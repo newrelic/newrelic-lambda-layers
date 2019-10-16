@@ -31,6 +31,7 @@ function build-python27 {
     rm -rf $PY27_DIST python
     mkdir -p dist
     pip install -qU newrelic -t python/lib/python2.7/site-packages
+	cp newrelic_handler.py python/lib/python2.7/site-packages/newrelic_handler.py
     find python -name '*.pyc' -exec rm -f {} +
     zip -rq $PY27_DIST python
     rm -rf python
@@ -75,7 +76,8 @@ function build-python36 {
     echo "Building nr1 layer for python3.6"
     rm -rf $PY36_DIST python
     mkdir -p dist
-    pip install -qU newrelic -t python/lib/python2.6/site-packages
+    pip install -qU newrelic -t python/lib/python3.6/site-packages
+	cp newrelic_handler.py python/lib/python3.6/site-packages/newrelic_handler.py
     find python -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY36_DIST python
     rm -rf python
@@ -120,7 +122,8 @@ function build-python37 {
     echo "Building nr1 layer for python3.7"
     rm -rf $PY37_DIST python
     mkdir -p dist
-    pip install -qU newrelic -t python/lib/python2.7/site-packages
+    pip install -qU newrelic -t python/lib/python3.7/site-packages
+	cp newrelic_handler.py python/lib/python3.7/site-packages/newrelic_handler.py
     find python -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY37_DIST python
     rm -rf python
