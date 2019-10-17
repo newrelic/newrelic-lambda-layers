@@ -58,7 +58,9 @@ function wrapHandler() {
 
   if (!wrappedHandler) {
     const userHandler = getHandler()
-    wrappedHandler = newrelic.setLambdaHandler((...args) => userHandler.apply(ctx, args))
+    wrappedHandler = newrelic.setLambdaHandler(
+      (...wrapperArgs) => userHandler.apply(ctx, wrapperArgs)
+    )
   }
 
   return wrappedHandler.apply(ctx, args)
