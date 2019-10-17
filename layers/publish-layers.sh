@@ -39,7 +39,12 @@ function build-python27 {
 }
 
 function publish-python27 {
-    py27_hash=$(git rev-parse HEAD)
+    if [ ! -f $PY27_DIST ]; then
+        echo "Package not found: ${PY27_DIST}"
+        exit 1
+    fi
+
+    py27_hash=$(md5sum $PY27_DIST | awk '{ print $1 }')
     py27_s3key="nr1-python2.7/${py27_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
@@ -85,7 +90,12 @@ function build-python36 {
 }
 
 function publish-python36 {
-    py36_hash=$(git rev-parse HEAD)
+    if [ ! -f $PY36_DIST ]; then
+        echo "Package not found: ${PY36_DIST}"
+        exit 1
+    fi
+
+    py36_hash=$(md5sum $PY36_DIST | awk '{ print $1 }')
     py36_s3key="nr1-python3.6/${py36_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
@@ -131,7 +141,12 @@ function build-python37 {
 }
 
 function publish-python37 {
-    py37_hash=$(git rev-parse HEAD)
+    if [ ! -f $PY37_DIST ]; then
+        echo "Package not found: ${PY37_DIST}"
+        exit 1
+    fi
+
+    py37_hash=$(md5sum $PY37_DIST | awk '{ print $1 }')
     py37_s3key="nr1-python3.7/${py37_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
