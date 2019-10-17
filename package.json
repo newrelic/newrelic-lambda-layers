@@ -9,7 +9,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm install && mkdir -p nodejs && cp src/index.js nodejs/ && cp -r node_modules nodejs/ && zip -rq dist/MainlandLayer.zip nodejs && rm -rf nodejs",
+    "build": "npm install && mkdir -p nodejs && cp src/newrelic-handler-wrapper.js nodejs/ && cp -r node_modules nodejs/ && zip -rq dist/MainlandLayer.zip nodejs && rm -rf nodejs",
     "clean": "rm dist/MainlandLayer.zip",
     "lint": "eslint ./src/*.js"
   },
