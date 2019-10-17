@@ -4,14 +4,14 @@
   "description": "Mainland Installer for serverless APM layers.",
   "main": "",
   "files": [
-    "dist",
+    "../dist",
     "package.json",
     "README.md"
   ],
   "scripts": {
-    "build": "npm install && mkdir -p nodejs && cp src/newrelic-handler-wrapper.js nodejs/ && cp -r node_modules nodejs/ && zip -rq dist/MainlandLayer.zip nodejs && rm -rf nodejs",
-    "clean": "rm dist/MainlandLayer.zip",
-    "lint": "eslint ./src/*.js"
+    "build": "npm install && cp handler.js node_modules/newrelic/ && zip -rq ../dist/nodejs/MainlandLayer.zip node_modules",
+    "clean": "rm ../dist/nodejs/MainlandLayer.zip",
+    "lint": "eslint ./*.js"
   },
   "repository": {
     "type": "git",
