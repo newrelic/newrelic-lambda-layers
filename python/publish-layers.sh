@@ -57,9 +57,9 @@ function publish-python27 {
         py27_version=$(aws lambda publish-layer-version \
             --layer-name NR1Python27 \
             --content "S3Bucket=${bucket_name},S3Key=${py27_s3key}" \
-            --description "NR1 Layer for Python 2.7" \
+            --description "New Relic Layer for Python 2.7" \
             --compatible-runtimes python2.7 \
-            --license-info "Apache 2.0" \
+            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -108,9 +108,9 @@ function publish-python36 {
         py36_version=$(aws lambda publish-layer-version \
             --layer-name NR1Python36 \
             --content "S3Bucket=${bucket_name},S3Key=${py36_s3key}" \
-            --description "NR1 Layer for Python 3.6" \
+            --description "New Relic Layer for Python 3.6" \
             --compatible-runtimes python3.6 \
-            --license-info "Apache 2.0" \
+            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -159,9 +159,9 @@ function publish-python37 {
         py36_version=$(aws lambda publish-layer-version \
             --layer-name NR1Python37 \
             --content "S3Bucket=${bucket_name},S3Key=${py37_s3key}" \
-            --description "NR1 Layer for Python 3.7" \
+            --description "New Relic Layer for Python 3.7" \
             --compatible-runtimes python3.7 \
-            --license-info "Apache 2.0" \
+            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
