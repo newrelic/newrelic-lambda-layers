@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 
 PY27_DIST=dist/python27.zip
 PY36_DIST=dist/python36.zip
@@ -31,7 +31,7 @@ function build-python27 {
     rm -rf $PY27_DIST python
     mkdir -p dist
     pip install --no-cache-dir -qU newrelic -t python/lib/python2.7/site-packages
-	cp newrelic_handler.py python/lib/python2.7/site-packages/newrelic/handler.py
+	cp newrelic_lambda_wrapper.py python/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
     find python -name '*.pyc' -exec rm -f {} +
     zip -rq $PY27_DIST python
     rm -rf python
@@ -82,7 +82,7 @@ function build-python36 {
     rm -rf $PY36_DIST python
     mkdir -p dist
     pip install --no-cache-dir -qU newrelic -t python/lib/python3.6/site-packages
-	cp newrelic_handler.py python/lib/python3.6/site-packages/newrelic/handler.py
+	cp newrelic_lambda_wrapper.py python/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
     find python -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY36_DIST python
     rm -rf python
@@ -133,7 +133,7 @@ function build-python37 {
     rm -rf $PY37_DIST python
     mkdir -p dist
     pip install --no-cache-dir -qU newrelic -t python/lib/python3.7/site-packages
-	cp newrelic_handler.py python/lib/python3.7/site-packages/newrelic/handler.py
+	cp newrelic_lambda_wrapper.py python/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find python -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY37_DIST python
     rm -rf python

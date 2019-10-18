@@ -1,5 +1,31 @@
 version: 2
 jobs:
+  publish-nodejs810:
+    docker:
+        - image: circleci/nodejs:8
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: sudo pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd nodejs
+            ./publish-layers.sh nodejs8.10
+  publish-nodejs10x:
+    docker:
+        - image: circleci/nodejs:10
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: sudo pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd nodejs
+            ./publish-layers.sh nodejs10.x
   publish-python27:
     docker:
       - image: circleci/python:2.7
@@ -44,6 +70,18 @@ workflows:
   version: 2
   publish-layers:
     jobs:
+      - publish-nodejs810:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_nodejs/
+      - publish-nodejs10x:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_nodejs/
       - publish-python27:
           filters:
             branches:

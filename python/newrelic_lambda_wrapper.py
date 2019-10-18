@@ -8,7 +8,7 @@ wrapped_handler = None
 
 
 @newrelic.agent.lambda_handler()
-def wrapper(event, context):
+def handler(event, context):
     return get_wrapped_handler()(event, context)
 
 

@@ -66,4 +66,4 @@ function wrapHandler() {
   return wrappedHandler.apply(ctx, args)
 }
 
-module.exports.wrapper = wrapHandler
+module.exports.handler = wrapHandler

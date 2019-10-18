@@ -9,7 +9,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm install && cp handler.js node_modules/newrelic/ && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/MainlandLayer.zip nodejs && rm -rf nodejs",
+    "build": "npm install && cp newrelic-lambda-wrapper.js node_modules && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/MainlandLayer.zip nodejs && rm -rf nodejs",
     "clean": "rm ../dist/nodejs/MainlandLayer.zip",
     "lint": "eslint ./*.js"
   },
