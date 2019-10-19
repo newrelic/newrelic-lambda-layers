@@ -1,5 +1,6 @@
 import imp
 import os
+import warnings
 
 import newrelic.agent
 
@@ -7,8 +8,21 @@ newrelic.agent.initialize()
 wrapped_handler = None
 
 
+class IOpipeNoOp(object):
+    def __call__(self, *args, **kwargs):
+        warnings.warn(
+            "Use of context.iopipe.* is no longer supported. "
+            "Please see New Relic Python agent documentation here: "
+            "https://docs.newrelic.com/docs/agents/python-agent"
+        )
+
+    def __getattr__(self, name):
+        return IOpipeNoOp()
+
+
 @newrelic.agent.lambda_handler()
 def handler(event, context):
+    context.iopipe = IOpipeNoOp()
     return get_wrapped_handler()(event, context)
 
 
