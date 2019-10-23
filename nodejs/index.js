@@ -6,21 +6,26 @@ require('@newrelic/aws-sdk')
 let wrappedHandler
 
 function getHandler() {
-  let handler;
-  const { MAINLAND_TARGET_FN, IOPIPE_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  let handler
+  const { NEW_RELIC_TARGET_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
 
-  if (!MAINLAND_TARGET_FN) {
-    throw new Error('No MAINLAND_TARGET_FN environment variable set.')
+  // console.log('%%% NEW_RELIC_TARGET_HANDLER', process.env.NEW_RELIC_TARGET_HANDLER)
+  // console.log('%%% NEW_RELIC_ENABLED', process.env.NEW_RELIC_ENABLED)
+  // console.log('%%% NEW_RELIC_NO_CONFIG_FILE', process.env.NEW_RELIC_NO_CONFIG_FILE)
+  // console.log('%%% NEW_RELIC_APP_NAME', process.env.NEW_RELIC_APP_NAME)
+  // console.log('%%% NEW_RELIC_SERVERLESS_MODE_ENABLED', process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED)
+  // console.log('%%% NEW_RELIC_DISTRIBUTED_TRACING_ENABLED', process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED)
+  // console.log('%%% NEW_RELIC_ACCOUNT_ID', process.env.NEW_RELIC_ACCOUNT_ID)
+  // console.log('%%% NEW_RELIC_PRIMARY_APPLICATION_ID', process.env.NEW_RELIC_PRIMARY_APPLICATION_ID)
+  // console.log('%%% NEW_RELIC_LICENSE_KEY', process.env.NEW_RELIC_LICENSE_KEY)
+  // console.log('%%% NEW_RELIC_TRUSTED_ACCOUNT_KEY', process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY)
+  // console.log('%%% NEW_RELIC_LOG_ENABLED', process.env.NEW_RELIC_LOG_ENABLED)
+  // console.log('%%% NEW_RELIC_LOG', process.env.NEW_RELIC_LOG)
+
+  if (!NEW_RELIC_TARGET_HANDLER) {
+    throw new Error('No NEW_RELIC_TARGET_HANDLER environment variable set.')
   } else {
-    handler = MAINLAND_TARGET_FN;
-  }
-  if (IOPIPE_HANDLER) {
-    console.warn('IOPIPE_HANDLER defined; patching.');
-
-  }
-
-  if (!handler) {
-    throw new Error('No handler environment variable set.')
+    handler = NEW_RELIC_TARGET_HANDLER
   }
 
   const parts = handler.split('.')
@@ -32,7 +37,8 @@ function getHandler() {
   }
 
   const [moduleToImport, handlerToWrap] = parts
-
+  // console.log('MODULE TO IMPORT', moduleToImport)
+  // console.log('handler to wrap', handlerToWrap)
   let importedModule
 
   try {
@@ -65,10 +71,10 @@ function getHandler() {
 function wrapHandler() {
   const ctx = this
   const args = Array.prototype.slice.call(arguments)
+  // console.log('WRAPPING HANDLER')
 
   if (!wrappedHandler) {
     const userHandler = getHandler()
-    console.log('*** setting wrapped handler')
     wrappedHandler = newrelic.setLambdaHandler(
       (...wrapperArgs) => userHandler.apply(ctx, wrapperArgs)
     )
@@ -77,4 +83,4 @@ function wrapHandler() {
   return wrappedHandler.apply(ctx, args)
 }
 
-module.exports.wrapper = wrapHandler
+module.exports.handler = wrapHandler
