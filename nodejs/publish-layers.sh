@@ -58,9 +58,8 @@ function publish-nodejs810 {
         njs810_version=$(aws lambda publish-layer-version \
             --layer-name NewRelicNodeJS810 \
             --content "S3Bucket=${bucket_name},S3Key=${njs810_s3key}" \
-            --description "New Relic Layer for NodeJS 8.10" \
+            --description "New Relic Layer for Node.js 8.10" \
             --compatible-runtimes nodejs8.10 \
-            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -108,9 +107,8 @@ function publish-nodejs10x {
         njs10x_version=$(aws lambda publish-layer-version \
             --layer-name NewRelicNodeJS10X \
             --content "S3Bucket=${bucket_name},S3Key=${njs10x_s3key}" \
-            --description "New Relic Layer for NodeJS 10.x" \
+            --description "New Relic Layer for Node.js 10.x" \
             --compatible-runtimes nodejs10.x \
-            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
