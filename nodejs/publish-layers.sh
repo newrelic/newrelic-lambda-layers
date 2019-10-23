@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 BUILD_DIR=nodejs
-BUCKET_PREFIX=nr1-layers
+BUCKET_PREFIX=nr-layers
 DIST_DIR=dist
 NJS810_DIST=$DIST_DIR/nodejs810.zip
 NJS10X_DIST=$DIST_DIR/nodejs10x.zip
@@ -29,7 +29,7 @@ function usage {
 }
 
 function build-nodejs810 {
-    echo "Building nr1 layer for nodejs8.10"
+    echo "Building New Relic layer for nodejs8.10"
     rm -rf $BUILD_DIR $NJS810_DIST
     mkdir -p $DIST_DIR
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
@@ -46,7 +46,7 @@ function publish-nodejs810 {
     fi
 
     njs810_hash=$(md5sum $NJS810_DIST | awk '{ print $1 }')
-    njs810_s3key="nr1-nodejs8.10/${njs810_hash}.zip"
+    njs810_s3key="nr-nodejs8.10/${njs810_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
         bucket_name="${BUCKET_PREFIX}-${region}"
@@ -56,7 +56,7 @@ function publish-nodejs810 {
 
         echo "Publishing nodejs8.10 layer to ${region}"
         njs810_version=$(aws lambda publish-layer-version \
-            --layer-name NR1NodeJS810 \
+            --layer-name NewRelicNodeJS810 \
             --content "S3Bucket=${bucket_name},S3Key=${njs810_s3key}" \
             --description "New Relic Layer for NodeJS 8.10" \
             --compatible-runtimes nodejs8.10 \
@@ -68,7 +68,7 @@ function publish-nodejs810 {
 
         echo "Setting public permissions for nodejs8.10 layer version ${njs810_version} in ${region}"
         aws lambda add-layer-version-permission \
-          --layer-name NR1NodeJS810 \
+          --layer-name NewRelicNodeJS810 \
           --version-number $njs810_version \
           --statement-id public \
           --action lambda:GetLayerVersion \
@@ -79,7 +79,7 @@ function publish-nodejs810 {
 }
 
 function build-nodejs10x {
-    echo "Building nr1 layer for nodejs10.x"
+    echo "Building new relic layer for nodejs10.x"
     rm -rf $BUILD_DIR $NJS10X_DIST
     mkdir -p $DIST_DIR
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
@@ -96,7 +96,7 @@ function publish-nodejs10x {
     fi
 
     njs10x_hash=$(md5sum $NJS10X_DIST | awk '{ print $1 }')
-    njs10x_s3key="nr1-nodejs10.x/${njs10x_hash}.zip"
+    njs10x_s3key="nr-nodejs10.x/${njs10x_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
         bucket_name="${BUCKET_PREFIX}-${region}"
@@ -106,7 +106,7 @@ function publish-nodejs10x {
 
         echo "Publishing nodejs10.x layer to ${region}"
         njs10x_version=$(aws lambda publish-layer-version \
-            --layer-name NR1NodeJS10X \
+            --layer-name NewRelicNodeJS10X \
             --content "S3Bucket=${bucket_name},S3Key=${njs10x_s3key}" \
             --description "New Relic Layer for NodeJS 10.x" \
             --compatible-runtimes nodejs10.x \
@@ -118,7 +118,7 @@ function publish-nodejs10x {
 
         echo "Setting public permissions for nodejs10.x layer version ${njs10x_version} in ${region}"
         aws lambda add-layer-version-permission \
-          --layer-name NR1NodeJS10X \
+          --layer-name NewRelicNodeJS10X \
           --version-number $njs10x_version \
           --statement-id public \
           --action lambda:GetLayerVersion \

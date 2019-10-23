@@ -27,14 +27,22 @@ def handler(event, context):
 
 
 def get_handler():
-    if "NEWRELIC_HANDLER" not in os.environ or not os.environ["NEWRELIC_HANDLER"]:
-        raise ValueError("No value specified in NEWRELIC_HANDLER environment variable")
+    if (
+        "NEW_RELIC_LAMBDA_HANDLER" not in os.environ
+        or not os.environ["NEW_RELIC_LAMBDA_HANDLER"]
+    ):
+        raise ValueError(
+            "No value specified in NEW_RELIC_LAMBDA_HANDLER environment variable"
+        )
 
     try:
-        module_path, handler_name = os.environ["NEWRELIC_HANDLER"].rsplit(".", 1)
+        module_path, handler_name = os.environ["NEW_RELIC_LAMBDA_HANDLER"].rsplit(
+            ".", 1
+        )
     except ValueError:
         raise ValueError(
-            "Improperly formated handler value: %s" % os.environ["NEWRELIC_HANDLER"]
+            "Improperly formated handler value: %s"
+            % os.environ["NEW_RELIC_LAMBDA_HANDLER"]
         )
 
     module_path = module_path.replace("/", ".")
@@ -55,7 +63,7 @@ def get_handler():
                 )
 
         module = imp.load_module(module_path, file_handle, pathname, desc)
-    except Exception as e:
+    except Exception:
         raise ImportError("Failed to import module: %s" % module_path)
     finally:
         if file_handle is not None:
@@ -63,7 +71,7 @@ def get_handler():
 
     try:
         handler = getattr(module, handler_name)
-    except AttributeError as e:
+    except AttributeError:
         raise AttributeError("No handler %s in module %s" % (handler_name, module_path))
 
     return handler
