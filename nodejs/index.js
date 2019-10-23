@@ -7,9 +7,9 @@ let wrappedHandler
 
 function getHandler() {
   let handler
-  const { NEW_RELIC_TARGET_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  const { NEW_RELIC_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
 
-  // console.log('%%% NEW_RELIC_TARGET_HANDLER', process.env.NEW_RELIC_TARGET_HANDLER)
+  // console.log('%%% NEW_RELIC_HANDLER', process.env.NEW_RELIC_HANDLER)
   // console.log('%%% NEW_RELIC_ENABLED', process.env.NEW_RELIC_ENABLED)
   // console.log('%%% NEW_RELIC_NO_CONFIG_FILE', process.env.NEW_RELIC_NO_CONFIG_FILE)
   // console.log('%%% NEW_RELIC_APP_NAME', process.env.NEW_RELIC_APP_NAME)
@@ -22,10 +22,10 @@ function getHandler() {
   // console.log('%%% NEW_RELIC_LOG_ENABLED', process.env.NEW_RELIC_LOG_ENABLED)
   // console.log('%%% NEW_RELIC_LOG', process.env.NEW_RELIC_LOG)
 
-  if (!NEW_RELIC_TARGET_HANDLER) {
-    throw new Error('No NEW_RELIC_TARGET_HANDLER environment variable set.')
+  if (!NEW_RELIC_HANDLER) {
+    throw new Error('No NEW_RELIC_HANDLER environment variable set.')
   } else {
-    handler = NEW_RELIC_TARGET_HANDLER
+    handler = NEW_RELIC_HANDLER
   }
 
   const parts = handler.split('.')
