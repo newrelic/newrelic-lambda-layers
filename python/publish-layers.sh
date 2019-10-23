@@ -8,7 +8,7 @@ PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
 
 REGIONS=(
-  ap-northeast-1
+  #ap-northeast-1
   ap-northeast-2
   ap-south-1
   ap-southeast-1
@@ -62,7 +62,6 @@ function publish-python27 {
             --content "S3Bucket=${bucket_name},S3Key=${py27_s3key}" \
             --description "New Relic Layer for Python 2.7" \
             --compatible-runtimes python2.7 \
-            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -102,7 +101,7 @@ function publish-python36 {
     py36_s3key="nr-python3.6/${py36_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
-        bucket_name="${BUCKET_NAME}-${region}"
+        bucket_name="${BUCKET_PREFIX}-${region}"
 
         echo "Uploading ${PY36_DIST} to s3://${bucket_name}/${py36_s3key}"
         aws --region $region s3 cp $PY36_DIST "s3://${bucket_name}/${py36_s3key}"
@@ -113,7 +112,6 @@ function publish-python36 {
             --content "S3Bucket=${bucket_name},S3Key=${py36_s3key}" \
             --description "New Relic Layer for Python 3.6" \
             --compatible-runtimes python3.6 \
-            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -153,18 +151,17 @@ function publish-python37 {
     py37_s3key="nr-python3.7/${py37_hash}.zip"
 
     for region in "${REGIONS[@]}"; do
-        bucket_name="${BUCKET_NAME}-${region}"
+        bucket_name="${BUCKET_PREFIX}-${region}"
 
         echo "Uploading ${PY37_DIST} to s3://${bucket_name}/${py37_s3key}"
         aws --region $region s3 cp $PY37_DIST "s3://${bucket_name}/${py37_s3key}"
 
         echo "Publishing python3.7 layer to ${region}"
-        py36_version=$(aws lambda publish-layer-version \
+        py37_version=$(aws lambda publish-layer-version \
             --layer-name NewRelicPython37 \
             --content "S3Bucket=${bucket_name},S3Key=${py37_s3key}" \
             --description "New Relic Layer for Python 3.7" \
             --compatible-runtimes python3.7 \
-            --license-info "https://docs.newrelic.com/docs/licenses/license-information/distributed-licenses/new-relic-agent-license" \
             --region $region \
             --output text \
             --query Version)
@@ -185,15 +182,15 @@ function publish-python37 {
 case "$1" in
     "python2.7")
         build-python27
-		#publish-python27
+		publish-python27
         ;;
     "python3.6")
         build-python36
-		#publish-python36
+		publish-python36
         ;;
     "python3.7")
         build-python37
-		#publish-python37
+		publish-python37
         ;;
     *)
         usage
