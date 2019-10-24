@@ -7,12 +7,12 @@ let wrappedHandler
 
 function getHandler() {
   let handler
-  const { NEW_RELIC_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  const { NEW_RELIC_LAMBDA_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
 
-  if (!NEW_RELIC_HANDLER) {
-    throw new Error('No NEW_RELIC_HANDLER environment variable set.')
+  if (!NEW_RELIC_LAMBDA_HANDLER) {
+    throw new Error('No NEW_RELIC_LAMBDA_HANDLER environment variable set.')
   } else {
-    handler = NEW_RELIC_HANDLER
+    handler = NEW_RELIC_LAMBDA_HANDLER
   }
 
   const parts = handler.split('.')

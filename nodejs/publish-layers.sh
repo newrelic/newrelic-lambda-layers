@@ -33,7 +33,8 @@ function build-nodejs810 {
     rm -rf $BUILD_DIR $NJS810_DIST
     mkdir -p $DIST_DIR
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
-    cp newrelic-lambda-wrapper.js $BUILD_DIR/node_modules
+    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     zip -rq $NJS810_DIST $BUILD_DIR
     rm -rf $BUILD_DIR
     echo "Build complete: ${NJS810_DIST}"
@@ -82,7 +83,8 @@ function build-nodejs10x {
     rm -rf $BUILD_DIR $NJS10X_DIST
     mkdir -p $DIST_DIR
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
-    cp newrelic-lambda-wrapper.js $BUILD_DIR/node_modules
+    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     zip -rq $NJS10X_DIST $BUILD_DIR
     rm -rf $BUILD_DIR
     echo "Build complete: ${NJS10X_DIST}"
