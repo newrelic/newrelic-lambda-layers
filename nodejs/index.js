@@ -9,19 +9,6 @@ function getHandler() {
   let handler
   const { NEW_RELIC_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
 
-  // console.log('%%% NEW_RELIC_HANDLER', process.env.NEW_RELIC_HANDLER)
-  // console.log('%%% NEW_RELIC_ENABLED', process.env.NEW_RELIC_ENABLED)
-  // console.log('%%% NEW_RELIC_NO_CONFIG_FILE', process.env.NEW_RELIC_NO_CONFIG_FILE)
-  // console.log('%%% NEW_RELIC_APP_NAME', process.env.NEW_RELIC_APP_NAME)
-  // console.log('%%% NEW_RELIC_SERVERLESS_MODE_ENABLED', process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED)
-  // console.log('%%% NEW_RELIC_DISTRIBUTED_TRACING_ENABLED', process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED)
-  // console.log('%%% NEW_RELIC_ACCOUNT_ID', process.env.NEW_RELIC_ACCOUNT_ID)
-  // console.log('%%% NEW_RELIC_PRIMARY_APPLICATION_ID', process.env.NEW_RELIC_PRIMARY_APPLICATION_ID)
-  // console.log('%%% NEW_RELIC_LICENSE_KEY', process.env.NEW_RELIC_LICENSE_KEY)
-  // console.log('%%% NEW_RELIC_TRUSTED_ACCOUNT_KEY', process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY)
-  // console.log('%%% NEW_RELIC_LOG_ENABLED', process.env.NEW_RELIC_LOG_ENABLED)
-  // console.log('%%% NEW_RELIC_LOG', process.env.NEW_RELIC_LOG)
-
   if (!NEW_RELIC_HANDLER) {
     throw new Error('No NEW_RELIC_HANDLER environment variable set.')
   } else {
@@ -37,8 +24,7 @@ function getHandler() {
   }
 
   const [moduleToImport, handlerToWrap] = parts
-  // console.log('MODULE TO IMPORT', moduleToImport)
-  // console.log('handler to wrap', handlerToWrap)
+
   let importedModule
 
   try {
@@ -71,7 +57,6 @@ function getHandler() {
 function wrapHandler() {
   const ctx = this
   const args = Array.prototype.slice.call(arguments)
-  // console.log('WRAPPING HANDLER')
 
   if (!wrappedHandler) {
     const userHandler = getHandler()
