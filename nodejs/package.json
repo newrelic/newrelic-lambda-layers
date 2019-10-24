@@ -1,7 +1,7 @@
 {
   "name": "mainland-layer",
   "version": "0.1.0",
-  "description": "Mainland Installer for serverless APM layers.",
+  "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
     "../dist",
@@ -9,7 +9,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm install && cp newrelic-lambda-wrapper.js node_modules && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/MainlandLayer.zip nodejs && rm -rf nodejs",
+    "build": "npm install && mkdir -p node_modules/newrelic-lambda-wrapper && cp index.js node_modules/newrelic-lambda-wrapper && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/MainlandLayer.zip nodejs && rm -rf ./nodejs",
     "clean": "rm ../dist/nodejs/MainlandLayer.zip",
     "lint": "eslint ./*.js"
   },

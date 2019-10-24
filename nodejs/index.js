@@ -6,17 +6,20 @@ require('@newrelic/aws-sdk')
 let wrappedHandler
 
 function getHandler() {
-  const { MAINLAND_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  let handler
+  const { NEW_RELIC_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
 
-  if (!MAINLAND_HANDLER) {
-    throw new Error('No MAINLAND_HANDLER environment variable set.')
+  if (!NEW_RELIC_HANDLER) {
+    throw new Error('No NEW_RELIC_HANDLER environment variable set.')
+  } else {
+    handler = NEW_RELIC_HANDLER
   }
 
-  const parts = MAINLAND_HANDLER.split('.')
+  const parts = handler.split('.')
 
   if (parts.length !== 2) {
     throw new Error(
-      `Improperly formatted MAINLAND_HANDLER environment variable: ${MAINLAND_HANDLER}`
+      `Improperly formatted handler environment variable: ${handler}`
     )
   }
 
@@ -31,7 +34,6 @@ function getHandler() {
     if (e.code === 'MODULE_NOT_FOUND') {
       throw new Error(`Unable to import module '${moduleToImport}'`)
     }
-
     throw e
   }
 
