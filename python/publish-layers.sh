@@ -34,7 +34,7 @@ function build-python27 {
     rm -rf $BUILD_DIR $PY27_DIST
     mkdir -p $DIST_DIR
     pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python2.7/site-packages
-	cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '*.pyc' -exec rm -f {} +
     zip -rq $PY27_DIST $BUILD_DIR
     rm -rf $BUILD_DIR
@@ -84,7 +84,7 @@ function build-python36 {
     rm -rf $BUILD_DIR $PY36_DIST
     mkdir -p $DIST_DIR
     pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.6/site-packages
-	cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY36_DIST $BUILD_DIR
     rm -rf $BUILD_DIR
@@ -134,7 +134,7 @@ function build-python37 {
     rm -rf $BUILD_DIR $PY37_DIST
     mkdir -p $DIST_DIR
     pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.7/site-packages
-	cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY37_DIST $BUILD_DIR
     rm -rf $BUILD_DIR
@@ -182,15 +182,15 @@ function publish-python37 {
 case "$1" in
     "python2.7")
         build-python27
-		publish-python27
+        publish-python27
         ;;
     "python3.6")
         build-python36
-		publish-python36
+        publish-python36
         ;;
     "python3.7")
         build-python37
-		publish-python37
+        publish-python37
         ;;
     *)
         usage
