@@ -4,7 +4,7 @@ import warnings
 
 import newrelic.agent
 
-os.environ["NEW_RELIC_NO_CONFIG_FILE"] = os.getenv("NEW_RELIC_NO_CONFIG_FILE", "true")
+os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 
 newrelic.agent.initialize()
 wrapped_handler = None
