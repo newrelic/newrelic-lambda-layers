@@ -1,5 +1,9 @@
 'use strict'
 
+const { NEW_RELIC_NO_CONFIG_FILE = 'true' } = process.env
+process.env.NEW_RELIC_NO_CONFIG_FILE = NEW_RELIC_NO_CONFIG_FILE
+
+
 const newrelic = require('newrelic')
 require('@newrelic/aws-sdk')
 
