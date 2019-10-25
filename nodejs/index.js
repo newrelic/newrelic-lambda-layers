@@ -58,11 +58,34 @@ function getHandler() {
   return userHandler
 }
 
+function patchIO(method) {
+  const warning = `
+    Use of context.iopipe.* (including ${method}) is no longer supported. 
+    Please see New Relic Node agent documentation here: 
+    https://docs.newrelic.com/docs/agents/nodejs-agent
+    `
+  /* eslint-disable no-console */
+  console.warn(warning)
+}
+
+const iopipePatch = {
+  label: () => patchIO('label'),
+  mark: {
+    start: () => patchIO('mark.start'),
+    end: () => patchIO('mark.end')
+  },
+  measure: () => patchIO('measure'),
+  metric: () => patchIO('metric')
+}
+
 function wrapHandler() {
   const ctx = this
   const args = Array.prototype.slice.call(arguments)
 
   if (!wrappedHandler) {
+    if (process.env.IOPIPE_TOKEN && args[1] && typeof args[1] === 'object') {
+      args[1].iopipe = iopipePatch
+    }
     const userHandler = getHandler()
     wrappedHandler = newrelic.setLambdaHandler(
       (...wrapperArgs) => userHandler.apply(ctx, wrapperArgs)
