@@ -1,8 +1,11 @@
 'use strict'
 
-const { NEW_RELIC_NO_CONFIG_FILE = 'true' } = process.env
-process.env.NEW_RELIC_NO_CONFIG_FILE = NEW_RELIC_NO_CONFIG_FILE
-
+process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
+process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
+process.env.NEW_RELIC_LOG_ENABLED = process.env.NEW_RELIC_LOG_ENABLED || 'true'
+process.env.NEW_RELIC_LOG = process.env.NEW_RELIC_LOG || 'stdout'
+process.env.NEW_RELIC_LOG_LEVEL = process.env.NEW_RELIC_LOG_LEVEL || 'info'
+process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED || 'false'
 
 const newrelic = require('newrelic')
 require('@newrelic/aws-sdk')

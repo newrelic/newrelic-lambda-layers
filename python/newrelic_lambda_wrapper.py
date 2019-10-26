@@ -5,6 +5,11 @@ import warnings
 import newrelic.agent
 
 os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
+os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
+os.environ.setdefault("NEW_RELIC_LOG", "stdout")
+os.environ.setdefault("NEW_RELIC_LOG_ENABLED", "true")
+os.environ.setdefault("NEW_RELIC_LOG_LEVEL", "info")
+os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
 
 newrelic.agent.initialize()
 wrapped_handler = None

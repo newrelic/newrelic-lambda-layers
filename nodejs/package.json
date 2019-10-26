@@ -38,5 +38,9 @@
     "tracing",
     "distributed tracing",
     "layers"
-  ]
+  ],
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
 }
