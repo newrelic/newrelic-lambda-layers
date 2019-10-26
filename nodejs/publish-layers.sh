@@ -131,11 +131,11 @@ function publish-nodejs10x {
 case "$1" in
     "nodejs8.10")
         build-nodejs810
-        #publish-nodejs810
+        publish-nodejs810
         ;;
     "nodejs10.x")
         build-nodejs10x
-        #publish-nodejs10x
+        publish-nodejs10x
         ;;
     *)
         usage
