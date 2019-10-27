@@ -5,6 +5,7 @@ BUCKET_PREFIX=nr-layers
 DIST_DIR=dist
 NJS810_DIST=$DIST_DIR/nodejs810.zip
 NJS10X_DIST=$DIST_DIR/nodejs10x.zip
+NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 
 REGIONS=(
   ap-northeast-1
@@ -25,7 +26,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [nodejs8.10|nodejs10.x]"
+    echo "./publish-layers.sh [nodejs8.10|nodejs10.x|nodejs12.x]"
 }
 
 function build-nodejs810 {
@@ -128,6 +129,56 @@ function publish-nodejs10x {
     done
 }
 
+function build-nodejs12x {
+    echo "Building new relic layer for nodejs12.x"
+    rm -rf $BUILD_DIR $NJS12X_DIST
+    mkdir -p $DIST_DIR
+    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
+    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    zip -rq $NJS12X_DIST $BUILD_DIR
+    rm -rf $BUILD_DIR
+    echo "Build complete: ${NJS12X_DIST}"
+}
+
+function publish-nodejs12x {
+    if [ ! -f $NJS12X_DIST ]; then
+        echo "Package not found: ${NJS12X_DIST}"
+        exit 1
+    fi
+
+    njs12x_hash=$(md5sum $NJS12X_DIST | awk '{ print $1 }')
+    njs12x_s3key="nr-nodejs12.x/${njs12x_hash}.zip"
+
+    for region in "${REGIONS[@]}"; do
+        bucket_name="${BUCKET_PREFIX}-${region}"
+
+        echo "Uploading ${NJS12X_DIST} to s3://${bucket_name}/${njs12x_s3key}"
+        aws --region $region s3 cp $NJS12X_DIST "s3://${bucket_name}/${njs12x_s3key}"
+
+        echo "Publishing nodejs12.x layer to ${region}"
+        njs12x_version=$(aws lambda publish-layer-version \
+            --layer-name NewRelicNodeJS12X \
+            --content "S3Bucket=${bucket_name},S3Key=${njs12x_s3key}" \
+            --description "New Relic Layer for Node.js 12.x" \
+            --compatible-runtimes nodejs12.x \
+            --region $region \
+            --output text \
+            --query Version)
+        echo "published nodejs12.x layer version ${njs12x_version} to ${region}"
+
+        echo "Setting public permissions for nodejs12.x layer version ${njs12x_version} in ${region}"
+        aws lambda add-layer-version-permission \
+          --layer-name NewRelicNodeJS12X \
+          --version-number $njs12x_version \
+          --statement-id public \
+          --action lambda:GetLayerVersion \
+          --principal "*" \
+          --region $region
+        echo "Public permissions set for nodejs12.x layer version ${njs12x_version} in region ${region}"
+    done
+}
+
 case "$1" in
     "nodejs8.10")
         build-nodejs810
@@ -136,6 +187,10 @@ case "$1" in
     "nodejs10.x")
         build-nodejs10x
         publish-nodejs10x
+        ;;
+    "nodejs12.x")
+        build-nodejs12x
+        publish-nodejs12x
         ;;
     *)
         usage

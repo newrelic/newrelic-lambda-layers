@@ -28,6 +28,20 @@ jobs:
           command: |
             cd nodejs
             ./publish-layers.sh nodejs10.x
+  publish-nodejs12x:
+    docker:
+        - image: circleci/nodejs:12-stretch
+    steps:
+      - checkout
+      - run: sudo apt-get install -y python3-pip
+      - run:
+          name: Install publish dependencies
+          command: sudo pip3 install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd nodejs
+            ./publish-layers.sh nodejs12.x
   publish-python27:
     docker:
       - image: circleci/python:2.7
@@ -79,6 +93,12 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
       - publish-nodejs10x:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_nodejs/
+      - publish-nodejs12x:
           filters:
             branches:
               ignore: /.*/
