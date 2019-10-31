@@ -1,5 +1,6 @@
 'use strict'
 
+process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
 process.env.NEW_RELIC_LOG_ENABLED = process.env.NEW_RELIC_LOG_ENABLED || 'true'
 process.env.NEW_RELIC_LOG = process.env.NEW_RELIC_LOG || 'stdout'
