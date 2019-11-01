@@ -34,7 +34,6 @@ function getHandler() {
   let importedModule
 
   try {
-    /* eslint-disable import/no-dynamic-require*/
     importedModule = require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
@@ -60,24 +59,53 @@ function getHandler() {
   return userHandler
 }
 
-function patchIO(method) {
+const ioMarks = {}
+
+function patchIO(method, payload) {
   const warning = `
     Use of context.iopipe.* (including ${method}) is no longer supported. 
     Please see New Relic Node agent documentation here: 
     https://docs.newrelic.com/docs/agents/nodejs-agent
     `
+
+  let property, value
+
+  if (method === 'label') {
+    property = `customLabel.${payload.value}`
+    value = payload.value
+  } else if (method === 'metric') {
+    property = `customMetric.${payload.name}`
+    value = payload.value
+  } else if (method === 'measure' && payload.name && ioMarks[payload.end].end && ioMarks[payload.start].start) {
+    property = `customMetric.${payload.name}`
+    value = ioMarks[payload.end].end - ioMarks[payload.start].start
+  }
+
+  if (typeof property !== 'undefined' && typeof value !== 'undefined') {
+    newrelic.addCustomAttribute(property, value)
+  }
   /* eslint-disable no-console */
   console.warn(warning)
 }
 
-const iopipePatch = {
-  label: () => patchIO('label'),
-  mark: {
-    start: () => patchIO('mark.start'),
-    end: () => patchIO('mark.end')
-  },
-  measure: () => patchIO('measure'),
-  metric: () => patchIO('metric')
+const wrapPatch = () => {
+  return {
+    label: labelName => patchIO('label', {value: labelName}),
+    mark: {
+      start: markName => {
+        ioMarks[markName] = {start: new Date().getTime()}
+        return ioMarks[markName]
+      },
+      end: markName => {
+        ioMarks[markName] = {end: new Date().getTime()}
+        patchIO('measure', {name: markName, start: markName, end: markName})
+      }
+    },
+    measure: (name, start, end) => {
+      patchIO('measure', {name, start, end})
+    },
+    metric: (name, value) => patchIO('metric', {name, value})
+  }
 }
 
 function wrapHandler() {
@@ -85,15 +113,14 @@ function wrapHandler() {
   const args = Array.prototype.slice.call(arguments)
 
   if (!wrappedHandler) {
-    if (process.env.IOPIPE_TOKEN && args[1] && typeof args[1] === 'object') {
-      args[1].iopipe = iopipePatch
+    if (args[1] && typeof args[1] === 'object' && !args[1].iopipe) { // process.env.IOPIPE_TOKEN &&
+      args[1].iopipe = wrapPatch()
     }
     const userHandler = getHandler()
     wrappedHandler = newrelic.setLambdaHandler(
       (...wrapperArgs) => userHandler.apply(ctx, wrapperArgs)
     )
   }
-
   return wrappedHandler.apply(ctx, args)
 }
 
