@@ -2,7 +2,7 @@ version: 2
 jobs:
   publish-nodejs810:
     docker:
-        - image: circleci/nodejs:8-stretch
+        - image: circleci/node:8-stretch
     steps:
       - checkout
       - run: sudo apt-get install -y python3-pip
@@ -16,7 +16,7 @@ jobs:
             ./publish-layers.sh nodejs8.10
   publish-nodejs10x:
     docker:
-        - image: circleci/nodejs:10-stretch
+        - image: circleci/node:10-stretch
     steps:
       - checkout
       - run: sudo apt-get install -y python3-pip
@@ -30,7 +30,7 @@ jobs:
             ./publish-layers.sh nodejs10.x
   publish-nodejs12x:
     docker:
-        - image: circleci/nodejs:12-stretch
+        - image: circleci/node:12-stretch
     steps:
       - checkout
       - run: sudo apt-get install -y python3-pip
