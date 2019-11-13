@@ -11,6 +11,7 @@ require('@newrelic/aws-sdk')
 
 let wrappedHandler
 
+
 function getHandler() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
