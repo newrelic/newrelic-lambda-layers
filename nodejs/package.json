@@ -1,6 +1,6 @@
 {
-  "name": "mainland-layer",
-  "version": "0.1.0",
+  "name": "newrelic-lambda-layers",
+  "version": "6.0.0",
   "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
@@ -9,20 +9,20 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm install && mkdir -p node_modules/newrelic-lambda-wrapper && cp index.js node_modules/newrelic-lambda-wrapper && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/MainlandLayer.zip nodejs && rm -rf ./nodejs",
-    "clean": "rm ../dist/nodejs/MainlandLayer.zip",
+    "build": "npm install && mkdir -p node_modules/newrelic-lambda-wrapper && cp index.js node_modules/newrelic-lambda-wrapper && mkdir -p nodejs && cp -r node_modules nodejs && zip -rq ../dist/nodejs/NewRelicLayer.zip nodejs && rm -rf ./nodejs",
+    "clean": "rm ../dist/nodejs/NewRelicLayer.zip",
     "lint": "eslint ./*.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iopipe/mainland-layer.git"
+    "url": "git+https://github.com/iopipe/newrelic-lambda-layers.git"
   },
   "author": "IOpipe",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/iopipe/serverless-iopipe-layers/issues"
+    "url": "https://github.com/iopipe/newrelic-lambda-layers/issues"
   },
-  "homepage": "https://github.com/iopipe/serverless-plugin-iopipe-layers#readme",
+  "homepage": "https://github.com/iopipe/newrelic-lambda-layers#readme",
   "dependencies": {
     "@newrelic/aws-sdk": "^0.3.0",
     "newrelic": "^5.13.1"
