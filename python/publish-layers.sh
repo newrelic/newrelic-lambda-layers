@@ -8,7 +8,7 @@ PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
 
 REGIONS=(
-  #ap-northeast-1
+  ap-northeast-1
   ap-northeast-2
   ap-south-1
   ap-southeast-1
