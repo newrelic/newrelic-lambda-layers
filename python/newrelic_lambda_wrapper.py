@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import imp
 import os
 import warnings
 
 import newrelic.agent
 
-os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME", ""))
 os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
 os.environ.setdefault("NEW_RELIC_LOG", "stdout")
@@ -53,7 +55,6 @@ def get_handler():
             % os.environ["NEW_RELIC_LAMBDA_HANDLER"]
         )
 
-    module_path = module_path.replace("/", ".")
     file_handle, pathname, desc = None, None, None
 
     try:

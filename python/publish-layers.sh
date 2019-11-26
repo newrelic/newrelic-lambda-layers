@@ -6,9 +6,10 @@ DIST_DIR=dist
 PY27_DIST=$DIST_DIR/python27.zip
 PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
+PY38_DIST=dist/python38.zip
 
 REGIONS=(
-  #ap-northeast-1
+  ap-northeast-1
   ap-northeast-2
   ap-south-1
   ap-southeast-1
@@ -26,7 +27,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [python2.7|python3.6|python3.7]"
+    echo "./publish-layers.sh [python2.7|python3.6|python3.7|python3.8]"
 }
 
 function build-python27 {
@@ -179,6 +180,56 @@ function publish-python37 {
     done
 }
 
+function build-python38 {
+    echo "Building New Relic layer for python3.8"
+    rm -rf $BUILD_DIR $PY38_DIST
+    mkdir -p $DIST_DIR
+    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.8/site-packages
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
+    find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
+    zip -rq $PY38_DIST $BUILD_DIR
+    rm -rf $BUILD_DIR
+    echo "Build complete: ${PY38_DIST}"
+}
+
+function publish-python38 {
+    if [ ! -f $PY38_DIST ]; then
+        echo "Package not found: ${PY38_DIST}"
+        exit 1
+    fi
+
+    py38_hash=$(md5sum $PY38_DIST | awk '{ print $1 }')
+    py38_s3key="nr-python3.8/${py38_hash}.zip"
+
+    for region in "${REGIONS[@]}"; do
+        bucket_name="${BUCKET_PREFIX}-${region}"
+
+        echo "Uploading ${PY38_DIST} to s3://${bucket_name}/${py38_s3key}"
+        aws --region $region s3 cp $PY38_DIST "s3://${bucket_name}/${py38_s3key}"
+
+        echo "Publishing python3.8 layer to ${region}"
+        py38_version=$(aws lambda publish-layer-version \
+            --layer-name NewRelicPython38 \
+            --content "S3Bucket=${bucket_name},S3Key=${py38_s3key}" \
+            --description "New Relic Layer for Python 3.8" \
+            --compatible-runtimes python3.8 \
+            --region $region \
+            --output text \
+            --query Version)
+        echo "published python3.8 layer version ${py38_version} to ${region}"
+
+        echo "Setting public permissions for python3.8 layer version ${py38_version} in ${region}"
+        aws lambda add-layer-version-permission \
+          --layer-name NewRelicPython38 \
+          --version-number $py38_version \
+          --statement-id public \
+          --action lambda:GetLayerVersion \
+          --principal "*" \
+          --region $region
+        echo "Public permissions set for python3.8 layer version ${py38_version} in region ${region}"
+    done
+}
+
 case "$1" in
     "python2.7")
         build-python27
@@ -191,6 +242,10 @@ case "$1" in
     "python3.7")
         build-python37
         publish-python37
+        ;;
+    "python3.8")
+        build-python38
+        publish-python38
         ;;
     *)
         usage

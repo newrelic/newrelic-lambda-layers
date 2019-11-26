@@ -1,6 +1,6 @@
 {
   "name": "newrelic-lambda-layers",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
@@ -24,8 +24,8 @@
   },
   "homepage": "https://github.com/iopipe/newrelic-lambda-layers#readme",
   "dependencies": {
-    "@newrelic/aws-sdk": "^0.3.0",
-    "newrelic": "^5.13.1"
+    "@newrelic/aws-sdk": "^1.0.0",
+    "newrelic": "^6.1.0"
   },
   "keywords": [
     "lambda",

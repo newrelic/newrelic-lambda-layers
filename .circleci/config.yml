@@ -81,6 +81,19 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.7
+  publish-python38:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: sudo pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd python
+            ./publish-layers.sh python3.8
 
 workflows:
   version: 2
@@ -117,6 +130,12 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-python37:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_python/
+      - publish-python38:
           filters:
             branches:
               ignore: /.*/
