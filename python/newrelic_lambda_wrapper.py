@@ -18,8 +18,6 @@ import newrelic.agent  # noqa
 
 newrelic.agent.initialize()
 
-wrapped_handler = None
-
 
 class IOpipeNoOp(object):
     def __call__(self, *args, **kwargs):
@@ -31,12 +29,6 @@ class IOpipeNoOp(object):
 
     def __getattr__(self, name):
         return IOpipeNoOp()
-
-
-@newrelic.agent.lambda_handler()
-def handler(event, context):
-    context.iopipe = IOpipeNoOp()
-    return get_wrapped_handler()(event, context)
 
 
 def get_handler():
@@ -89,10 +81,12 @@ def get_handler():
     return handler
 
 
-def get_wrapped_handler():
-    global wrapped_handler
+# Greedily load the handler during cold start, so we don't pay for it on first invoke
+wrapped_handler = get_handler()
 
-    if not wrapped_handler:
-        wrapped_handler = get_handler()
 
-    return wrapped_handler
+@newrelic.agent.lambda_handler()
+def handler(event, context):
+    context.iopipe = IOpipeNoOp()
+    return wrapped_handler(event, context)
+
