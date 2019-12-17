@@ -6,10 +6,15 @@ process.env.NEW_RELIC_LOG_ENABLED = process.env.NEW_RELIC_LOG_ENABLED || 'true'
 process.env.NEW_RELIC_LOG = process.env.NEW_RELIC_LOG || 'stdout'
 process.env.NEW_RELIC_LOG_LEVEL = process.env.NEW_RELIC_LOG_LEVEL || 'info'
 
+if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
+  delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
+}
+
 const newrelic = require('newrelic')
 require('@newrelic/aws-sdk')
 
 let wrappedHandler
+
 
 function getHandler() {
   let handler
