@@ -1,6 +1,7 @@
 'use strict'
 
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
+process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
 process.env.NEW_RELIC_LOG_ENABLED = process.env.NEW_RELIC_LOG_ENABLED || 'true'
 process.env.NEW_RELIC_LOG = process.env.NEW_RELIC_LOG || 'stdout'
@@ -12,8 +13,6 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 
 const newrelic = require('newrelic')
 require('@newrelic/aws-sdk')
-
-let wrappedHandler
 
 
 function getHandler() {
@@ -64,6 +63,8 @@ function getHandler() {
   return userHandler
 }
 
+const wrappedHandler = newrelic.setLambdaHandler(getHandler())
+
 const ioMarks = {}
 
 function patchIO(method, payload) {
@@ -113,20 +114,14 @@ const wrapPatch = () => {
   }
 }
 
-function wrapHandler() {
-  const ctx = this
+function patchedHandler() {
   const args = Array.prototype.slice.call(arguments)
 
-  if (!wrappedHandler) {
-    if (args[1] && typeof args[1] === 'object' && !args[1].iopipe) { // process.env.IOPIPE_TOKEN &&
-      args[1].iopipe = wrapPatch()
-    }
-    const userHandler = getHandler()
-    wrappedHandler = newrelic.setLambdaHandler(
-      (...wrapperArgs) => userHandler.apply(ctx, wrapperArgs)
-    )
+  if (args[1] && typeof args[1] === 'object' && !args[1].iopipe) {
+    args[1].iopipe = wrapPatch()
   }
-  return wrappedHandler.apply(ctx, args)
+
+  return wrappedHandler.apply(this, args)
 }
 
-module.exports.handler = wrapHandler
+module.exports.handler = patchedHandler
