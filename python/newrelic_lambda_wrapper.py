@@ -89,4 +89,3 @@ wrapped_handler = get_handler()
 def handler(event, context):
     context.iopipe = IOpipeNoOp()
     return wrapped_handler(event, context)
-
