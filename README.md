@@ -15,7 +15,7 @@ The AWS cli must be configured, please refer to its [documentation](https://docs
 
 ## Publishing Layers:
 
-Run the folloiwng in your shell:
+Run the following in your shell:
 
 ```
 cd python
