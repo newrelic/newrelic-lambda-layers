@@ -33,7 +33,7 @@ cd ..
 
 The layers published to your account may be used directly within SAM, Cloudformation Templates, Serverless.yml, or other configuration methods that allow specifying the use of layers by ARN.
 
-New Relic Serverless APM customers are advised to use the [newrelic-lambda-cli tool](https://github.com/newrelic/newrelic-lambda-cli], and this may be used with custom layers as follows by adding the `--layer-arn` flag to the layers install command:
+New Relic Serverless APM customers are advised to use the [newrelic-lambda-cli tool](https://github.com/newrelic/newrelic-lambda-cli), and this may be used with custom layers as follows by adding the `--layer-arn` flag to the layers install command:
 
 ```
 newrelic-lambda layers install \
