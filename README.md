@@ -44,7 +44,7 @@ newrelic-lambda layers install \
 
 ## Manual Instrumentation using Layers:
 
-We recommend using the [newrelic-lambda-cli tool](https://github.com/newrelic/newrelic-lambda-cli], but some users find that they need, or prefer to manually configure their functions.
+We recommend using the [newrelic-lambda-cli tool](https://github.com/newrelic/newrelic-lambda-cli), but some users find that they need, or prefer to manually configure their functions.
 
 These steps will help you configure the layers correctly:
 
