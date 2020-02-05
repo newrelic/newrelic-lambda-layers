@@ -3,9 +3,6 @@
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
-process.env.NEW_RELIC_LOG_ENABLED = process.env.NEW_RELIC_LOG_ENABLED || 'true'
-process.env.NEW_RELIC_LOG = process.env.NEW_RELIC_LOG || 'stdout'
-process.env.NEW_RELIC_LOG_LEVEL = process.env.NEW_RELIC_LOG_LEVEL || 'info'
 
 if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED

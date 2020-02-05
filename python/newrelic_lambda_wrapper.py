@@ -7,9 +7,6 @@ import warnings
 os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME", ""))
 os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
-os.environ.setdefault("NEW_RELIC_LOG", "stdout")
-os.environ.setdefault("NEW_RELIC_LOG_ENABLED", "true")
-os.environ.setdefault("NEW_RELIC_LOG_LEVEL", "info")
 os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
 
 # The agent will load some environment variables on module import so we need to perform
