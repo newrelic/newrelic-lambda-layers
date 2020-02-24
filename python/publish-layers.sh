@@ -34,7 +34,7 @@ function build-python27 {
     echo "Building New Relic layer for python2.7"
     rm -rf $BUILD_DIR $PY27_DIST
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python2.7/site-packages
+    pip install --no-cache-dir -qU newrelic-lambda -t $BUILD_DIR/lib/python2.7/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '*.pyc' -exec rm -f {} +
     zip -rq $PY27_DIST $BUILD_DIR
@@ -84,7 +84,7 @@ function build-python36 {
     echo "Building New Relic layer for python3.6"
     rm -rf $BUILD_DIR $PY36_DIST
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.6/site-packages
+    pip install --no-cache-dir -qU newrelic-lambda -t $BUILD_DIR/lib/python3.6/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY36_DIST $BUILD_DIR
@@ -134,7 +134,7 @@ function build-python37 {
     echo "Building New Relic layer for python3.7"
     rm -rf $BUILD_DIR $PY37_DIST
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.7/site-packages
+    pip install --no-cache-dir -qU newrelic-lambda -t $BUILD_DIR/lib/python3.7/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY37_DIST $BUILD_DIR
@@ -184,7 +184,7 @@ function build-python38 {
     echo "Building New Relic layer for python3.8"
     rm -rf $BUILD_DIR $PY38_DIST
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.8/site-packages
+    pip install --no-cache-dir -qU newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     zip -rq $PY38_DIST $BUILD_DIR
