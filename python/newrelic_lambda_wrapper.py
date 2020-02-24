@@ -9,9 +9,10 @@ os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
 os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
 
-# The agent will load some environment variables on module import so we need to perform
-# the import after setting the necessary environment variables.
-import newrelic.agent  # noqa
+# The agent will load some environment variables on module import so we need
+# to perform the import after setting the necessary environment variables.
+import newrelic.agent
+from newrelic_lambda.lambda_handler import lambda_handler
 
 newrelic.agent.initialize()
 
@@ -82,7 +83,7 @@ def get_handler():
 wrapped_handler = get_handler()
 
 
-@newrelic.agent.lambda_handler()
+@lambda_handler()
 def handler(event, context):
     context.iopipe = IOpipeNoOp()
     return wrapped_handler(event, context)
