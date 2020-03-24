@@ -5,7 +5,7 @@ jobs:
         - image: circleci/node:8-stretch
     steps:
       - checkout
-      - run: sudo apt-get install -y python3-pip
+      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
           command: sudo pip3 install -U awscli
@@ -19,7 +19,7 @@ jobs:
         - image: circleci/node:10-stretch
     steps:
       - checkout
-      - run: sudo apt-get install -y python3-pip
+      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
           command: sudo pip3 install -U awscli
@@ -33,7 +33,7 @@ jobs:
         - image: circleci/node:12-stretch
     steps:
       - checkout
-      - run: sudo apt-get install -y python3-pip
+      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
           command: sudo pip3 install -U awscli
