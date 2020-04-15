@@ -1,0 +1,39 @@
+name: Poll New Relic Agent Releases
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  nodejs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - run: python -m pip install -U pip
+    - run: pip install -U PyGitHub
+    - run: python./poll_releases.py nodejs
+    - uses: actions/create-release@latest
+      with:
+
+        draft: true
+        release_name: New Relic node Agent ${{ latest_version }}
+        tag_name: ${{ tag_name }}
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.7"
+    - run: python -m pip install -U pip
+    - run: pip install -U PyGitHub
+    - run: python./poll_releases.py python
+    - uses: actions/create-release@latest
+      with:
+        draft: true
+        release_name: New Relic Python Agent ${{ latest_version }}
+        tag_name: ${{ tag_name }}
