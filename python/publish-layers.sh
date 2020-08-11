@@ -8,6 +8,10 @@ PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
 PY38_DIST=dist/python38.zip
 
+EXTENSION_DIST_DIR=extensions
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/archive/v1.0.0.zip
+EXTENSION_DIST_ZIP=extension.zip
+
 REGIONS=(
   ap-northeast-1
   ap-northeast-2
@@ -30,15 +34,23 @@ function usage {
     echo "./publish-layers.sh [python2.7|python3.6|python3.7|python3.8]"
 }
 
+function download-extension {
+    rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
+    curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
+    unzip $EXTENSION_DIST_ZIP -d .
+    rm -f $EXTENSION_DIST_ZIP
+}
+
 function build-python27 {
     echo "Building New Relic layer for python2.7"
-    rm -rf $BUILD_DIR $PY27_DIST
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $PY27_DIST
     mkdir -p $DIST_DIR
     pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python2.7/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '*.pyc' -exec rm -f {} +
-    zip -rq $PY27_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $PY27_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${PY27_DIST}"
 }
 
@@ -62,6 +74,7 @@ function publish-python27 {
             --layer-name NewRelicPython27 \
             --content "S3Bucket=${bucket_name},S3Key=${py27_s3key}" \
             --description "New Relic Layer for Python 2.7" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes python2.7 \
             --region $region \
             --output text \
@@ -87,8 +100,9 @@ function build-python36 {
     pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.6/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    zip -rq $PY36_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $PY36_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${PY36_DIST}"
 }
 
@@ -112,6 +126,7 @@ function publish-python36 {
             --layer-name NewRelicPython36 \
             --content "S3Bucket=${bucket_name},S3Key=${py36_s3key}" \
             --description "New Relic Layer for Python 3.6" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes python3.6 \
             --region $region \
             --output text \
@@ -137,8 +152,9 @@ function build-python37 {
     pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.7/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    zip -rq $PY37_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $PY37_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${PY37_DIST}"
 }
 
@@ -162,6 +178,7 @@ function publish-python37 {
             --layer-name NewRelicPython37 \
             --content "S3Bucket=${bucket_name},S3Key=${py37_s3key}" \
             --description "New Relic Layer for Python 3.7" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes python3.7 \
             --region $region \
             --output text \
@@ -187,8 +204,9 @@ function build-python38 {
     pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    zip -rq $PY38_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $PY38_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${PY38_DIST}"
 }
 
@@ -212,6 +230,7 @@ function publish-python38 {
             --layer-name NewRelicPython38 \
             --content "S3Bucket=${bucket_name},S3Key=${py38_s3key}" \
             --description "New Relic Layer for Python 3.8" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes python3.8 \
             --region $region \
             --output text \
