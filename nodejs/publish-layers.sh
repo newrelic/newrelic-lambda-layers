@@ -7,6 +7,10 @@ NJS810_DIST=$DIST_DIR/nodejs810.zip
 NJS10X_DIST=$DIST_DIR/nodejs10x.zip
 NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 
+EXTENSION_DIST_DIR=extensions
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/archive/v1.0.0.zip
+EXTENSION_DIST_ZIP=extension.zip
+
 REGIONS=(
   ap-northeast-1
   ap-northeast-2
@@ -29,6 +33,13 @@ function usage {
     echo "./publish-layers.sh [nodejs8.10|nodejs10.x|nodejs12.x]"
 }
 
+function download-extension {
+    rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
+    curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
+    unzip $EXTENSION_DIST_ZIP -d .
+    rm -f $EXTENSION_DIST_ZIP
+}
+
 function build-nodejs810 {
     echo "Building New Relic layer for nodejs8.10"
     rm -rf $BUILD_DIR $NJS810_DIST
@@ -36,8 +47,9 @@ function build-nodejs810 {
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    zip -rq $NJS810_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $NJS810_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${NJS810_DIST}"
 }
 
@@ -61,6 +73,7 @@ function publish-nodejs810 {
             --layer-name NewRelicNodeJS810 \
             --content "S3Bucket=${bucket_name},S3Key=${njs810_s3key}" \
             --description "New Relic Layer for Node.js 8.10" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes nodejs8.10 \
             --region $region \
             --output text \
@@ -86,8 +99,9 @@ function build-nodejs10x {
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    zip -rq $NJS10X_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $NJS10X_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${NJS10X_DIST}"
 }
 
@@ -111,6 +125,7 @@ function publish-nodejs10x {
             --layer-name NewRelicNodeJS10X \
             --content "S3Bucket=${bucket_name},S3Key=${njs10x_s3key}" \
             --description "New Relic Layer for Node.js 10.x" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes nodejs10.x \
             --region $region \
             --output text \
@@ -136,8 +151,9 @@ function build-nodejs12x {
     npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    zip -rq $NJS12X_DIST $BUILD_DIR
-    rm -rf $BUILD_DIR
+    download-extension
+    zip -rq $NJS12X_DIST $BUILD_DIR $EXTENSION_DIST_DIR
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
     echo "Build complete: ${NJS12X_DIST}"
 }
 
@@ -161,6 +177,7 @@ function publish-nodejs12x {
             --layer-name NewRelicNodeJS12X \
             --content "S3Bucket=${bucket_name},S3Key=${njs12x_s3key}" \
             --description "New Relic Layer for Node.js 12.x" \
+            --license-info "Apache-2.0" \
             --compatible-runtimes nodejs12.x \
             --region $region \
             --output text \
