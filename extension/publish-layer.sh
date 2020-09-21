@@ -2,7 +2,8 @@
 
 BUCKET_PREFIX=nr-layers
 
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/archive/v1.0.0.zip
+EXTENSION_DIST_DIR=extensions
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v0.0.2/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 
 REGIONS=(
@@ -25,7 +26,7 @@ REGIONS=(
 
 function build-layer {
     echo "Building New Relic Lambda Extension Layer"
-    rm -rf $EXTENSION_DIST_ZIP
+    rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
     curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     echo "Build complete: ${EXTENSION_DIST_ZIP}"
 }
@@ -51,7 +52,7 @@ function publish-layer {
             --content "S3Bucket=${bucket_name},S3Key=${layer_s3key}" \
             --description "New Relic Lambda Extension Layer" \
             --license-info "Apache-2.0" \
-            --compatible-runtimes dotnetcore1.0 dotnetcore2.0 dotnetcore2.1 dotnetcore3.1 nodejs nodejs8.10 nodejs10.x nodejs12.x go1.x java8 java11 provided python2.7 python3.6 python3.7 python3.8 ruby2.5 ruby2.7 \
+            --compatible-runtimes "dotnetcore3.1 go1.x java8.al2 java11 provided provided.al2 ruby2.5 ruby2.7" \
             --region $region \
             --output text \
             --query Version)
