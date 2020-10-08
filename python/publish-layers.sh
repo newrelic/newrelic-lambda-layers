@@ -11,6 +11,7 @@ PY38_DIST=dist/python38.zip
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v0.0.3/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
+EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
 REGIONS=(
   ap-northeast-1
@@ -36,7 +37,7 @@ function usage {
 
 function download-extension {
     rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
-    curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
+    curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     unzip $EXTENSION_DIST_ZIP -d .
     rm -f $EXTENSION_DIST_ZIP
 }
@@ -49,8 +50,8 @@ function build-python27 {
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '*.pyc' -exec rm -f {} +
     download-extension
-    zip -rq $PY27_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $PY27_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY27_DIST}"
 }
 
@@ -101,8 +102,8 @@ function build-python36 {
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     download-extension
-    zip -rq $PY36_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $PY36_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY36_DIST}"
 }
 
@@ -153,8 +154,8 @@ function build-python37 {
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     download-extension
-    zip -rq $PY37_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $PY37_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY37_DIST}"
 }
 
@@ -205,8 +206,8 @@ function build-python38 {
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     download-extension
-    zip -rq $PY38_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $PY38_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY38_DIST}"
 }
 

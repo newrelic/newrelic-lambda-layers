@@ -10,6 +10,7 @@ NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v0.0.3/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
+EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
 REGIONS=(
   ap-northeast-1
@@ -35,7 +36,7 @@ function usage {
 
 function download-extension {
     rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
-    curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
+    curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     unzip $EXTENSION_DIST_ZIP -d .
     rm -f $EXTENSION_DIST_ZIP
 }
@@ -48,8 +49,8 @@ function build-nodejs810 {
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     download-extension
-    zip -rq $NJS810_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $NJS810_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${NJS810_DIST}"
 }
 
@@ -100,8 +101,8 @@ function build-nodejs10x {
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     download-extension
-    zip -rq $NJS10X_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $NJS10X_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${NJS10X_DIST}"
 }
 
@@ -152,8 +153,8 @@ function build-nodejs12x {
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     download-extension
-    zip -rq $NJS12X_DIST $BUILD_DIR $EXTENSION_DIST_DIR
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR
+    zip -rq $NJS12X_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${NJS12X_DIST}"
 }
 

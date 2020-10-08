@@ -27,7 +27,7 @@ REGIONS=(
 function build-layer {
     echo "Building New Relic Lambda Extension Layer"
     rm -rf $EXTENSION_DIST_DIR $EXTENSION_DIST_ZIP
-    curl $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
+    curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     echo "Build complete: ${EXTENSION_DIST_ZIP}"
 }
 
@@ -52,7 +52,7 @@ function publish-layer {
             --content "S3Bucket=${bucket_name},S3Key=${layer_s3key}" \
             --description "New Relic Lambda Extension Layer" \
             --license-info "Apache-2.0" \
-            --compatible-runtimes "dotnetcore3.1 go1.x java8.al2 java11 provided provided.al2 ruby2.5 ruby2.7" \
+            --compatible-runtimes "dotnetcore3.1 go1.x java8.al2 java11 provided provided.al2" \
             --region $region \
             --output text \
             --query Version)
