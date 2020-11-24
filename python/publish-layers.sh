@@ -9,7 +9,7 @@ PY37_DIST=dist/python37.zip
 PY38_DIST=dist/python38.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.0.1/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.0.2/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
