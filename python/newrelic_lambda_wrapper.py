@@ -65,8 +65,8 @@ def get_handler():
                 )
 
         module = imp.load_module(module_path, file_handle, pathname, desc)
-    except Exception:
-        raise ImportError("Failed to import module: %s" % module_path)
+    except Exception as e:
+        raise ImportError("Failed to import module '%s': %s" % (module_path, e))
     finally:
         if file_handle is not None:
             file_handle.close()
@@ -74,7 +74,9 @@ def get_handler():
     try:
         handler = getattr(module, handler_name)
     except AttributeError:
-        raise AttributeError("No handler %s in module %s" % (handler_name, module_path))
+        raise AttributeError(
+            "No handler '%s' in module '%s'" % (handler_name, module_path)
+        )
 
     return handler
 
