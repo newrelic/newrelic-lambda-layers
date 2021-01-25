@@ -1,3 +1,5 @@
+[![Community Plus header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
+
 # New Relic Lambda Layers
 
 This repository contains source code and utilities to build and publish New Relic's public AWS Lambda layers.
