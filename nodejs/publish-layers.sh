@@ -1,4 +1,6 @@
-#!/bin/bash -ex
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
 
 BUILD_DIR=nodejs
 BUCKET_PREFIX=nr-layers
@@ -6,6 +8,7 @@ DIST_DIR=dist
 NJS810_DIST=$DIST_DIR/nodejs810.zip
 NJS10X_DIST=$DIST_DIR/nodejs10x.zip
 NJS12X_DIST=$DIST_DIR/nodejs12x.zip
+NJS14X_DIST=$DIST_DIR/nodejs14x.zip
 
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.0/newrelic-lambda-extension.zip
@@ -197,6 +200,58 @@ function publish-nodejs12x {
     done
 }
 
+function build-nodejs14x {
+    echo "Building new relic layer for nodejs14.x"
+    rm -rf $BUILD_DIR $NJS14X_DIST
+    mkdir -p $DIST_DIR
+    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
+    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+    download-extension
+    zip -rq $NJS14X_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    echo "Build complete: ${NJS14X_DIST}"
+}
+
+function publish-nodejs14x {
+    if [ ! -f $NJS14X_DIST ]; then
+        echo "Package not found: ${NJS14X_DIST}"
+        exit 1
+    fi
+
+    njs14x_hash=$(md5sum $NJS14X_DIST | awk '{ print $1 }')
+    njs14x_s3key="nr-nodejs14.x/${njs14x_hash}.zip"
+
+    for region in "${REGIONS[@]}"; do
+        bucket_name="${BUCKET_PREFIX}-${region}"
+
+        echo "Uploading ${NJS14X_DIST} to s3://${bucket_name}/${njs14x_s3key}"
+        aws --region $region s3 cp $NJS14X_DIST "s3://${bucket_name}/${njs14x_s3key}"
+
+        echo "Publishing nodejs14.x layer to ${region}"
+        njs14x_version=$(aws lambda publish-layer-version \
+            --layer-name NewRelicNodeJS14X \
+            --content "S3Bucket=${bucket_name},S3Key=${njs14x_s3key}" \
+            --description "New Relic Layer for Node.js 14.x" \
+            --license-info "Apache-2.0" \
+            --compatible-runtimes nodejs14.x \
+            --region $region \
+            --output text \
+            --query Version)
+        echo "published nodejs14.x layer version ${njs14x_version} to ${region}"
+
+        echo "Setting public permissions for nodejs14.x layer version ${njs14x_version} in ${region}"
+        aws lambda add-layer-version-permission \
+          --layer-name NewRelicNodeJS14X \
+          --version-number $njs14x_version \
+          --statement-id public \
+          --action lambda:GetLayerVersion \
+          --principal "*" \
+          --region $region
+        echo "Public permissions set for nodejs14.x layer version ${njs14x_version} in region ${region}"
+    done
+}
+
 case "$1" in
     "nodejs8.10")
         build-nodejs810
@@ -209,6 +264,10 @@ case "$1" in
     "nodejs12.x")
         build-nodejs12x
         publish-nodejs12x
+        ;;
+    "nodejs14.x")
+        build-nodejs14x
+        publish-nodejs14x
         ;;
     *)
         usage
