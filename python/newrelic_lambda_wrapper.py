@@ -8,11 +8,14 @@ os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME"
 os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
 os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
+os.environ.setdefault(
+    "NEW_RELIC_TRUSTED_ACCOUNT_KEY", os.getenv("NEW_RELIC_ACCOUNT_ID", "")
+)
 
 # The agent will load some environment variables on module import so we need
 # to perform the import after setting the necessary environment variables.
-import newrelic.agent
-from newrelic_lambda.lambda_handler import lambda_handler
+import newrelic.agent  # noqa
+from newrelic_lambda.lambda_handler import lambda_handler  # noqa
 
 newrelic.agent.initialize()
 
