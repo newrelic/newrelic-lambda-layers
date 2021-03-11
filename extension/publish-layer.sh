@@ -1,9 +1,11 @@
-#!/bin/bash -x
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
 
 BUCKET_PREFIX=nr-layers
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.1.2/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.2/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 
 REGIONS=(
