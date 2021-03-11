@@ -1,4 +1,6 @@
-#!/bin/bash -x
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
 
 BUILD_DIR=python
 BUCKET_PREFIX=nr-layers
@@ -9,7 +11,7 @@ PY37_DIST=dist/python37.zip
 PY38_DIST=dist/python38.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.1.2/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.2/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
