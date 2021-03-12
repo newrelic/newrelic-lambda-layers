@@ -72,9 +72,5 @@ function publish-layer {
     done
 }
 
-case "$1" in
-    *)
-        build-layer
-        publish-layer
-        ;;
-esac
+build-layer
+publish-layer
