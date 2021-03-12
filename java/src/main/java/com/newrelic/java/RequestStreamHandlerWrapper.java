@@ -1,13 +1,17 @@
 package com.newrelic.java;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.newrelic.opentracing.LambdaTracer;
-import com.newrelic.opentracing.aws.LambdaTracing;
+import com.newrelic.opentracing.aws.StreamLambdaTracing;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
-public class RequestHandlerWrapper implements RequestHandler<Object, Object> {
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+public class RequestStreamHandlerWrapper implements RequestStreamHandler {
     static JavaClassLoader javaClassLoader;
     static {
         // Obtain an instance of the OpenTracing Tracer of your choice
@@ -18,25 +22,22 @@ public class RequestHandlerWrapper implements RequestHandler<Object, Object> {
         String handler = System.getenv("NEW_RELIC_LAMBDA_HANDLER");
         String[] parts = handler.split("::");
         String handlerClass = parts[0];
-        String handlerMethod = parts.length == 2 ? parts[1] : "handleRequest";
 
         try {
-             javaClassLoader = JavaClassLoader.initializeClassLoader(handlerClass, handlerMethod);
+            javaClassLoader = JavaClassLoader.initializeClassLoader(handlerClass);
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Error occurred during initialization of javaClassLoader: " + e);
+            throw new RuntimeException("Error occurred during initialization of javaStreamClassLoader: " + e);
         }
     }
 
-    // Instrumentation for RequestHandler
     @Override
-    public Object handleRequest(Object input, Context context) {
-        return LambdaTracing.instrument(
+    public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+        StreamLambdaTracing.instrument(
                 input,
+                output,
                 context,
-                (event, ctx) -> javaClassLoader.invokeClassMethod(input, context)
+                javaClassLoader.getClassInstance()
         );
     }
-
-
-
 }
+
