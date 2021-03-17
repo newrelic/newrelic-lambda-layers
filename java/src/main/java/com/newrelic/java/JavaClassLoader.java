@@ -1,9 +1,11 @@
 package com.newrelic.java;
 
-import com.amazonaws.services.lambda.runtime.*;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -17,7 +19,9 @@ public class JavaClassLoader {
     private static final MethodType methodType = MethodType.methodType(Object.class, Object.class, Context.class);
     private static final ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .enable(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS);
+            .enable(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS)
+            .registerModule(new JodaModule());
+
 
     private static Class inputType;
     private static MethodHandle methodHandle;
@@ -30,7 +34,6 @@ public class JavaClassLoader {
 
     // RequestStreamHandler initializeClassLoader
     static JavaClassLoader initializeClassLoader(String className) throws ReflectiveOperationException {
-        //ClassLoader classLoader = JavaClassLoader.class.getClassLoader();
         Class loadedClass = classLoader.loadClass(className);
         RequestStreamHandler classInstance = (RequestStreamHandler) loadedClass.getDeclaredConstructor().newInstance();
         return new JavaClassLoader(classInstance);
@@ -48,7 +51,6 @@ public class JavaClassLoader {
 
     // RequestHandler initializeClassLoader
     static JavaClassLoader initializeClassLoader(String className, String methodName) throws ReflectiveOperationException {
-        //ClassLoader classLoader = JavaClassLoader.class.getClassLoader();
         Class loadedClass = classLoader.loadClass(className);
         Class methodInputType = null;
 
@@ -66,6 +68,7 @@ public class JavaClassLoader {
     }
 
     public Object invokeClassMethod(Object inputParam, Context contextParam) {
+
         try {
             Object handlerType = mappingInputToHandlerType(inputParam, inputType);
             return methodHandle.invokeWithArguments(handlerType, contextParam);

@@ -1,29 +1,20 @@
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
 }
 
 repositories {
-    // Use JCenter for resolving dependencies.
     jcenter()
 }
 
 dependencies {
     implementation("com.newrelic.opentracing:newrelic-java-lambda:2.1.2")
     implementation("com.newrelic.opentracing:java-aws-lambda:2.1.0")
-    implementation 'com.amazonaws:aws-lambda-java-events:3.1.0'
-    runtimeOnly 'com.amazonaws:aws-lambda-java-log4j2:1.2.0'
+    implementation("com.amazonaws:aws-lambda-java-events:3.1.0")
     implementation("io.opentracing:opentracing-util:0.33.0")
-    implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.1.0'
-    implementation 'com.google.guava:guava:29.0-jre'
-    testImplementation 'junit:junit:4.13'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.2'
-
-}
-
-application {
-    // Define the main class for the application.
-    mainClass = 'com.newrelic.java.RequestHandlerWrapper'
+    implementation("com.amazonaws:aws-lambda-java-core:1.1.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.2")
+    testImplementation("junit:junit:4.13")
 }
 
 task packageFat(type: Zip) {
@@ -32,32 +23,25 @@ task packageFat(type: Zip) {
     into('java/lib') {
         from configurations.runtimeClasspath
     }
-    from (sourceSets.main.output.getClassesDirs().collect {it.isDirectory() ? it:zipTree(it)}) {
+    from(sourceSets.main.output.getClassesDirs().collect {it.isDirectory() ? it:zipTree(it)}) {
         into ('lib')
     }
     dirMode = 0755
     fileMode = 0755
 }
 
-task packageLibs(type: Zip) {
-    into('java/lib') {
-        from configurations.runtimeClasspath
-    }
-    dirMode = 0755
-    fileMode = 0755
+task copyLibs(type: Copy) {
+    from('build/libs')
+    into('build/java/lib')
+    include('NewRelicJavaLayer.jar')
 }
 
-task packageSkinny(type: Zip) {
-    from compileJava
-    from processResources
-}
+ext.javaVersion = hasProperty('javaVersion') && project.getProperty('javaVersion') == 11 ?
+        JavaVersion.VERSION_11 : JavaVersion.VERSION_1_8
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-
-//    sourceCompatibility = JavaVersion.VERSION_1_8
-//    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
 }
 
-build.dependsOn packageSkinny
+copyLibs.dependsOn packageFat
