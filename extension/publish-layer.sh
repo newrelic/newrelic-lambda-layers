@@ -52,7 +52,7 @@ function publish-layer {
             --content "S3Bucket=${bucket_name},S3Key=${layer_s3key}" \
             --description "New Relic Lambda Extension Layer" \
             --license-info "Apache-2.0" \
-            --compatible-runtimes "dotnetcore3.1" "java8.al2" "java11" "provided" "provided.al2" \
+            --compatible-runtimes "dotnetcore3.1" "provided" "provided.al2" \
             --region $region \
             --output text \
             --query Version)

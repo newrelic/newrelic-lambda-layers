@@ -2,6 +2,9 @@ package com.newrelic.java;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.lambda.runtime.serialization.PojoSerializer;
+import com.amazonaws.services.lambda.runtime.serialization.events.LambdaEventSerializers;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +24,6 @@ public class JavaClassLoader {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .enable(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS)
             .registerModule(new JodaModule());
-
 
     private static Class inputType;
     private static MethodHandle methodHandle;
@@ -53,24 +55,20 @@ public class JavaClassLoader {
     static JavaClassLoader initializeClassLoader(String className, String methodName) throws ReflectiveOperationException {
         Class loadedClass = classLoader.loadClass(className);
         Class methodInputType = null;
-
         for (Method method : loadedClass.getMethods()) {
             if (isUserHandlerMethod(method, className, methodName) == true) {
                 methodInputType = method.getParameterTypes()[0];
                 break;
             }
         }
-
         Object classInstance = loadedClass.getDeclaredConstructor().newInstance();
         MethodHandle methodHandle = publicLookup.findVirtual(loadedClass, methodName, methodType).bindTo(classInstance);
-
         return new JavaClassLoader(methodInputType, methodHandle);
     }
 
     public Object invokeClassMethod(Object inputParam, Context contextParam) {
-
+        Object handlerType = mappingInputToHandlerType(inputParam, inputType);
         try {
-            Object handlerType = mappingInputToHandlerType(inputParam, inputType);
             return methodHandle.invokeWithArguments(handlerType, contextParam);
         } catch (Throwable e) {
             throw new RuntimeException("Error occurred while invoking handler method: " + e);
@@ -89,10 +87,16 @@ public class JavaClassLoader {
     }
 
     private Object mappingInputToHandlerType(Object inputParam, Class inputType) {
-        if (inputType.isAssignableFrom(Integer.class)) {
+        if (inputType.isAssignableFrom(Number.class) || inputType.isAssignableFrom(String.class)) {
             return inputParam;
-        } else if (inputType.isAssignableFrom(String.class)) {
-            return inputParam;
+        } else if (LambdaEventSerializers.isLambdaSupportedEvent(inputType.getName())) {
+            try {
+                PojoSerializer serializer = LambdaEventSerializers.serializerFor(inputType, classLoader);
+                String inputParamString = mapper.writeValueAsString(inputParam);
+                return serializer.fromJson(inputParamString);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error occurred while serializing lambda input type: " + e);
+            }
         }
         return mapper.convertValue(inputParam, inputType);
     }

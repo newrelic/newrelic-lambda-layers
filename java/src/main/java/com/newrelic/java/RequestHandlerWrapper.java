@@ -36,7 +36,4 @@ public class RequestHandlerWrapper implements RequestHandler<Object, Object> {
                 (event, ctx) -> javaClassLoader.invokeClassMethod(input, context)
         );
     }
-
-
-
 }
