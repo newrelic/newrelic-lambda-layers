@@ -1,6 +1,7 @@
 package com.newrelic.java;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.amazonaws.services.lambda.runtime.serialization.PojoSerializer;
 import com.amazonaws.services.lambda.runtime.serialization.events.LambdaEventSerializers;
@@ -29,14 +30,21 @@ public class JavaClassLoader {
     private static MethodHandle methodHandle;
     private static RequestStreamHandler classInstance;
 
+    static JavaClassLoader initializeClass(String className, String methodName) throws ReflectiveOperationException {
+        Class loadedClass = classLoader.loadClass(className);
+        if (RequestStreamHandler.class.isAssignableFrom(loadedClass)) {
+            return initializeRequestStreamHandler(className, loadedClass);
+        }
+        return initializeRequestHandler(className, methodName, loadedClass);
+    }
+
     // RequestStreamHandler implementation constructor
     private JavaClassLoader(RequestStreamHandler classInstance) {
         this.classInstance = classInstance;
     }
 
     // RequestStreamHandler initializeClassLoader
-    static JavaClassLoader initializeClassLoader(String className) throws ReflectiveOperationException {
-        Class loadedClass = classLoader.loadClass(className);
+    static JavaClassLoader initializeRequestStreamHandler(String className, Class loadedClass) throws ReflectiveOperationException {
         RequestStreamHandler classInstance = (RequestStreamHandler) loadedClass.getDeclaredConstructor().newInstance();
         return new JavaClassLoader(classInstance);
     }
@@ -52,8 +60,7 @@ public class JavaClassLoader {
     }
 
     // RequestHandler initializeClassLoader
-    static JavaClassLoader initializeClassLoader(String className, String methodName) throws ReflectiveOperationException {
-        Class loadedClass = classLoader.loadClass(className);
+    static JavaClassLoader initializeRequestHandler(String className, String methodName, Class loadedClass) throws ReflectiveOperationException {
         Class methodInputType = null;
         for (Method method : loadedClass.getMethods()) {
             if (isUserHandlerMethod(method, className, methodName) == true) {
