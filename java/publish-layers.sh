@@ -9,7 +9,7 @@ JAVA_ZIP_DIR=$BUILD_DIR/java/lib/
 JAVA_DIST=distributions/NewRelicJavaLayer.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.1.2/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v1.2.4/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
@@ -42,8 +42,8 @@ function download-extension {
     rm -f $EXTENSION_DIST_ZIP
 }
 
- function build-java8 {
-     echo "Building New Relic layer for java 8"
+ function build-java8.al2 {
+     echo "Building New Relic layer for java8.al2"
      rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
      ./gradlew build -P javaVersion=8
      ./gradlew packageFat
@@ -56,7 +56,7 @@ function download-extension {
      echo "Build complete"
  }
 
- function publish-java8 {
+ function publish-java8.al2 {
      if [ ! -f "distributions/NewRelicJavaLayer.zip" ]; then
          echo "Package not found"
          exit 1
@@ -71,19 +71,19 @@ function download-extension {
          echo "Uploading ${JAVA_DIST} to s3://${bucket_name}/${java_s3key}"
          aws --region $region s3 cp $JAVA_DIST "s3://${bucket_name}/${java_s3key}"
 
-         echo "Publishing java 8 layer to ${region}"
+         echo "Publishing java8.al2 layer to ${region}"
          java_version=$(aws lambda publish-layer-version \
              --layer-name NewRelicJava8 \
              --content "S3Bucket=${bucket_name},S3Key=${java_s3key}" \
-             --description "New Relic Layer for Java 8" \
+             --description "New Relic Layer for java8.al2" \
              --license-info "Apache-2.0" \
              --compatible-runtimes java8.al2 \
              --region $region \
              --output text \
              --query Version)
-         echo "Published java 8 layer version ${java_version} to ${region}"
+         echo "Published java8.al2 layer version ${java_version} to ${region}"
 
-         echo "Setting public permissions for java 8 layer version ${java_version} in ${region}"
+         echo "Setting public permissions for java8.al2 layer version ${java_version} in ${region}"
          aws lambda add-layer-version-permission \
            --layer-name NewRelicJava8 \
            --version-number $java_version \
@@ -91,7 +91,7 @@ function download-extension {
            --action lambda:GetLayerVersion \
            --principal "*" \
            --region $region
-         echo "Public permissions set for java 8 layer version ${java_version} in region ${region}"
+         echo "Public permissions set for java8.al2 layer version ${java_version} in region ${region}"
      done
  }
 
@@ -149,9 +149,9 @@ function publish-java11 {
 }
 
 case "$1" in
-    "java8")
-        build-java8
-        publish-java8
+    "java8.al2")
+        build-java8.al2
+        publish-java8.al2
         ;;
     "java11")
         build-java11
