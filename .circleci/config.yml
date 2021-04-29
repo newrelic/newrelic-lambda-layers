@@ -110,7 +110,7 @@ jobs:
             ./publish-layers.sh python3.8
   publish-java8.al2:
     docker:
-        - image: circleci/openjdk-8-stretch
+        - image: circleci/openjdk:8-stretch
     steps:
       - checkout
       - run: sudo apt-get update && sudo apt-get install -y python3-pip
@@ -124,7 +124,7 @@ jobs:
             ./publish-layers.sh java8.al2
   publish-java11:
     docker:
-        - image: circleci/openjdk-11-stretch
+        - image: circleci/openjdk:11-stretch
     steps:
       - checkout
       - run: sudo apt-get update && sudo apt-get install -y python3-pip
