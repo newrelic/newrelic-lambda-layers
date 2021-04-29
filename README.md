@@ -60,11 +60,11 @@ These steps will help you configure the layers correctly:
 2. Copy the ARN of the most recent AWS Lambda Layer version and attach it to your function.
   * Using Cloudformation, this refers to adding your layer arn to the Layers property of a [AWS::Lambda::Function resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html).
 3. Update your functions handler to point to the newly attached layer in the console for your function:
-  * Python: newrelic_lambda_wrapper.handler
-  * Node: newrelic-lambda-wrapper.handler
+  * Python: `newrelic_lambda_wrapper.handler`
+  * Node: `newrelic-lambda-wrapper.handler`
   * Java:
-    * RequestHandler implementation: com.newrelic.java.HandlerWrapper::handleRequest
-    * RequestStreamHandlerWrapper implementation: RequestHandler implementation: com.newrelic.java.HandlerWrapper::handleStreamsRequest
+    * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
+    * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`
 4. Add these environment variables to your Lambda console:
   * NEW_RELIC_ACCOUNT_ID: Your New Relic account ID
   * NEW_RELIC_LAMBDA_HANDLER: Path to your initial handler.
