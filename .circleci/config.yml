@@ -108,6 +108,34 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.8
+  publish-java8.al2:
+    docker:
+        - image: circleci/openjdk-8-stretch
+    steps:
+      - checkout
+      - run: sudo apt-get update && sudo apt-get install -y python3-pip
+      - run:
+          name: Install publish dependencies
+          command: sudo pip3 install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd java
+            ./publish-layers.sh java8.al2
+  publish-java11:
+    docker:
+        - image: circleci/openjdk-11-stretch
+    steps:
+      - checkout
+      - run: sudo apt-get update && sudo apt-get install -y python3-pip
+      - run:
+          name: Install publish dependencies
+          command: sudo pip3 install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd java
+            ./publish-layers.sh java11
 
   publish-extension:
     docker:
@@ -175,6 +203,18 @@ workflows:
               ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
+      - publish-java11:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_java/
+      - publish-java8.al2:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_java/
       - publish-extension:
           filters:
             branches:

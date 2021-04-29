@@ -1,0 +1,48 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation("io.opentracing:opentracing-util:0.33.0")
+    implementation("com.newrelic.opentracing:newrelic-java-lambda:2.2.1")
+    implementation("com.newrelic.opentracing:java-aws-lambda:2.1.0")
+    implementation("com.amazonaws:aws-lambda-java-events:3.8.0")
+    implementation("com.amazonaws:aws-lambda-java-core:1.2.0")
+    implementation("com.amazonaws:aws-lambda-java-serialization:1.0.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.2")
+    testImplementation("junit:junit:4.13")
+}
+
+task packageFat(type: Zip) {
+    from compileJava
+    from processResources
+    into('java/lib') {
+        from configurations.runtimeClasspath
+    }
+    from(sourceSets.main.output.getClassesDirs().collect {it.isDirectory() ? it:zipTree(it)}) {
+        into ('lib')
+    }
+    dirMode = 0755
+    fileMode = 0755
+}
+
+task copyLibs(type: Copy) {
+    from('build/libs')
+    into('build/java/lib')
+    include('NewRelicJavaLayer.jar')
+}
+
+ext.javaVersion = hasProperty('javaVersion') && project.getProperty('javaVersion') == 11 ?
+        JavaVersion.VERSION_11 : JavaVersion.VERSION_1_8
+
+java {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+
+copyLibs.dependsOn packageFat

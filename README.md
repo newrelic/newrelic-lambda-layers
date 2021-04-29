@@ -31,6 +31,12 @@ cd nodejs;
 cd ..
 ```
 
+```
+cd java;
+./publish-layers.sh
+cd ..
+```
+
 ## Attaching Custom Lambda Layer ARNs
 
 The layers published to your account may be used directly within SAM, Cloudformation Templates, Serverless.yml, or other configuration methods that allow specifying the use of layers by ARN.
@@ -56,6 +62,9 @@ These steps will help you configure the layers correctly:
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: newrelic_lambda_wrapper.handler
   * Node: newrelic-lambda-wrapper.handler
+  * Java:
+    * RequestHandler implementation: com.newrelic.java.HandlerWrapper::handleRequest
+    * RequestStreamHandlerWrapper implementation: RequestHandler implementation: com.newrelic.java.HandlerWrapper::handleStreamsRequest
 4. Add these environment variables to your Lambda console:
   * NEW_RELIC_ACCOUNT_ID: Your New Relic account ID
   * NEW_RELIC_LAMBDA_HANDLER: Path to your initial handler.
