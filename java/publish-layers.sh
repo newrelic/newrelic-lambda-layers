@@ -9,7 +9,7 @@ JAVA_ZIP_DIR=$BUILD_DIR/java/lib/
 JAVA_DIST=distributions/NewRelicJavaLayer.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.0/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.1/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
