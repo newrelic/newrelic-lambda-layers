@@ -1,19 +1,5 @@
 version: 2
 jobs:
-  publish-nodejs810:
-    docker:
-        - image: circleci/node:8-stretch
-    steps:
-      - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-pip
-      - run:
-          name: Install publish dependencies
-          command: sudo pip3 install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd nodejs
-            ./publish-layers.sh nodejs8.10
   publish-nodejs10x:
     docker:
         - image: circleci/node:10-stretch
@@ -155,12 +141,6 @@ workflows:
   version: 2
   publish-layers:
     jobs:
-      - publish-nodejs810:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
       - publish-nodejs10x:
           filters:
             branches:
