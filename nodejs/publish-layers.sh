@@ -5,7 +5,6 @@ set -Eeuo pipefail
 BUILD_DIR=nodejs
 BUCKET_PREFIX=nr-layers
 DIST_DIR=dist
-NJS810_DIST=$DIST_DIR/nodejs810.zip
 NJS10X_DIST=$DIST_DIR/nodejs10x.zip
 NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 NJS14X_DIST=$DIST_DIR/nodejs14x.zip
@@ -35,7 +34,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [nodejs8.10|nodejs10.x|nodejs12.x]"
+    echo "./publish-layers.sh [nodejs10.x|nodejs12.x|nodejs14.x]"
 }
 
 function download-extension {
@@ -43,58 +42,6 @@ function download-extension {
     curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     unzip $EXTENSION_DIST_ZIP -d .
     rm -f $EXTENSION_DIST_ZIP
-}
-
-function build-nodejs810 {
-    echo "Building New Relic layer for nodejs8.10"
-    rm -rf $BUILD_DIR $NJS810_DIST
-    mkdir -p $DIST_DIR
-    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
-    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    download-extension
-    zip -rq $NJS810_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    echo "Build complete: ${NJS810_DIST}"
-}
-
-function publish-nodejs810 {
-    if [ ! -f $NJS810_DIST ]; then
-        echo "Package not found: ${NJS810_DIST}"
-        exit 1
-    fi
-
-    njs810_hash=$(md5sum $NJS810_DIST | awk '{ print $1 }')
-    njs810_s3key="nr-nodejs8.10/${njs810_hash}.zip"
-
-    for region in "${REGIONS[@]}"; do
-        bucket_name="${BUCKET_PREFIX}-${region}"
-
-        echo "Uploading ${NJS810_DIST} to s3://${bucket_name}/${njs810_s3key}"
-        aws --region $region s3 cp $NJS810_DIST "s3://${bucket_name}/${njs810_s3key}"
-
-        echo "Publishing nodejs8.10 layer to ${region}"
-        njs810_version=$(aws lambda publish-layer-version \
-            --layer-name NewRelicNodeJS810 \
-            --content "S3Bucket=${bucket_name},S3Key=${njs810_s3key}" \
-            --description "New Relic Layer for Node.js 8.10" \
-            --license-info "Apache-2.0" \
-            --compatible-runtimes nodejs8.10 \
-            --region $region \
-            --output text \
-            --query Version)
-        echo "Published nodejs8.10 layer version ${njs810_version} to ${region}"
-
-        echo "Setting public permissions for nodejs8.10 layer version ${njs810_version} in ${region}"
-        aws lambda add-layer-version-permission \
-          --layer-name NewRelicNodeJS810 \
-          --version-number $njs810_version \
-          --statement-id public \
-          --action lambda:GetLayerVersion \
-          --principal "*" \
-          --region $region
-        echo "Public permissions set for nodejs8.10 layer version ${njs810_version} in region ${region}"
-    done
 }
 
 function build-nodejs10x {
@@ -254,10 +201,6 @@ function publish-nodejs14x {
 }
 
 case "$1" in
-    "nodejs8.10")
-        build-nodejs810
-        publish-nodejs810
-        ;;
     "nodejs10.x")
         build-nodejs10x
         publish-nodejs10x
