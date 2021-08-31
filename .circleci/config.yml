@@ -94,6 +94,19 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.8
+  publish-python39:
+    docker:
+      - image: circleci/python:3.9
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: sudo pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd python
+            ./publish-layers.sh python3.9
   publish-java8.al2:
     docker:
         - image: circleci/openjdk:8-stretch
