@@ -9,6 +9,7 @@ PY27_DIST=$DIST_DIR/python27.zip
 PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
 PY38_DIST=dist/python38.zip
+PY39_DIST=dist/python39.zip
 
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.2/newrelic-lambda-extension.zip
@@ -35,7 +36,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [python2.7|python3.6|python3.7|python3.8]"
+    echo "./publish-layers.sh [python2.7|python3.6|python3.7|python3.8|python3.9]"
 }
 
 function download-extension {
@@ -253,6 +254,58 @@ function publish-python38 {
     done
 }
 
+function build-python39 {
+    echo "Building New Relic layer for python3.9"
+    rm -rf $BUILD_DIR $PY39_DIST
+    mkdir -p $DIST_DIR
+    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.9/site-packages
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.9/site-packages/newrelic_lambda_wrapper.py
+    find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
+    download-extension
+    zip -rq $PY39_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    echo "Build complete: ${PY39_DIST}"
+}
+
+function publish-python39 {
+    if [ ! -f $PY39_DIST ]; then
+        echo "Package not found: ${PY39_DIST}"
+        exit 1
+    fi
+
+    py39_hash=$(md5sum $PY39_DIST | awk '{ print $1 }')
+    py39_s3key="nr-python3.9/${py39_hash}.zip"
+
+    for region in "${REGIONS[@]}"; do
+        bucket_name="${BUCKET_PREFIX}-${region}"
+
+        echo "Uploading ${PY39_DIST} to s3://${bucket_name}/${py39_s3key}"
+        aws --region $region s3 cp $PY39_DIST "s3://${bucket_name}/${py39_s3key}"
+
+        echo "Publishing python3.9 layer to ${region}"
+        py39_version=$(aws lambda publish-layer-version \
+            --layer-name NewRelicPython39 \
+            --content "S3Bucket=${bucket_name},S3Key=${py39_s3key}" \
+            --description "New Relic Layer for Python 3.9" \
+            --license-info "Apache-2.0" \
+            --compatible-runtimes python3.9 \
+            --region $region \
+            --output text \
+            --query Version)
+        echo "published python3.9 layer version ${py39_version} to ${region}"
+
+        echo "Setting public permissions for python3.9 layer version ${py39_version} in ${region}"
+        aws lambda add-layer-version-permission \
+          --layer-name NewRelicPython39 \
+          --version-number $py39_version \
+          --statement-id public \
+          --action lambda:GetLayerVersion \
+          --principal "*" \
+          --region $region
+        echo "Public permissions set for python3.9 layer version ${py39_version} in region ${region}"
+    done
+}
+
 case "$1" in
     "python2.7")
         build-python27
@@ -269,6 +322,10 @@ case "$1" in
     "python3.8")
         build-python38
         publish-python38
+        ;;
+    "python3.9")
+        build-python39
+        publish-python39
         ;;
     *)
         usage
