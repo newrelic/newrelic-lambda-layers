@@ -5,7 +5,7 @@ set -Eeuo pipefail
 BUCKET_PREFIX=nr-layers
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.2/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.3/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 
 REGIONS=(
