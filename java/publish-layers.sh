@@ -33,7 +33,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [java8, java11]"
+    echo "./publish-layers.sh [java8.al2, java11]"
 }
 
 function download-extension {

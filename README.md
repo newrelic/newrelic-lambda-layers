@@ -37,6 +37,12 @@ cd java;
 cd ..
 ```
 
+```
+cd extension;
+./publish-layer.sh
+cd ..
+```
+
 ## Attaching Custom Lambda Layer ARNs
 
 The layers published to your account may be used directly within SAM, Cloudformation Templates, Serverless.yml, or other configuration methods that allow specifying the use of layers by ARN.
