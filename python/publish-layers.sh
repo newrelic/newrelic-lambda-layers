@@ -5,7 +5,6 @@ set -Eeuo pipefail
 BUILD_DIR=python
 BUCKET_PREFIX=nr-layers
 DIST_DIR=dist
-PY27_DIST=$DIST_DIR/python27.zip
 PY36_DIST=$DIST_DIR/python36.zip
 PY37_DIST=dist/python37.zip
 PY38_DIST=dist/python38.zip
@@ -36,7 +35,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [python2.7|python3.6|python3.7|python3.8|python3.9]"
+    echo "./publish-layers.sh [python3.6|python3.7|python3.8|python3.9]"
 }
 
 function download-extension {
@@ -44,58 +43,6 @@ function download-extension {
     curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     unzip $EXTENSION_DIST_ZIP -d .
     rm -f $EXTENSION_DIST_ZIP
-}
-
-function build-python27 {
-    echo "Building New Relic layer for python2.7"
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $PY27_DIST
-    mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python2.7/site-packages
-    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python2.7/site-packages/newrelic_lambda_wrapper.py
-    find $BUILD_DIR -name '*.pyc' -exec rm -f {} +
-    download-extension
-    zip -rq $PY27_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    echo "Build complete: ${PY27_DIST}"
-}
-
-function publish-python27 {
-    if [ ! -f $PY27_DIST ]; then
-        echo "Package not found: ${PY27_DIST}"
-        exit 1
-    fi
-
-    py27_hash=$(md5sum $PY27_DIST | awk '{ print $1 }')
-    py27_s3key="nr-python2.7/${py27_hash}.zip"
-
-    for region in "${REGIONS[@]}"; do
-        bucket_name="${BUCKET_PREFIX}-${region}"
-
-        echo "Uploading ${PY27_DIST} to s3://${bucket_name}/${py27_s3key}"
-        aws --region $region s3 cp $PY27_DIST "s3://${bucket_name}/${py27_s3key}"
-
-        echo "Publishing python2.7 layer to ${region}"
-        py27_version=$(aws lambda publish-layer-version \
-            --layer-name NewRelicPython27 \
-            --content "S3Bucket=${bucket_name},S3Key=${py27_s3key}" \
-            --description "New Relic Layer for Python 2.7" \
-            --license-info "Apache-2.0" \
-            --compatible-runtimes python2.7 \
-            --region $region \
-            --output text \
-            --query Version)
-        echo "Published python2.7 layer version ${py27_version} to ${region}"
-
-        echo "Setting public permissions for python2.7 layer version ${py27_version} in ${region}"
-        aws lambda add-layer-version-permission \
-          --layer-name NewRelicPython27 \
-          --version-number $py27_version \
-          --statement-id public \
-          --action lambda:GetLayerVersion \
-          --principal "*" \
-          --region $region
-        echo "Public permissions set for python2.7 layer version ${py27_version} in region ${region}"
-    done
 }
 
 function build-python36 {
@@ -307,10 +254,6 @@ function publish-python39 {
 }
 
 case "$1" in
-    "python2.7")
-        build-python27
-        publish-python27
-        ;;
     "python3.6")
         build-python36
         publish-python36
