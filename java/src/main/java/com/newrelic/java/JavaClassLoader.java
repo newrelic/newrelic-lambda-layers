@@ -63,7 +63,7 @@ public class JavaClassLoader {
     static JavaClassLoader initializeRequestHandler(String className, String methodName, Class loadedClass) throws ReflectiveOperationException {
         Class methodInputType = null;
         for (Method method : loadedClass.getMethods()) {
-            if (isUserHandlerMethod(method, className, methodName) == true) {
+            if (isUserHandlerMethod(method, className, methodName, loadedClass) == true) {
                 methodInputType = method.getParameterTypes()[0];
                 break;
             }
@@ -82,8 +82,8 @@ public class JavaClassLoader {
         }
     }
 
-    private static boolean isUserHandlerMethod(Method method, String className, String methodName) {
-        if (method.toString().contains(className) &&
+    private static boolean isUserHandlerMethod(Method method, String className, String methodName, Class<?> loadedClass) {
+        if ((method.getDeclaringClass().getName().equals(className) || method.getDeclaringClass().isAssignableFrom(loadedClass)) &&
                 method.getName().equals(methodName) &&
                 method.getParameterTypes().length == 2 &&
                 !(method.isBridge() || method.isSynthetic()) &&
