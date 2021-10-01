@@ -5,7 +5,6 @@ set -Eeuo pipefail
 BUILD_DIR=nodejs
 BUCKET_PREFIX=nr-layers
 DIST_DIR=dist
-NJS10X_DIST=$DIST_DIR/nodejs10x.zip
 NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 NJS14X_DIST=$DIST_DIR/nodejs14x.zip
 
@@ -34,7 +33,7 @@ REGIONS=(
 )
 
 function usage {
-    echo "./publish-layers.sh [nodejs10.x|nodejs12.x|nodejs14.x]"
+    echo "./publish-layers.sh [nodejs12.x|nodejs14.x]"
 }
 
 function download-extension {
@@ -42,58 +41,6 @@ function download-extension {
     curl -L $EXTENSION_DIST_URL -o $EXTENSION_DIST_ZIP
     unzip $EXTENSION_DIST_ZIP -d .
     rm -f $EXTENSION_DIST_ZIP
-}
-
-function build-nodejs10x {
-    echo "Building new relic layer for nodejs10.x"
-    rm -rf $BUILD_DIR $NJS10X_DIST
-    mkdir -p $DIST_DIR
-    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
-    mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-    download-extension
-    zip -rq $NJS10X_DIST $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    echo "Build complete: ${NJS10X_DIST}"
-}
-
-function publish-nodejs10x {
-    if [ ! -f $NJS10X_DIST ]; then
-        echo "Package not found: ${NJS10X_DIST}"
-        exit 1
-    fi
-
-    njs10x_hash=$(md5sum $NJS10X_DIST | awk '{ print $1 }')
-    njs10x_s3key="nr-nodejs10.x/${njs10x_hash}.zip"
-
-    for region in "${REGIONS[@]}"; do
-        bucket_name="${BUCKET_PREFIX}-${region}"
-
-        echo "Uploading ${NJS10X_DIST} to s3://${bucket_name}/${njs10x_s3key}"
-        aws --region $region s3 cp $NJS10X_DIST "s3://${bucket_name}/${njs10x_s3key}"
-
-        echo "Publishing nodejs10.x layer to ${region}"
-        njs10x_version=$(aws lambda publish-layer-version \
-            --layer-name NewRelicNodeJS10X \
-            --content "S3Bucket=${bucket_name},S3Key=${njs10x_s3key}" \
-            --description "New Relic Layer for Node.js 10.x" \
-            --license-info "Apache-2.0" \
-            --compatible-runtimes nodejs10.x \
-            --region $region \
-            --output text \
-            --query Version)
-        echo "published nodejs10.x layer version ${njs10x_version} to ${region}"
-
-        echo "Setting public permissions for nodejs10.x layer version ${njs10x_version} in ${region}"
-        aws lambda add-layer-version-permission \
-          --layer-name NewRelicNodeJS10X \
-          --version-number $njs10x_version \
-          --statement-id public \
-          --action lambda:GetLayerVersion \
-          --principal "*" \
-          --region $region
-        echo "Public permissions set for nodejs10.x layer version ${njs10x_version} in region ${region}"
-    done
 }
 
 function build-nodejs12x {
@@ -201,10 +148,6 @@ function publish-nodejs14x {
 }
 
 case "$1" in
-    "nodejs10.x")
-        build-nodejs10x
-        publish-nodejs10x
-        ;;
     "nodejs12.x")
         build-nodejs12x
         publish-nodejs12x
