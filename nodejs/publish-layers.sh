@@ -9,7 +9,7 @@ NJS12X_DIST=$DIST_DIR/nodejs12x.zip
 NJS14X_DIST=$DIST_DIR/nodejs14x.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.3/newrelic-lambda-extension.zip
+EXTENSION_DIST_URL=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.4/newrelic-lambda-extension.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
