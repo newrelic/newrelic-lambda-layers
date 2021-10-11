@@ -37,7 +37,9 @@ function getHandler() {
 
   try {
     importedModule = require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
+    console.log(importedModule)
   } catch (e) {
+    console.log(e)
     if (e.code === 'MODULE_NOT_FOUND') {
       throw new Error(`Unable to import module '${moduleToImport}'`)
     }
