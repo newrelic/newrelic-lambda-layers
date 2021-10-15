@@ -59,7 +59,7 @@ public class HandlerWrapper {
         return LambdaTracing.instrument(
                 input,
                 context,
-                (event, ctx) -> requestHandler.handleRequest(input, context)
+                requestHandler::handleRequest
         );
     }
 
