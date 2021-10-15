@@ -21,15 +21,16 @@ public class HandlerWrapper {
     private static RequestStreamHandler requestStreamHandler;
 
     static {
-        setupHandlers();
-    }
-
-    static void setupHandlers() {
         // Obtain an instance of the OpenTracing Tracer of your choice
         Tracer tracer = LambdaTracer.INSTANCE;
         // Register your tracer as the Global Tracer
         GlobalTracer.registerIfAbsent(tracer);
 
+        // Set up handlers
+        setupHandlers();
+    }
+
+    static void setupHandlers() {
         String handler = System.getenv(HANDLER_ENV_VAR);
         String[] parts = handler.split("::");
         String handlerClass = parts[0];
