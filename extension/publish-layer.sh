@@ -34,7 +34,7 @@ function build-layer-x86 {
     rm -f $EXTENSION_DIST_ZIP_X86_64
 
     curl -L $EXTENSION_DIST_URL_X86_64 -o $EXTENSION_DIST_ZIP_X86_64
-    echo "Build complete: ${EXTENSION_DIST_ZIP}"
+    echo "Build complete: ${EXTENSION_DIST_ZIP_X86_64}"
 }
 
 function build-layer-arm64 {
@@ -43,7 +43,7 @@ function build-layer-arm64 {
 
     curl -L $EXTENSION_DIST_URL_ARM64 -o $EXTENSION_DIST_ZIP_ARM64
 
-    echo "Build complete: ${EXTENSION_DIST_ZIP}"
+    echo "Build complete: ${EXTENSION_DIST_ZIP_ARM64}"
 }
 
 function publish-layer-x86 {
