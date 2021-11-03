@@ -10,23 +10,28 @@ EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/
 EXTENSION_DIST_ZIP_ARM64=extension.arm64.zip
 EXTENSION_DIST_ZIP_X86_64=extension.x86_64.zip
 
-REGIONS=(
+# Regions that support arm64 architecture
+REGIONS_ARCH=(
   ap-northeast-1
-  ap-northeast-2
   ap-south-1
   ap-southeast-1
   ap-southeast-2
-  ca-central-1
   eu-central-1
-  eu-north-1
   eu-west-1
   eu-west-2
-  eu-west-3
-  sa-east-1
   us-east-1
   us-east-2
-  us-west-1
   us-west-2
+)
+
+# Regions that don't yet support arm64 architecture
+REGIONS_NO_ARCH=(
+  ap-northeast-2
+  ca-central-1
+  eu-north-1
+  eu-west-3
+  sa-east-1
+  us-west-1
 )
 
 function build-layer-x86 {
@@ -55,7 +60,7 @@ function publish-layer-x86 {
     layer_hash=$(md5sum $EXTENSION_DIST_ZIP_X86_64 | awk '{ print $1 }')
     layer_s3key="nr-extension/${layer_hash}.x86_64.zip"
 
-    for region in "${REGIONS[@]}"; do
+    for region in "${REGIONS_ARCH[@]}"; do
         bucket_name="${BUCKET_PREFIX}-${region}"
 
         echo "Uploading ${EXTENSION_DIST_ZIP_X86_64} to s3://${bucket_name}/${layer_s3key}"
@@ -84,6 +89,36 @@ function publish-layer-x86 {
           --region $region
         echo "Public permissions set for layer version ${layer_version} in region ${region}"
     done
+
+    # TODO: Remove this once all regions support --compatible-architectures
+    for region in "${REGIONS_NO_ARCH[@]}"; do
+        bucket_name="${BUCKET_PREFIX}-${region}"
+
+        echo "Uploading ${EXTENSION_DIST_ZIP_X86_64} to s3://${bucket_name}/${layer_s3key}"
+        aws --region $region s3 cp $EXTENSION_DIST_ZIP_X86_64 "s3://${bucket_name}/${layer_s3key}"
+
+        echo "Publishing extension layer to ${region}"
+        layer_version=$(aws lambda publish-layer-version \
+            --layer-name NewRelicLambdaExtension \
+            --content "S3Bucket=${bucket_name},S3Key=${layer_s3key}" \
+            --description "New Relic Lambda Extension Layer (x86_64)" \
+            --license-info "Apache-2.0" \
+            --compatible-runtimes "dotnetcore3.1" "provided" "provided.al2" \
+            --region $region \
+            --output text \
+            --query Version)
+        echo "Published layer version ${layer_version} to ${region}"
+
+        echo "Setting public permissions for layer version ${layer_version} in ${region}"
+        aws lambda add-layer-version-permission \
+          --layer-name NewRelicLambdaExtension \
+          --version-number $layer_version \
+          --statement-id public \
+          --action lambda:GetLayerVersion \
+          --principal "*" \
+          --region $region
+        echo "Public permissions set for layer version ${layer_version} in region ${region}"
+    done
 }
 
 function publish-layer-arm64 {
@@ -95,7 +130,7 @@ function publish-layer-arm64 {
     layer_hash=$(md5sum $EXTENSION_DIST_ZIP_ARM64 | awk '{ print $1 }')
     layer_s3key="nr-extension/${layer_hash}.arm64.zip"
 
-    for region in "${REGIONS[@]}"; do
+    for region in "${REGIONS_ARCH[@]}"; do
         bucket_name="${BUCKET_PREFIX}-${region}"
 
         echo "Uploading ${EXTENSION_DIST_ZIP_ARM64} to s3://${bucket_name}/${layer_s3key}"
