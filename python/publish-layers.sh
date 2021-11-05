@@ -12,7 +12,7 @@ PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 PY36_DIST_X86_64=$DIST_DIR/python36.x86_64.zip
 PY37_DIST_X86_64=$DIST_DIR/python37.x86_64.zip
 PY38_DIST_X86_64=$DIST_DIR/python38.x86_64.zip
-PY39_DIST=$DIST_DIR/python39.x86_64.zip
+PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
 
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.5/newrelic-lambda-extension.arm64.zip
