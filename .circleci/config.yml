@@ -157,6 +157,12 @@ workflows:
               ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
+      - publish-python39:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-java11:
           filters:
             branches:
