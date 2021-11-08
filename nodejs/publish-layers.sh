@@ -47,7 +47,7 @@ function build-nodejs12x {
     echo "Building new relic layer for nodejs12.x"
     rm -rf $BUILD_DIR $NJS12X_DIST
     mkdir -p $DIST_DIR
-    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
+    npm install --prefix $BUILD_DIR newrelic@latest
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     download-extension
@@ -99,7 +99,7 @@ function build-nodejs14x {
     echo "Building new relic layer for nodejs14.x"
     rm -rf $BUILD_DIR $NJS14X_DIST
     mkdir -p $DIST_DIR
-    npm install --prefix $BUILD_DIR newrelic@latest @newrelic/aws-sdk@latest
+    npm install --prefix $BUILD_DIR newrelic@latest
     mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
     download-extension

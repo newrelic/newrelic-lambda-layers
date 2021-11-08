@@ -10,8 +10,6 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 }
 
 const newrelic = require('newrelic')
-require('@newrelic/aws-sdk')
-
 
 function getHandler() {
   let handler
@@ -67,8 +65,8 @@ const ioMarks = {}
 
 function patchIO(method, payload) {
   const warning = `
-    Use of context.iopipe.* (including ${method}) is no longer supported. 
-    Please see New Relic Node agent documentation here: 
+    Use of context.iopipe.* (including ${method}) is no longer supported.
+    Please see New Relic Node agent documentation here:
     https://docs.newrelic.com/docs/agents/nodejs-agent
     `
 
