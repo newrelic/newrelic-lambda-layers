@@ -6,6 +6,7 @@ jobs:
         - image: circleci/node:12
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y groff less
       - run:
           name: Install publish dependencies
           command: |
@@ -23,6 +24,7 @@ jobs:
         - image: circleci/node:14
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y groff less
       - run:
           name: Install publish dependencies
           command: |
@@ -96,6 +98,7 @@ jobs:
         - image: circleci/openjdk:8
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y groff less
       - run:
           name: Install publish dependencies
           command: |
@@ -113,6 +116,7 @@ jobs:
         - image: circleci/openjdk:11
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y groff less
       - run:
           name: Install publish dependencies
           command: |
