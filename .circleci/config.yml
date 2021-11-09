@@ -1,33 +1,40 @@
 version: 2
+
 jobs:
   publish-nodejs12x:
     docker:
-        - image: circleci/node:12-stretch
+        - image: circleci/node:12
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install awscli==1.22.1
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Publish layer
           command: |
             cd nodejs
             ./publish-layers.sh nodejs12.x
+
   publish-nodejs14x:
     docker:
-        - image: circleci/node:14-stretch
+        - image: circleci/node:14
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install awscli==1.22.1
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Publish layer
           command: |
             cd nodejs
             ./publish-layers.sh nodejs14.x
+
   publish-python36:
     docker:
       - image: circleci/python:3.6
@@ -41,6 +48,7 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.6
+
   publish-python37:
     docker:
       - image: circleci/python:3.7
@@ -54,6 +62,7 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.7
+
   publish-python38:
     docker:
       - image: circleci/python:3.8
@@ -67,6 +76,7 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.8
+
   publish-python39:
     docker:
       - image: circleci/python:3.9
@@ -80,29 +90,35 @@ jobs:
           command: |
             cd python
             ./publish-layers.sh python3.9
+
   publish-java8.al2:
     docker:
-        - image: circleci/openjdk:8-stretch
+        - image: circleci/openjdk:8
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install -U awscli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Publish layer
           command: |
             cd java
             ./publish-layers.sh java8.al2
+
   publish-java11:
     docker:
-        - image: circleci/openjdk:11-stretch
+        - image: circleci/openjdk:11
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install -U awscli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Publish layer
           command: |
