@@ -99,11 +99,10 @@ function publish-nodejs12x-arm64 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS12X_DIST_ARM64} to s3://${bucket_name}/${njs12x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS12X_DIST_ARM64 "s3://${bucket_name}/${njs12x_s3key}"
+		aws --region "$region" s3 cp $NJS12X_DIST_ARM64 "s3://${bucket_name}/${njs12x_s3key}"
 
 		echo "Publishing nodejs12.x layer to ${region}"
 		njs12x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS12XARM64 \
 			--content "S3Bucket=${bucket_name},S3Key=${njs12x_s3key}" \
 			--description "New Relic Layer for Node.js 12.x (arm64)" \
@@ -117,7 +116,6 @@ function publish-nodejs12x-arm64 {
 
 		echo "Setting public permissions for nodejs12.x layer version ${njs12x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS12XARM64 \
 			--version-number "$njs12x_version" \
 			--statement-id public \
@@ -141,11 +139,10 @@ function publish-nodejs12x-x86 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS12X_DIST_X86_64} to s3://${bucket_name}/${njs12x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS12X_DIST_X86_64 "s3://${bucket_name}/${njs12x_s3key}"
+		aws --region "$region" s3 cp $NJS12X_DIST_X86_64 "s3://${bucket_name}/${njs12x_s3key}"
 
 		echo "Publishing nodejs12.x layer to ${region}"
 		njs12x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS12X \
 			--content "S3Bucket=${bucket_name},S3Key=${njs12x_s3key}" \
 			--description "New Relic Layer for Node.js 12.x (x86_64)" \
@@ -159,7 +156,6 @@ function publish-nodejs12x-x86 {
 
 		echo "Setting public permissions for nodejs12.x layer version ${njs12x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS12X \
 			--version-number "$njs12x_version" \
 			--statement-id public \
@@ -174,11 +170,10 @@ function publish-nodejs12x-x86 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS12X_DIST_X86_64} to s3://${bucket_name}/${njs12x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS12X_DIST_X86_64 "s3://${bucket_name}/${njs12x_s3key}"
+		aws --region "$region" s3 cp $NJS12X_DIST_X86_64 "s3://${bucket_name}/${njs12x_s3key}"
 
 		echo "Publishing nodejs12.x layer to ${region}"
 		njs12x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS12X \
 			--content "S3Bucket=${bucket_name},S3Key=${njs12x_s3key}" \
 			--description "New Relic Layer for Node.js 12.x (x86_64)" \
@@ -191,7 +186,6 @@ function publish-nodejs12x-x86 {
 
 		echo "Setting public permissions for nodejs12.x layer version ${njs12x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS12X \
 			--version-number "$njs12x_version" \
 			--statement-id public \
@@ -241,11 +235,10 @@ function publish-nodejs14x-arm64 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS14X_DIST_ARM64} to s3://${bucket_name}/${njs14x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS14X_DIST_ARM64 "s3://${bucket_name}/${njs14x_s3key}"
+		aws --region "$region" s3 cp $NJS14X_DIST_ARM64 "s3://${bucket_name}/${njs14x_s3key}"
 
 		echo "Publishing nodejs14.x layer to ${region}"
 		njs14x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS14XARM64 \
 			--content "S3Bucket=${bucket_name},S3Key=${njs14x_s3key}" \
 			--description "New Relic Layer for Node.js 14.x (arm64)" \
@@ -259,7 +252,6 @@ function publish-nodejs14x-arm64 {
 
 		echo "Setting public permissions for nodejs14.x layer version ${njs14x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS14XARM64 \
 			--version-number "$njs14x_version" \
 			--statement-id public \
@@ -283,11 +275,10 @@ function publish-nodejs14x-x86 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS14X_DIST_X86_64} to s3://${bucket_name}/${njs14x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS14X_DIST_X86_64 "s3://${bucket_name}/${njs14x_s3key}"
+		aws --region "$region" s3 cp $NJS14X_DIST_X86_64 "s3://${bucket_name}/${njs14x_s3key}"
 
 		echo "Publishing nodejs14.x layer to ${region}"
 		njs14x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS14X \
 			--content "S3Bucket=${bucket_name},S3Key=${njs14x_s3key}" \
 			--description "New Relic Layer for Node.js 14.x (x86_64)" \
@@ -301,7 +292,6 @@ function publish-nodejs14x-x86 {
 
 		echo "Setting public permissions for nodejs14.x layer version ${njs14x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS14X \
 			--version-number "$njs14x_version" \
 			--statement-id public \
@@ -316,11 +306,10 @@ function publish-nodejs14x-x86 {
 		bucket_name="${BUCKET_PREFIX}-${region}"
 
 		echo "Uploading ${NJS14X_DIST_X86_64} to s3://${bucket_name}/${njs14x_s3key}"
-		aws --debug --region "$region" s3 cp $NJS14X_DIST_X86_64 "s3://${bucket_name}/${njs14x_s3key}"
+		aws --region "$region" s3 cp $NJS14X_DIST_X86_64 "s3://${bucket_name}/${njs14x_s3key}"
 
 		echo "Publishing nodejs14.x layer to ${region}"
 		njs14x_version=$(aws lambda publish-layer-version \
-			--debug \
 			--layer-name NewRelicNodeJS14X \
 			--content "S3Bucket=${bucket_name},S3Key=${njs14x_s3key}" \
 			--description "New Relic Layer for Node.js 14.x (x86_64)" \
@@ -333,7 +322,6 @@ function publish-nodejs14x-x86 {
 
 		echo "Setting public permissions for nodejs14.x layer version ${njs14x_version} in ${region}"
 		aws lambda add-layer-version-permission \
-			--debug \
 			--layer-name NewRelicNodeJS14X \
 			--version-number "$njs14x_version" \
 			--statement-id public \
@@ -345,19 +333,29 @@ function publish-nodejs14x-x86 {
 }
 
 case "$1" in
-"nodejs12.x")
+"build-nodejs12x")
 	build-nodejs12x-arm64
-	publish-nodejs12x-arm64
-
 	build-nodejs12x-x86
+	;;
+"publish-nodejs12x")
+	publish-nodejs12x-arm64
 	publish-nodejs12x-x86
 	;;
-"nodejs14.x")
+"build-nodejs14x")
 	build-nodejs14x-arm64
-	publish-nodejs14x-arm64
-
 	build-nodejs14x-x86
+	;;
+"publish-nodejs14x")
+	publish-nodejs14x-arm64
 	publish-nodejs14x-x86
+	;;
+"nodejs12x")
+	$0 build-nodejs12.x
+	$0 publish-nodejs12.x
+	;;
+"nodejs14x")
+	$0 build-nodejs14x
+	$0 publish-nodejs14x
 	;;
 *)
 	usage
