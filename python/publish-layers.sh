@@ -98,7 +98,7 @@ function publish-python36-x86 {
             --description "New Relic Layer for Python 3.6 (x86_64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.6 \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)
@@ -181,7 +181,7 @@ function publish-python37-x86 {
             --description "New Relic Layer for Python 3.7 (x86_64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.7 \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)
@@ -277,7 +277,7 @@ function publish-python38-arm64 {
             --description "New Relic Layer for Python 3.8" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.8 \
-            --compatible-architectures "arm64" \
+            --compatible-architectures arm64 \
             --region $region \
             --output text \
             --query Version)
@@ -317,7 +317,7 @@ function publish-python38-x86 {
             --description "New Relic Layer for Python 3.8 (x86_64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.8 \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)
@@ -383,7 +383,7 @@ function publish-python39-arm64 {
             --description "New Relic Layer for Python 3.9 (arm64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.9 \
-            --compatible-architectures "arm64" \
+            --compatible-architectures arm64 \
             --region $region \
             --output text \
             --query Version)
@@ -423,7 +423,7 @@ function publish-python39-x86 {
             --description "New Relic Layer for Python 3.9" \
             --license-info "Apache-2.0" \
             --compatible-runtimes python3.9 \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)

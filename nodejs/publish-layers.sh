@@ -20,7 +20,6 @@ EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
 # Regions that support arm64 architecture
 REGIONS_ARCH=(
-  ap-northeast-1
   ap-south-1
   ap-southeast-1
   ap-southeast-2
@@ -34,6 +33,7 @@ REGIONS_ARCH=(
 
 # Regions that don't yet support arm64 architecture
 REGIONS_NO_ARCH=(
+  ap-northeast-1
   ap-northeast-2
   ca-central-1
   eu-north-1
@@ -108,7 +108,7 @@ function publish-nodejs12x-arm64 {
             --description "New Relic Layer for Node.js 12.x (arm64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes nodejs12.x \
-            --compatible-architectures "arm64" \
+            --compatible-architectures arm64 \
             --region $region \
             --output text \
             --query Version)
@@ -148,7 +148,7 @@ function publish-nodejs12x-x86 {
             --description "New Relic Layer for Node.js 12.x (x86_64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes nodejs12.x \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)
@@ -244,7 +244,7 @@ function publish-nodejs14x-arm64 {
             --description "New Relic Layer for Node.js 14.x (arm64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes nodejs14.x \
-            --compatible-architectures "arm64" \
+            --compatible-architectures arm64 \
             --region $region \
             --output text \
             --query Version)
@@ -284,7 +284,7 @@ function publish-nodejs14x-x86 {
             --description "New Relic Layer for Node.js 14.x (x86_64)" \
             --license-info "Apache-2.0" \
             --compatible-runtimes nodejs14.x \
-            --compatible-architectures "x86_64" \
+            --compatible-architectures x86_64 \
             --region $region \
             --output text \
             --query Version)
