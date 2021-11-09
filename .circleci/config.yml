@@ -8,7 +8,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install awscli==1.21.9
+          command: sudo pip3 install awscli==1.22.1
       - run:
           name: Publish layer
           command: |
@@ -22,7 +22,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y python3-pip
       - run:
           name: Install publish dependencies
-          command: sudo pip3 install -U awscli
+          command: sudo pip3 install awscli==1.22.1
       - run:
           name: Publish layer
           command: |
