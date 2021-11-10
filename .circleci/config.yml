@@ -2,6 +2,8 @@ version: 2
 
 jobs:
   publish-nodejs12x:
+    docker:
+      - image: circleci/python:3.8
     steps:
       - checkout
       - setup_remote_docker
@@ -10,6 +12,8 @@ jobs:
           command: make publish-nodejs12x-ci
 
   publish-nodejs14x:
+    docker:
+      - image: circleci/python:3.8
     steps:
       - checkout
       - setup_remote_docker
