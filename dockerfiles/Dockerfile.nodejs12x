@@ -1,0 +1,25 @@
+FROM node:12 as builder
+
+RUN apt-get update \
+    && apt-get install -y curl unzip zip
+
+RUN useradd -r newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+
+COPY nodejs .
+
+RUN ./publish-layers.sh build-nodejs12x
+
+FROM python:3.8
+
+RUN useradd -r newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+RUN pip3 install -U awscli --user
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH  
+
+COPY nodejs .
+COPY --from=builder /home/newrelic-lambda-layers/dist dist
+
+CMD ./publish-layers.sh publish-nodejs12x

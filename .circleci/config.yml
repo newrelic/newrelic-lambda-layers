@@ -2,40 +2,20 @@ version: 2
 
 jobs:
   publish-nodejs12x:
-    docker:
-        - image: circleci/node:12
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y groff less
-      - run:
-          name: Install publish dependencies
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+      - setup_remote_docker
       - run:
           name: Publish layer
-          command: |
-            cd nodejs
-            ./publish-layers.sh nodejs12.x
+          command: make publish-nodejs12x-ci
 
   publish-nodejs14x:
-    docker:
-        - image: circleci/node:14
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y groff less
-      - run:
-          name: Install publish dependencies
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+      - setup_remote_docker
       - run:
           name: Publish layer
-          command: |
-            cd nodejs
-            ./publish-layers.sh nodejs14.x
+          command: make publish-nodejs14x-ci
 
   publish-python36:
     docker:
