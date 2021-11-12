@@ -33,7 +33,7 @@ task packageFat(type: Zip) {
 
 task copyLibs(type: Copy) {
     from('build/libs')
-    into('build/java/lib')
+    into('java/lib')
     include('NewRelicJavaLayer.jar')
 }
 
