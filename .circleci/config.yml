@@ -79,39 +79,23 @@ jobs:
 
   publish-java8.al2:
     docker:
-        - image: circleci/openjdk:8
+      - image: circleci/python:3.8
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y groff less
-      - run:
-          name: Install publish dependencies
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+      - setup_remote_docker
       - run:
           name: Publish layer
-          command: |
-            cd java
-            ./publish-layers.sh java8.al2
+          command: make publish-java8al2-ci
 
   publish-java11:
     docker:
-        - image: circleci/openjdk:11
+      - image: circleci/python:3.8
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y groff less
-      - run:
-          name: Install publish dependencies
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+      - setup_remote_docker
       - run:
           name: Publish layer
-          command: |
-            cd java
-            ./publish-layers.sh java11
+          command: make publish-java11-ci
 
   publish-extension:
     docker:

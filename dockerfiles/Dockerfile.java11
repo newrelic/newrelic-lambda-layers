@@ -1,0 +1,25 @@
+FROM openjdk:11 as builder
+
+RUN apt-get update \
+    && apt-get install -y curl unzip zip
+
+RUN useradd -m newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+
+COPY java .
+
+RUN ./publish-layers.sh build-java11
+
+FROM python:3.8
+
+RUN useradd -m newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+RUN pip3 install -U awscli --user
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH  
+
+COPY java .
+COPY --from=builder /home/newrelic-lambda-layers/dist dist
+
+CMD ./publish-layers.sh publish-java11
