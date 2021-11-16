@@ -37,10 +37,14 @@ REGIONS_ARCH=(
 
 # Regions that don't yet support arm64 architecture
 REGIONS_NO_ARCH=(
+	af-south-1
 	ap-northeast-2
+	ap-northeast-3
 	ca-central-1
 	eu-north-1
+	eu-south-1
 	eu-west-3
+	me-south-1
 	sa-east-1
 	us-west-1
 )
