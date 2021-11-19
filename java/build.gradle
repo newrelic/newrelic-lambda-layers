@@ -1,5 +1,5 @@
 plugins {
-    id 'application'
+    id 'java-library'
 }
 
 repositories {
@@ -18,23 +18,22 @@ dependencies {
     testImplementation("junit:junit:4.13")
 }
 
-task packageFat(type: Zip) {
-    from compileJava
-    from processResources
-    into('java/lib') {
-        from configurations.runtimeClasspath
-    }
-    from(sourceSets.main.output.getClassesDirs().collect {it.isDirectory() ? it:zipTree(it)}) {
-        into ('lib')
-    }
-    dirMode = 0755
-    fileMode = 0755
+def extensions = copySpec {
+    from('extensions')
+    into('extensions')
 }
 
-task copyLibs(type: Copy) {
-    from('build/libs')
-    into('java/lib')
-    include('NewRelicJavaLayer.jar')
+task packageLayer(type: Zip) {
+    baseName = 'NewRelicJavaLayer'
+    into('lib') {
+        from configurations.compileClasspath
+    }
+    into('lib') {
+        from fileTree('build/libs') {
+            include 'NewRelicJavaLayer.jar'
+        }
+    }
+    with extensions
 }
 
 ext.javaVersion = hasProperty('javaVersion') && project.getProperty('javaVersion') == 11 ?
@@ -45,4 +44,4 @@ java {
     targetCompatibility = javaVersion
 }
 
-copyLibs.dependsOn packageFat
+packageFat.dependsOn build
