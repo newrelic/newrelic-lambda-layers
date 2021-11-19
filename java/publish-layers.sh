@@ -65,23 +65,31 @@ function download-extension-x86 {
 	rm -f $EXTENSION_DIST_ZIP
 }
 
-function build-arm(platform, javaVersion, target) {
+function build-arm() {
+  platform=$1
+  javaVersion=$2
+  target=$3
+
 	echo "Building New Relic layer for ${platform}"
 	rm -rf $BUILD_DIR $target
 	download-extension-arm64
 	./gradlew packageLayer -P javaVersion=$javaVersion
-	mkdir dist
+	mkdir -p $DIST_DIR
 	cp $GRADLE_ARCHIVE $target
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	echo "Build complete"
 }
 
-function build-x86(platform, javaVersion, target) {
+function build-x86() {
+  platform=$1
+  javaVersion=$2
+  target=$3
+
 	echo "Building New Relic layer for ${platform}"
 	rm -rf $BUILD_DIR $target
 	download-extension-x86
 	./gradlew packageLayer -P javaVersion=$javaVersion
-	mkdir dist
+	mkdir -p $DIST_DIR
 	cp $GRADLE_ARCHIVE $target
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	echo "Build complete"

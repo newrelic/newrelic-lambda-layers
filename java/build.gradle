@@ -24,7 +24,7 @@ def extensions = copySpec {
 }
 
 task packageLayer(type: Zip) {
-    baseName = 'NewRelicJavaLayer'
+    archiveBaseName = 'NewRelicJavaLayer'
     into('lib') {
         from configurations.compileClasspath
     }
@@ -44,4 +44,4 @@ java {
     targetCompatibility = javaVersion
 }
 
-packageFat.dependsOn build
+packageLayer.dependsOn build
