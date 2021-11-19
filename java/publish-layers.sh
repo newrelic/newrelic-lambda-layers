@@ -5,9 +5,7 @@ set -Eeuo pipefail
 BUILD_DIR=build
 BUCKET_PREFIX=nr-layers
 
-JAVA_DIR=java
-JAVA_LIB=$JAVA_DIR/lib
-JAVA_JAR=$JAVA_LIB/NewRelicJavaLayer.jar
+GRADLE_ARCHIVE=$BUILD_DIR/distributions/NewRelicJavaLayer.zip
 
 DIST_DIR=dist
 JAVA8_DIST_ARM64=$DIST_DIR/java8.arm64.zip
@@ -67,30 +65,34 @@ function download-extension-x86 {
 	rm -f $EXTENSION_DIST_ZIP
 }
 
-function build-java8al2-arm64 {
-	echo "Building New Relic layer for java8.al2 (arm64)"
-	rm -rf $BUILD_DIR $JAVA_DIR $JAVA8_DIST_ARM64
-	./gradlew build -P javaVersion=8
-	./gradlew packageFat
-	mkdir -p $DIST_DIR
-	./gradlew copyLibs
+function build-arm(platform, javaVersion, target) {
+	echo "Building New Relic layer for ${platform}"
+	rm -rf $BUILD_DIR $target
 	download-extension-arm64
-	zip $JAVA8_DIST_ARM64 $JAVA_JAR $EXTENSION_DIST_PREVIEW_FILE "${EXTENSION_DIST_DIR}/newrelic-lambda-extension"
-	rm -rf $BUILD_DIR $JAVA_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	./gradlew packageLayer -P javaVersion=$javaVersion
+	mkdir dist
+	cp $GRADLE_ARCHIVE $target
+	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	echo "Build complete"
 }
 
-function build-java8al2-x86 {
-	echo "Building New Relic layer for java8.al2 (x86_64)"
-	rm -rf $BUILD_DIR $JAVA_DIR $JAVA8_DIST_X86_64
-	./gradlew build -P javaVersion=8
-	./gradlew packageFat
-	mkdir -p $DIST_DIR
-	./gradlew copyLibs
+function build-x86(platform, javaVersion, target) {
+	echo "Building New Relic layer for ${platform}"
+	rm -rf $BUILD_DIR $target
 	download-extension-x86
-	zip $JAVA8_DIST_X86_64 $JAVA_JAR $EXTENSION_DIST_PREVIEW_FILE "${EXTENSION_DIST_DIR}/newrelic-lambda-extension"
-	rm -rf $BUILD_DIR $JAVA_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	./gradlew packageLayer -P javaVersion=$javaVersion
+	mkdir dist
+	cp $GRADLE_ARCHIVE $target
+	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	echo "Build complete"
+}
+
+function build-java8al2-arm64 {
+  build-arm "java8.al2 (arm64)" 8 $JAVA8_DIST_ARM64
+}
+
+function build-java8al2-x86 {
+  build-x86 "java8.al2 (x86_64)" 8 $JAVA8_DIST_X86_64
 }
 
 function publish-java8al2-arm64 {
@@ -204,29 +206,11 @@ function publish-java8al2-x86 {
 }
 
 function build-java11-arm64 {
-	echo "Building New Relic layer for java 11 (arm64)"
-	rm -rf $BUILD_DIR $JAVA_DIR $JAVA11_DIST_ARM64
-	./gradlew build -P javaVersion=11
-	./gradlew packageFat
-	mkdir -p $DIST_DIR
-	./gradlew copyLibs
-	download-extension-arm64
-	zip $JAVA11_DIST_ARM64 $JAVA_JAR $EXTENSION_DIST_PREVIEW_FILE "${EXTENSION_DIST_DIR}/newrelic-lambda-extension"
-	rm -rf $BUILD_DIR $JAVA_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete"
+  build-arm "java11 (arm64)" 11 $JAVA11_DIST_ARM64
 }
 
 function build-java11-x86 {
-	echo "Building New Relic layer for java 11 (x86_64)"
-	rm -rf $BUILD_DIR $JAVA_DIR $JAVA11_DIST_X86_64
-	./gradlew build -P javaVersion=11
-	./gradlew packageFat
-	mkdir -p $DIST_DIR
-	./gradlew copyLibs
-	download-extension-x86
-	zip $JAVA11_DIST_X86_64 $JAVA_JAR $EXTENSION_DIST_PREVIEW_FILE "${EXTENSION_DIST_DIR}/newrelic-lambda-extension"
-	rm -rf $BUILD_DIR $JAVA_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete"
+  build-x86 "java11 (x86_64)" 11 $JAVA11_DIST_X86_64
 }
 
 function publish-java11-arm64 {
