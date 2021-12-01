@@ -27,10 +27,10 @@ def extensions = copySpec {
 
 task packageLayer(type: Zip) {
     archiveBaseName = 'NewRelicJavaLayer'
-    into('lib') {
+    into('java/lib') {
         from configurations.compileClasspath
     }
-    into('lib') {
+    into('java/lib') {
         from fileTree('build/libs') {
             include 'NewRelicJavaLayer.jar'
         }
