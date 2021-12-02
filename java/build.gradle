@@ -7,7 +7,10 @@ repositories {
 }
 
 dependencies {
+    implementation("io.opentracing:opentracing-api:0.33.0")
     implementation("io.opentracing:opentracing-util:0.33.0")
+    implementation("io.opentracing:opentracing-noop:0.33.0")
+    implementation("com.googlecode.json-simple:json-simple:1.1.1")
     implementation("com.newrelic.opentracing:newrelic-java-lambda:2.2.1")
     implementation("com.newrelic.opentracing:java-aws-lambda:2.1.0")
     implementation("com.amazonaws:aws-lambda-java-events:3.8.0")
