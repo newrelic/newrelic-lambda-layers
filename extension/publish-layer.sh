@@ -4,8 +4,8 @@ set -Eeuo pipefail
 
 BUCKET_PREFIX=nr-layers
 
-EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.5/newrelic-lambda-extension.arm64.zip
-EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.5/newrelic-lambda-extension.x86_64.zip
+EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.6/newrelic-lambda-extension.arm64.zip
+EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.6/newrelic-lambda-extension.x86_64.zip
 
 EXTENSION_DIST_ZIP_ARM64=extension.arm64.zip
 EXTENSION_DIST_ZIP_X86_64=extension.x86_64.zip

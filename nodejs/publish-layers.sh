@@ -13,8 +13,8 @@ NJS12X_DIST_X86_64=$DIST_DIR/nodejs12x.x86_64.zip
 NJS14X_DIST_X86_64=$DIST_DIR/nodejs14x.x86_64.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.5/newrelic-lambda-extension.arm64.zip
-EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.5/newrelic-lambda-extension.x86_64.zip
+EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.6/newrelic-lambda-extension.arm64.zip
+EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.0.6/newrelic-lambda-extension.x86_64.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
