@@ -14,8 +14,8 @@ JAVA11_DIST_ARM64=$DIST_DIR/java11.arm64.zip
 JAVA11_DIST_X86_64=$DIST_DIR/java11.x86_64.zip
 
 EXTENSION_DIST_DIR=extensions
-EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.1.0/newrelic-lambda-extension.arm64.zip
-EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.1.0/newrelic-lambda-extension.x86_64.zip
+EXTENSION_DIST_URL_ARM64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.2.0/newrelic-lambda-extension.arm64.zip
+EXTENSION_DIST_URL_X86_64=https://github.com/newrelic/newrelic-lambda-extension/releases/download/v2.2.0/newrelic-lambda-extension.x86_64.zip
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
