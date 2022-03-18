@@ -14,7 +14,7 @@ NJS12X_DIST_X86_64=$DIST_DIR/nodejs12x.x86_64.zip
 NJS14X_DIST_X86_64=$DIST_DIR/nodejs14x.x86_64.zip
 
 function usage {
-  	echo "./publish-layers.sh [nodejs12.x|nodejs14.x]"
+  	echo "./publish-layers.sh [nodejs12x|nodejs14x]"
 }
 
 function build-nodejs12x-arm64 {
@@ -131,8 +131,8 @@ case "$1" in
 	publish-nodejs14x-x86
 	;;
 "nodejs12x")
-	$0 build-nodejs12.x
-	$0 publish-nodejs12.x
+	$0 build-nodejs12x
+	$0 publish-nodejs12x
 	;;
 "nodejs14x")
 	$0 build-nodejs14x

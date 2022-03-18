@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 
+BUILD_DIR=build
 GRADLE_ARCHIVE=$BUILD_DIR/distributions/NewRelicJavaLayer.zip
 
 DIST_DIR=dist

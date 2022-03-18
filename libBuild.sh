@@ -145,6 +145,14 @@ function s3_prefix() {
     echo $name
 }
 
+function hash_file() {
+    if which md5sum; then
+        md5sum $1 | awk '{ print $1 }'
+    else
+        md5 -q $1
+    fi
+}
+
 function publish_layer {
     layer_archive=$1
     region=$2
@@ -153,14 +161,14 @@ function publish_layer {
 
     layer_name=$( layer_name_str $runtime_name $arch )}
 
-    hash=$(md5sum $layer_archive | awk '{ print $1 }')
+    hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
     bucket_name="nr-layers-${region}"
     s3_key="$( s3_prefix $runtime_name )/${hash}.${arch}.zip"
 
-    compat_list=$runtime_name
+    compat_list=( $runtime_name )
     if [[ $runtime_name == "provided" ]]
-    then compat_list="provided" "provided.al2" "dotnetcore3.1" "dotnet6"
+    then compat_list=("provided" "provided.al2" "dotnetcore3.1" "dotnet6")
     fi
 
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
@@ -172,7 +180,7 @@ function publish_layer {
       --content "S3Bucket=${bucket_name},S3Key=${s3_key}" \
       --description "New Relic Layer for ${runtime_name} (${arch})" \
       --license-info "Apache-2.0" \
-      --compatible-runtimes $compat_list \
+      --compatible-runtimes ${compat_list[*]} \
       --region "$region" \
       --output text \
       --query Version)
