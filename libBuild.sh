@@ -146,7 +146,7 @@ function s3_prefix() {
 }
 
 function hash_file() {
-    if which md5sum > /dev/null ; then
+    if command -v md5sum &> /dev/null ; then
         md5sum $1 | awk '{ print $1 }'
     else
         md5 -q $1
