@@ -7,8 +7,8 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 
-COPY libBuild.sh .
-COPY nodejs nodejs/
+COPY --chown=newrelic-lambda-layers libBuild.sh .
+COPY --chown=newrelic-lambda-layers nodejs nodejs/
 
 WORKDIR nodejs
 RUN ./publish-layers.sh build-nodejs12x
