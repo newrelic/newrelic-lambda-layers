@@ -7,8 +7,10 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 
-COPY java .
+COPY libBuild.sh .
+COPY java java/
 
+WORKDIR java
 RUN ./publish-layers.sh build-java8al2
 
 FROM python:3.8
@@ -17,9 +19,11 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 RUN pip3 install -U awscli --user
-ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH  
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
 
-COPY java .
-COPY --from=builder /home/newrelic-lambda-layers/dist dist
+COPY libBuild.sh .
+COPY java java/
+COPY --from=builder /home/newrelic-lambda-layers/java/dist dist
 
+WORKDIR java
 CMD ./publish-layers.sh publish-java8al2

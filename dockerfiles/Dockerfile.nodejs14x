@@ -7,8 +7,10 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 
-COPY nodejs .
+COPY libBuild.sh .
+COPY nodejs nodejs/
 
+WORKDIR nodejs
 RUN ./publish-layers.sh build-nodejs14x
 
 FROM python:3.8
@@ -17,9 +19,11 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 RUN pip3 install -U awscli --user
-ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH  
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
 
-COPY nodejs .
-COPY --from=builder /home/newrelic-lambda-layers/dist dist
+COPY libBuild.sh .
+COPY nodejs nodejs/
+COPY --from=builder /home/newrelic-lambda-layers/nodejs/dist nodejs/dist
 
+WORKDIR nodejs
 CMD ./publish-layers.sh publish-nodejs14x
