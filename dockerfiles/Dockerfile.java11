@@ -7,8 +7,8 @@ RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 
-COPY libBuild.sh .
-COPY java java/
+COPY --chown=newrelic-lambda-layers libBuild.sh .
+COPY --chown=newrelic-lambda-layers java java/
 
 WORKDIR java
 RUN ./publish-layers.sh build-java11
