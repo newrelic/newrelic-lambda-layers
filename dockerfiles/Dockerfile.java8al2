@@ -23,7 +23,7 @@ ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
 
 COPY libBuild.sh .
 COPY java java/
-COPY --from=builder /home/newrelic-lambda-layers/java/dist dist
+COPY --from=builder /home/newrelic-lambda-layers/java/dist java/dist
 
 WORKDIR java
 CMD ./publish-layers.sh publish-java8al2
