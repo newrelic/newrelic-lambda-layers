@@ -174,14 +174,18 @@ function publish_layer {
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
     aws --region "$region" s3 cp $layer_archive "s3://${bucket_name}/${s3_key}"
 
+   if [[ ${REGIONS_ARM[*]} =~ $region ]];
+   then arch_flag="--compatible-architectures $arch"
+   else arch_flag=""
+   fi
+
     echo "Publishing ${runtime_name} layer to ${region}"
     layer_version=$(aws lambda publish-layer-version \
       --layer-name ${layer_name} \
       --content "S3Bucket=${bucket_name},S3Key=${s3_key}" \
       --description "New Relic Layer for ${runtime_name} (${arch})" \
-      --license-info "Apache-2.0" \
+      --license-info "Apache-2.0" $arch_flag \
       --compatible-runtimes ${compat_list[*]} \
-      --compatible-architectures "$arch" \
       --region "$region" \
       --output text \
       --query Version)
