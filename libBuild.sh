@@ -181,6 +181,7 @@ function publish_layer {
       --description "New Relic Layer for ${runtime_name} (${arch})" \
       --license-info "Apache-2.0" \
       --compatible-runtimes ${compat_list[*]} \
+      --compatible-architectures "$arch" \
       --region "$region" \
       --output text \
       --query Version)
