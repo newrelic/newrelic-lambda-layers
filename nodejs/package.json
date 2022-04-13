@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/iopipe/newrelic-lambda-layers#readme",
   "dependencies": {
-    "newrelic": "^8.5.1"
+    "newrelic": "^8.9.1"
   },
   "keywords": [
     "lambda",
