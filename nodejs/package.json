@@ -1,6 +1,6 @@
 {
   "name": "newrelic-lambda-layers",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
@@ -15,16 +15,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iopipe/newrelic-lambda-layers.git"
+    "url": "git+https://github.com/newrelic/newrelic-lambda-layers.git"
   },
-  "author": "IOpipe",
+  "author": "newrelic",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/iopipe/newrelic-lambda-layers/issues"
+    "url": "https://github.com/newrelic/newrelic-lambda-layers/issues"
   },
-  "homepage": "https://github.com/iopipe/newrelic-lambda-layers#readme",
+  "homepage": "https://github.com/newrelic/newrelic-lambda-layers#readme",
   "dependencies": {
-    "newrelic": "^8.5.1"
+    "newrelic": "^8.11.0"
   },
   "keywords": [
     "lambda",
