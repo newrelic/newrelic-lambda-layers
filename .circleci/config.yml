@@ -21,6 +21,16 @@ jobs:
           name: Publish layer
           command: make publish-nodejs14x-ci
 
+  publish-nodejs16x:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Publish layer
+          command: make publish-nodejs16x-ci
+
   publish-python36:
     docker:
       - image: circleci/python:3.6
