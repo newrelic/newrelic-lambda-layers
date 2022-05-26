@@ -3,7 +3,7 @@ version: 2
 jobs:
   publish-nodejs12x:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/node:12.22.12
     steps:
       - checkout
       - setup_remote_docker
@@ -13,7 +13,7 @@ jobs:
 
   publish-nodejs14x:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/node:14.19.3
     steps:
       - checkout
       - setup_remote_docker
@@ -23,7 +23,7 @@ jobs:
 
   publish-nodejs16x:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/node:16.15.0
     steps:
       - checkout
       - setup_remote_docker
