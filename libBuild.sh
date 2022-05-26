@@ -98,6 +98,9 @@ function layer_name_str() {
     "nodejs14.x")
       rt_part="NodeJS14X"
       ;;
+    "nodejs16.x")
+      rt_part="NodeJS16X"
+      ;;
     esac
 
     case $2 in
@@ -139,6 +142,9 @@ function s3_prefix() {
       ;;
     "nodejs14.x")
       name="nr-nodejs14.x"
+      ;;
+    "nodejs16.x")
+      name="nr-nodejs16.x"
       ;;
     esac
 
