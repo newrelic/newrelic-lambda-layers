@@ -52,7 +52,7 @@ public class HandlerWrapper {
                     };
 
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Error occurred during initialization of javaClassLoader: " + e);
+            throw new RuntimeException("Error occurred during initialization of javaClassLoader:", e);
         }
     }
 
