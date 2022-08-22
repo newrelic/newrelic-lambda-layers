@@ -1,16 +1,6 @@
 version: 2
 
 jobs:
-  publish-nodejs12x:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Publish layer
-          command: make publish-nodejs12x-ci
-
   publish-nodejs14x:
     docker:
       - image: circleci/python:3.8
@@ -125,12 +115,6 @@ workflows:
   version: 2
   publish-layers:
     jobs:
-      - publish-nodejs12x:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
       - publish-nodejs14x:
           filters:
             branches:
