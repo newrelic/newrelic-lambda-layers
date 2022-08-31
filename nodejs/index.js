@@ -23,13 +23,14 @@ function getHandler() {
 
   const parts = handler.split('.')
 
-  if (parts.length !== 2) {
+  if (parts.length < 2) {
     throw new Error(
-      `Improperly formatted handler environment variable: ${handler}`
+        `Improperly formatted handler environment variable: ${handler}`
     )
   }
 
-  const [moduleToImport, handlerToWrap] = parts
+  const handlerToWrap = parts.at(-1)
+  const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
 
   let importedModule
 
