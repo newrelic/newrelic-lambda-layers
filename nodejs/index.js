@@ -29,7 +29,7 @@ function getHandler() {
     )
   }
 
-  const handlerToWrap = parts.at(-1)
+  const handlerToWrap = parts[parts.length - 1]
   const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
 
   let importedModule
