@@ -3,7 +3,8 @@
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
-process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY = process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY || process.env.NEW_RELIC_ACCOUNT_ID
+process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY =
+  process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY || process.env.NEW_RELIC_ACCOUNT_ID
 
 if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
@@ -11,9 +12,9 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 
 const newrelic = require('newrelic')
 
-function getHandler() {
+function getHandlerPath() {
   let handler
-  const { NEW_RELIC_LAMBDA_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  const { NEW_RELIC_LAMBDA_HANDLER } = process.env
 
   if (!NEW_RELIC_LAMBDA_HANDLER) {
     throw new Error('No NEW_RELIC_LAMBDA_HANDLER environment variable set.')
@@ -25,13 +26,18 @@ function getHandler() {
 
   if (parts.length < 2) {
     throw new Error(
-        `Improperly formatted handler environment variable: ${handler}`
+      `Improperly formatted handler environment variable: ${handler}`
     )
   }
 
   const handlerToWrap = parts[parts.length - 1]
   const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
+  return { moduleToImport, handlerToWrap }
+}
 
+function requireHandler() {
+  const { LAMBDA_TASK_ROOT = '.' } = process.env
+  const { moduleToImport, handlerToWrap } = getHandlerPath()
   let importedModule
 
   try {
@@ -60,7 +66,7 @@ function getHandler() {
   return userHandler
 }
 
-const wrappedHandler = newrelic.setLambdaHandler(getHandler())
+const wrappedHandler = newrelic.setLambdaHandler(requireHandler())
 
 const ioMarks = {}
 
@@ -121,4 +127,4 @@ function patchedHandler() {
   return wrappedHandler.apply(this, args)
 }
 
-module.exports.handler = patchedHandler
+module.exports = { handler: patchedHandler, getHandlerPath }
