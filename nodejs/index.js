@@ -68,61 +68,9 @@ function requireHandler() {
 
 const wrappedHandler = newrelic.setLambdaHandler(requireHandler())
 
-const ioMarks = {}
-
-function patchIO(method, payload) {
-  const warning = `
-    Use of context.iopipe.* (including ${method}) is no longer supported.
-    Please see New Relic Node agent documentation here:
-    https://docs.newrelic.com/docs/agents/nodejs-agent
-    `
-
-  let property, value
-
-  if (method === 'label') {
-    property = `customLabel.${payload.value}`
-    value = payload.value
-  } else if (method === 'metric') {
-    property = `customMetric.${payload.name}`
-    value = payload.value
-  } else if (method === 'measure' && payload.name && ioMarks[payload.end].end && ioMarks[payload.start].start) {
-    property = `customMetric.${payload.name}`
-    value = ioMarks[payload.end].end - ioMarks[payload.start].start
-  }
-
-  if (typeof property !== 'undefined' && typeof value !== 'undefined') {
-    newrelic.addCustomAttribute(property, value)
-  }
-  /* eslint-disable no-console */
-  console.warn(warning)
-}
-
-const wrapPatch = () => {
-  return {
-    label: labelName => patchIO('label', {value: labelName}),
-    mark: {
-      start: markName => {
-        ioMarks[markName] = {start: new Date().getTime()}
-        return ioMarks[markName]
-      },
-      end: markName => {
-        ioMarks[markName] = {end: new Date().getTime()}
-        patchIO('measure', {name: markName, start: markName, end: markName})
-      }
-    },
-    measure: (name, start, end) => {
-      patchIO('measure', {name, start, end})
-    },
-    metric: (name, value) => patchIO('metric', {name, value})
-  }
-}
 
 function patchedHandler() {
   const args = Array.prototype.slice.call(arguments)
-
-  if (args[1] && typeof args[1] === 'object' && !args[1].iopipe) {
-    args[1].iopipe = wrapPatch()
-  }
 
   return wrappedHandler.apply(this, args)
 }
