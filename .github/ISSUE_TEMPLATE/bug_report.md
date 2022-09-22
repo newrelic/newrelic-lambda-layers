@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: "Bug report \U0001F41B"
 about: Describe a scenario in which this project behaves unexpectedly
 title: ''
 labels: bug, needs-triage
