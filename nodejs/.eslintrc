@@ -5,7 +5,7 @@
     "browser": false
   },
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 12 
   },
   "rules": {
     "indent": ["warn", 2, {"SwitchCase": 1}],
@@ -55,6 +55,12 @@
     "wrap-iife": "error"
   },
   "overrides": [
+    {
+      "files": ["test/*.tap.js"],
+      "rules": {
+        "no-shadow": ["warn", { "allow": ["t"] }] 
+      }
+    },
     {
         "files": ["test/integration/*.tap.js", "test/integration/*/*.tap.js", "test/integration/core/exec-me.js"],
         "rules": {

@@ -9,28 +9,41 @@
 // process.env.NEW_RELIC_APP_NAME = 'My Test App'
 
 const tap = require('tap')
-const { handler, getHandlerPath } = require('../index')
-const { TestAgent } = require('@newrelic/test-utilities')
+const proxyquire = require('proxyquire')
+const utils = require('@newrelic/test-utilities')
 
-tap.test('The handler wrapper wraps the handler', async (t) => {
-    let helper
+tap.test('Layer tests', (t) => {
+  t.autoend()
+  let handler, getHandlerPath, helper 
 
-    t.beforeEach(t => {
-        helper = new TestAgent()
-    })
-    t.test(async t => {
-        const p = getHandlerPath()
-        const testPath = [p.moduleToImport, p.handlerToWrap].join('.')
+  t.beforeEach(() => {
+    helper = utils.TestAgent.makeInstrumented() 
+    const newrelic = helper.getAgentApi() 
+        ;({ handler, getHandlerPath } = proxyquire('../index', {
+      newrelic
+    }))
+  })
+  t.afterEach(() => {
+    helper.unload()
+  })
+  t.test('New Relic handler wraps customer handler', (t) => {
+    const p = getHandlerPath()
+    const testPath = [p.moduleToImport, p.handlerToWrap].join('.')
 
-        t.ok(helper, 'Helper is ok')
-        t.equal(testPath, process.env.NEW_RELIC_LAMBDA_HANDLER, 'Path should be equivalent to NR Lambda Handler env var')
-        t.ok(handler, 'handler should be ok')
-        t.equal(typeof handler, 'function', 'handler should be a function')
-        t.end()
+    t.equal(testPath, process.env.NEW_RELIC_LAMBDA_HANDLER, 'Path should be equivalent to NR Lambda Handler env var')
+    t.ok(handler, 'handler should be ok')
+    t.equal(typeof handler, 'function', 'handler should be a function')
+    t.end()
+  })
+
+  t.test('should wrap handler in transaction', async(t) => {
+    t.plan(2)
+    helper.agent.on('transactionFinished', (tx) => {
+      t.equal(tx.name, 'OtherTransaction/Function/testFn', 'transaction should be properly named')
     })
-    t.afterEach(t => {
-        helper.unload()
-    })
+    const res = await handler({ key: 'value'}, { functionName: 'testFn'})
+    t.same(res, { statusCode: 200, body: 'response body' }, 'response should be correct')
+  })
 })
 
 
