@@ -4,9 +4,6 @@
  */
 
 'use strict'
-//
-// process.env.NEW_RELIC_LAMBDA_HANDLER = 'myFunction.handler'
-// process.env.NEW_RELIC_APP_NAME = 'My Test App'
 
 const tap = require('tap')
 const proxyquire = require('proxyquire')
@@ -45,6 +42,3 @@ tap.test('Layer tests', (t) => {
     t.same(res, { statusCode: 200, body: 'response body' }, 'response should be correct')
   })
 })
-
-
-// test .my.file.has.many.dots.handler
