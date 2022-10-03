@@ -3,7 +3,8 @@
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
-process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY = process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY || process.env.NEW_RELIC_ACCOUNT_ID
+process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY =
+  process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY || process.env.NEW_RELIC_ACCOUNT_ID
 
 if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
@@ -11,9 +12,9 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 
 const newrelic = require('newrelic')
 
-function getHandler() {
+function getHandlerPath() {
   let handler
-  const { NEW_RELIC_LAMBDA_HANDLER, LAMBDA_TASK_ROOT = '.' } = process.env
+  const { NEW_RELIC_LAMBDA_HANDLER } = process.env
 
   if (!NEW_RELIC_LAMBDA_HANDLER) {
     throw new Error('No NEW_RELIC_LAMBDA_HANDLER environment variable set.')
@@ -25,13 +26,18 @@ function getHandler() {
 
   if (parts.length < 2) {
     throw new Error(
-        `Improperly formatted handler environment variable: ${handler}`
+      `Improperly formatted handler environment variable: ${handler}`
     )
   }
 
   const handlerToWrap = parts[parts.length - 1]
   const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
+  return { moduleToImport, handlerToWrap }
+}
 
+function requireHandler() {
+  const { LAMBDA_TASK_ROOT = '.' } = process.env
+  const { moduleToImport, handlerToWrap } = getHandlerPath()
   let importedModule
 
   try {
@@ -60,65 +66,13 @@ function getHandler() {
   return userHandler
 }
 
-const wrappedHandler = newrelic.setLambdaHandler(getHandler())
+const wrappedHandler = newrelic.setLambdaHandler(requireHandler())
 
-const ioMarks = {}
-
-function patchIO(method, payload) {
-  const warning = `
-    Use of context.iopipe.* (including ${method}) is no longer supported.
-    Please see New Relic Node agent documentation here:
-    https://docs.newrelic.com/docs/agents/nodejs-agent
-    `
-
-  let property, value
-
-  if (method === 'label') {
-    property = `customLabel.${payload.value}`
-    value = payload.value
-  } else if (method === 'metric') {
-    property = `customMetric.${payload.name}`
-    value = payload.value
-  } else if (method === 'measure' && payload.name && ioMarks[payload.end].end && ioMarks[payload.start].start) {
-    property = `customMetric.${payload.name}`
-    value = ioMarks[payload.end].end - ioMarks[payload.start].start
-  }
-
-  if (typeof property !== 'undefined' && typeof value !== 'undefined') {
-    newrelic.addCustomAttribute(property, value)
-  }
-  /* eslint-disable no-console */
-  console.warn(warning)
-}
-
-const wrapPatch = () => {
-  return {
-    label: labelName => patchIO('label', {value: labelName}),
-    mark: {
-      start: markName => {
-        ioMarks[markName] = {start: new Date().getTime()}
-        return ioMarks[markName]
-      },
-      end: markName => {
-        ioMarks[markName] = {end: new Date().getTime()}
-        patchIO('measure', {name: markName, start: markName, end: markName})
-      }
-    },
-    measure: (name, start, end) => {
-      patchIO('measure', {name, start, end})
-    },
-    metric: (name, value) => patchIO('metric', {name, value})
-  }
-}
 
 function patchedHandler() {
   const args = Array.prototype.slice.call(arguments)
 
-  if (args[1] && typeof args[1] === 'object' && !args[1].iopipe) {
-    args[1].iopipe = wrapPatch()
-  }
-
   return wrappedHandler.apply(this, args)
 }
 
-module.exports.handler = patchedHandler
+module.exports = { handler: patchedHandler, getHandlerPath }

@@ -8,6 +8,9 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
+          name: Node 14 unit tests
+          command: npm test
+      - run:
           name: Publish layer
           command: make publish-nodejs14x-ci
 
@@ -17,6 +20,9 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run:
+          name: Node 16 unit tests
+          command: npm test
       - run:
           name: Publish layer
           command: make publish-nodejs16x-ci
