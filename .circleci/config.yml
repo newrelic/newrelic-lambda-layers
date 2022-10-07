@@ -3,7 +3,7 @@ version: 2
 jobs:
   publish-nodejs14x:
     docker:
-      - image: circleci/python:3.8
+      - image: circleci/node:14
     steps:
       - checkout
       - setup_remote_docker
@@ -16,7 +16,7 @@ jobs:
 
   publish-nodejs16x:
     docker:
-      - image: circleci/python:3.8
+      - image: circleci/node:16
     steps:
       - checkout
       - setup_remote_docker
