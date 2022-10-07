@@ -13,7 +13,8 @@
     "clean": "rm ../dist/nodejs/NewRelicLayer.zip",
     "lint": "eslint ./*.js test",
     "lint:fix": "eslint --fix ./*.js test",
-    "test": "npm run lint && npm run testHandler && npm run testHiddenHandler",
+    "setupTest": "npm install",
+    "test": "npm run setupTest && npm run lint && npm run testHandler && npm run testHiddenHandler",
     "testHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/handler.handler --test-env=NEW_RELIC_LICENSE_KEY=0123456",
     "testHiddenHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/.hidden/.directory/.handler.handler  --test-env=NEW_RELIC_LICENSE_KEY=0123456"
   },
