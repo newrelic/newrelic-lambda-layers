@@ -81,7 +81,7 @@ Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrel
 
 As of October 2022, AWS supports ECMAScript in Lambda and ECMAScript modules as dependencies, but those functions do not yet support loading dependencies from Lambda Layers, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). 
 
-If your Lambda functions support ESM, you can still instrument them with New Relic, but you will need to do the following: 
+If your Lambda functions are written using ES modules, you can still instrument them with New Relic, but you will need to do the following: 
 
 1. [instrument your function manually](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy#node) using our [Node Agent](https://github.com/newrelic/node-newrelic/)  
 2. On deploying your function, don't set the function handler to our Node wrapper; instead, use your regular handler function, which you've wrapped with `newrelic.setLambdaHandler()`. 
