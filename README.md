@@ -77,7 +77,7 @@ These steps will help you configure the layers correctly:
 
 Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda) for instructions on completing your configuration by linking your AWS Account and Cloudwatch Log Streams to New Relic.
 
-## Support for ECMAScript Modules
+## Support for ES Modules
 
 As of October 2022, AWS supports ECMAScript in Lambda and ECMAScript modules as dependencies, but those functions do not yet support loading dependencies from Lambda Layers, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). 
 
