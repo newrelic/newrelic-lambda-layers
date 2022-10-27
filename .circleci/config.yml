@@ -125,19 +125,21 @@ workflows:
   publish-layers:
     jobs:
       - publish-nodejs14x:
-          pre-steps: # steps to run before steps defined in the job bar
-            - run:
-                command: echo "install custom dependency"
-          post-steps: # steps to run after steps defined in the job bar
-            - run:
-                command: echo "upload artifact to s3"
+          post-steps:
+            - codecov/upload:
+                file: ./coverage/handler/lcov.info
+                flags: nodejs-14-handler
+            - codecov/upload:
+                file: ./coverage/hidden-handler/lcov.info
+                flags: nodejs-14-hidden-handler
       - publish-nodejs16x:
-          pre-steps: # steps to run before steps defined in the job bar
-            - run:
-                command: echo "install custom dependency"
-          post-steps: # steps to run after steps defined in the job bar
-            - run:
-                command: echo "upload artifact to s3"
+          post-steps:
+            - codecov/upload:
+                file: ./coverage/handler/lcov.info
+                flags: nodejs-16-handler
+            - codecov/upload:
+                file: ./coverage/hidden-handler/lcov.info
+                flags: nodejs-16-hidden-handler
       # - publish-nodejs14x:
           # filters:
             # branches:
