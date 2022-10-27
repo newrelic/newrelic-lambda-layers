@@ -13,9 +13,9 @@ jobs:
       - run:
           name: Node 14 unit tests
           command: cd nodejs && npm run ciTest
-      - run:
-          name: Publish layer
-          command: make publish-nodejs14x-ci
+      # - run:
+      #     name: Publish layer
+      #     command: make publish-nodejs14x-ci
       - codecov/upload:
           file: ./coverage/handler/lcov.info
           flags: nodejs-14-handler
@@ -32,9 +32,9 @@ jobs:
       - run:
           name: Node 16 unit tests
           command: cd nodejs && npm run ciTest
-      - run:
-          name: Publish layer
-          command: make publish-nodejs16x-ci
+      # - run:
+      #     name: Publish layer
+      #     command: make publish-nodejs16x-ci
       - codecov/upload:
           file: ./coverage/handler/lcov.info
           flags: nodejs-16-handler
@@ -42,95 +42,95 @@ jobs:
           file: ./coverage/hidden-handler/lcov.info
           flags: nodejs-16-hidden-handler
 
-  publish-python36:
-    docker:
-      - image: circleci/python:3.6
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd python
-            ./publish-layers.sh python3.6
+  # publish-python36:
+  #   docker:
+  #     - image: circleci/python:3.6
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install publish dependencies
+  #         command: sudo pip install -U awscli
+  #     - run:
+  #         name: Publish layer
+  #         command: |
+  #           cd python
+  #           ./publish-layers.sh python3.6
 
-  publish-python37:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd python
-            ./publish-layers.sh python3.7
+  # publish-python37:
+  #   docker:
+  #     - image: circleci/python:3.7
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install publish dependencies
+  #         command: sudo pip install -U awscli
+  #     - run:
+  #         name: Publish layer
+  #         command: |
+  #           cd python
+  #           ./publish-layers.sh python3.7
 
-  publish-python38:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd python
-            ./publish-layers.sh python3.8
+  # publish-python38:
+  #   docker:
+  #     - image: circleci/python:3.8
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install publish dependencies
+  #         command: sudo pip install -U awscli
+  #     - run:
+  #         name: Publish layer
+  #         command: |
+  #           cd python
+  #           ./publish-layers.sh python3.8
 
-  publish-python39:
-    docker:
-      - image: circleci/python:3.9
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd python
-            ./publish-layers.sh python3.9
+  # publish-python39:
+  #   docker:
+  #     - image: circleci/python:3.9
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install publish dependencies
+  #         command: sudo pip install -U awscli
+  #     - run:
+  #         name: Publish layer
+  #         command: |
+  #           cd python
+  #           ./publish-layers.sh python3.9
 
-  publish-java8.al2:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Publish layer
-          command: make publish-java8al2-ci
+  # publish-java8.al2:
+  #   docker:
+  #     - image: circleci/python:3.8
+  #   steps:
+  #     - checkout
+  #     - setup_remote_docker
+  #     - run:
+  #         name: Publish layer
+  #         command: make publish-java8al2-ci
 
-  publish-java11:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Publish layer
-          command: make publish-java11-ci
+  # publish-java11:
+  #   docker:
+  #     - image: circleci/python:3.8
+  #   steps:
+  #     - checkout
+  #     - setup_remote_docker
+  #     - run:
+  #         name: Publish layer
+  #         command: make publish-java11-ci
 
-  publish-extension:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd extension
-            ./publish-layer.sh
+  # publish-extension:
+  #   docker:
+  #     - image: circleci/python:3.8
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install publish dependencies
+  #         command: sudo pip install -U awscli
+  #     - run:
+  #         name: Publish layer
+  #         command: |
+  #           cd extension
+  #           ./publish-layer.sh
 
 workflows:
   version: 2
@@ -138,55 +138,55 @@ workflows:
     jobs:
       - publish-nodejs14x:
           filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
+            # branches:
+            #   ignore: /.*/
+            # tags:
+            #   only: /v[0-9]+(\.[0-9]+)*_nodejs/
       - publish-nodejs16x:
           filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
-      - publish-python36:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_python/
-      - publish-python37:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_python/
-      - publish-python38:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_python/
-      - publish-python39:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_python/
-      - publish-java11:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_java/
-      - publish-java8.al2:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_java/
-      - publish-extension:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_extension/
+            # branches:
+            #   ignore: /.*/
+            # tags:
+            #   only: /v[0-9]+(\.[0-9]+)*_nodejs/
+      # - publish-python36:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_python/
+      # - publish-python37:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_python/
+      # - publish-python38:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_python/
+      # - publish-python39:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_python/
+      # - publish-java11:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_java/
+      # - publish-java8.al2:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_java/
+      # - publish-extension:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*_extension/
