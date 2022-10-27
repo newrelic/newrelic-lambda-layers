@@ -136,14 +136,16 @@ workflows:
   version: 2
   publish-layers:
     jobs:
-      - publish-nodejs14x:
-          filters:
+      - publish-nodejs14x
+      - publish-nodejs16x
+      # - publish-nodejs14x:
+          # filters:
             # branches:
             #   ignore: /.*/
             # tags:
             #   only: /v[0-9]+(\.[0-9]+)*_nodejs/
-      - publish-nodejs16x:
-          filters:
+      # - publish-nodejs16x:
+          # filters:
             # branches:
             #   ignore: /.*/
             # tags:
