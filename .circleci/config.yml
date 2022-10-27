@@ -142,13 +142,13 @@ workflows:
               ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
-            post-steps:
-              - codecov/upload:
-                  file: ./nodejs/coverage/handler/lcov.info
-                  flags: nodejs-16-handler
-              - codecov/upload:
-                  file: ./nodejs/coverage/hidden-handler/lcov.info
-                  flags: nodejs-16-hidden-handler
+          post-steps:
+            - codecov/upload:
+                file: ./nodejs/coverage/handler/lcov.info
+                flags: nodejs-16-handler
+            - codecov/upload:
+                file: ./nodejs/coverage/hidden-handler/lcov.info
+                flags: nodejs-16-hidden-handler
       - publish-python36:
           filters:
             branches:
