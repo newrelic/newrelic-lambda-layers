@@ -29,12 +29,6 @@ jobs:
       # - run:
       #     name: Publish layer
       #     command: make publish-nodejs16x-ci
-      - codecov/upload:
-          file: ./coverage/handler/lcov.info
-          flags: nodejs-16-handler
-      - codecov/upload:
-          file: ./coverage/hidden-handler/lcov.info
-          flags: nodejs-16-hidden-handler
 
   # publish-python36:
   #   docker:
@@ -132,13 +126,20 @@ workflows:
     jobs:
       - publish-nodejs14x:
           post-steps:
-              - codecov/upload:
-                  file: ./coverage/handler/lcov.info
-                  flags: nodejs-14-handler
-              - codecov/upload:
-                  file: ./coverage/hidden-handler/lcov.info
-                  flags: nodejs-14-hidden-handler
-      - publish-nodejs16x
+            - codecov/upload:
+                file: ./coverage/handler/lcov.info
+                flags: nodejs-14-handler
+            - codecov/upload:
+                file: ./coverage/hidden-handler/lcov.info
+                flags: nodejs-14-hidden-handler
+      - publish-nodejs16x:
+          post-steps:
+            - codecov/upload:
+                file: ./coverage/handler/lcov.info
+                flags: nodejs-16-handler
+            - codecov/upload:
+                file: ./coverage/hidden-handler/lcov.info
+                flags: nodejs-16-hidden-handler
       # - publish-nodejs14x:
           # filters:
             # branches:
