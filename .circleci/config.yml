@@ -1,5 +1,8 @@
 version: 2
 
+orbs:
+  codecov: codecov/codecov@3.2.4
+
 jobs:
   publish-nodejs14x:
     docker:
@@ -13,6 +16,10 @@ jobs:
       - run:
           name: Publish layer
           command: make publish-nodejs14x-ci
+      - codecov/upload:
+          file: ./coverage/handler/lcov.info
+      - codecov/upload:
+          file: ./coverage/hidden-handler/lcov.info
 
   publish-nodejs16x:
     docker:
@@ -26,6 +33,10 @@ jobs:
       - run:
           name: Publish layer
           command: make publish-nodejs16x-ci
+      - codecov/upload:
+          file: ./coverage/handler/lcov.info
+      - codecov/upload:
+          file: ./coverage/hidden-handler/lcov.info
 
   publish-python36:
     docker:
