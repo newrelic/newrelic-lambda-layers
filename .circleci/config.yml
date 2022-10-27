@@ -127,18 +127,18 @@ workflows:
       - publish-nodejs14x:
           post-steps:
             - codecov/upload:
-                file: ./coverage/handler/lcov.info
+                file: ./nodejs/coverage/handler/lcov.info
                 flags: nodejs-14-handler
             - codecov/upload:
-                file: ./coverage/hidden-handler/lcov.info
+                file: ./nodejs/coverage/hidden-handler/lcov.info
                 flags: nodejs-14-hidden-handler
       - publish-nodejs16x:
           post-steps:
             - codecov/upload:
-                file: ./coverage/handler/lcov.info
+                file: ./nodejs/coverage/handler/lcov.info
                 flags: nodejs-16-handler
             - codecov/upload:
-                file: ./coverage/hidden-handler/lcov.info
+                file: ./nodejs/coverage/hidden-handler/lcov.info
                 flags: nodejs-16-hidden-handler
       # - publish-nodejs14x:
           # filters:
