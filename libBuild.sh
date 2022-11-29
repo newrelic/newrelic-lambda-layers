@@ -90,9 +90,6 @@ function layer_name_str() {
     "java11")
       rt_part="Java11"
       ;;
-    "python3.6")
-      rt_part="Python36"
-      ;;
     "python3.7")
       rt_part="Python37"
       ;;
@@ -134,9 +131,6 @@ function s3_prefix() {
       ;;
     "java11")
       name="java-11"
-      ;;
-    "python3.6")
-      name="nr-python3.6"
       ;;
     "python3.7")
       name="nr-python3.7"

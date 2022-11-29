@@ -43,20 +43,6 @@ jobs:
           name: Publish layer
           command: make publish-nodejs18x-ci
 
-  publish-python36:
-    docker:
-      - image: circleci/python:3.6
-    steps:
-      - checkout
-      - run:
-          name: Install publish dependencies
-          command: sudo pip install -U awscli
-      - run:
-          name: Publish layer
-          command: |
-            cd python
-            ./publish-layers.sh python3.6
-
   publish-python37:
     docker:
       - image: circleci/python:3.7
@@ -175,12 +161,6 @@ workflows:
             - codecov/upload:
                 file: ./nodejs/coverage/hidden-handler/lcov.info
                 flags: nodejs-18-hidden-handler
-      - publish-python36:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-python37:
           filters:
             branches:
