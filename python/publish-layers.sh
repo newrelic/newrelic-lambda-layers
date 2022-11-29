@@ -8,7 +8,6 @@ DIST_DIR=dist
 PY38_DIST_ARM64=$DIST_DIR/python38.arm64.zip
 PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 
-PY36_DIST_X86_64=$DIST_DIR/python36.x86_64.zip
 PY37_DIST_X86_64=$DIST_DIR/python37.x86_64.zip
 PY38_DIST_X86_64=$DIST_DIR/python38.x86_64.zip
 PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
@@ -16,31 +15,7 @@ PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.6|python3.7|python3.8|python3.9]"
-}
-
-function build-python36-x86 {
-    echo "Building New Relic layer for python3.6 (x86_64)"
-    rm -rf $BUILD_DIR $PY36_DIST_X86_64
-    mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.6/site-packages
-    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.6/site-packages/newrelic_lambda_wrapper.py
-    find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    download_extension x86_64
-    zip -rq $PY36_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-    echo "Build complete: ${PY36_DIST_X86_64}"
-}
-
-function publish-python36-x86 {
-    if [ ! -f $PY36_DIST_X86_64 ]; then
-        echo "Package not found: ${PY36_DIST_X86_64}"
-        exit 1
-    fi
-
-    for region in "${REGIONS_X86[@]}"; do
-      publish_layer $PY36_DIST_X86_64 $region python3.6 x86_64
-    done
+    echo "./publish-layers.sh [python3.7|python3.8|python3.9]"
 }
 
 function build-python37-x86 {
@@ -164,10 +139,6 @@ function publish-python39-x86 {
 }
 
 case "$1" in
-    "python3.6")
-        build-python36-x86
-        publish-python36-x86
-        ;;
     "python3.7")
         build-python37-x86
         publish-python37-x86
