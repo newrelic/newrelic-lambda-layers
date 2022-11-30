@@ -73,3 +73,22 @@ publish-nodejs16x-local: build-nodejs16x
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-nodejs16x
+
+build-nodejs18x:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-nodejs18x \
+		-f ./dockerfiles/Dockerfile.nodejs18x \
+		.
+
+publish-nodejs18x-ci: build-nodejs18x
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-nodejs18x
+
+publish-nodejs18x-local: build-nodejs18x
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-nodejs18x
