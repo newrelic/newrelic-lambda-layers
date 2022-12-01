@@ -6,7 +6,7 @@ orbs:
 jobs:
   publish-nodejs14x:
     docker:
-      - image: cimg/node:14
+      - image: cimg/node:14.21
     steps:
       - checkout
       - setup_remote_docker
@@ -19,7 +19,7 @@ jobs:
 
   publish-nodejs16x:
     docker:
-      - image: cimg/node:16
+      - image: cimg/node:16.18
     steps:
       - checkout
       - setup_remote_docker
@@ -32,7 +32,7 @@ jobs:
 
   publish-nodejs18x:
     docker:
-      - image: cimg/node:18
+      - image: cimg/node:18.12
     steps:
       - checkout
       - setup_remote_docker
