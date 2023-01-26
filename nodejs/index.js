@@ -11,7 +11,6 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 }
 
 const newrelic = require('newrelic')
-
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
@@ -35,21 +34,35 @@ function getHandlerPath() {
   return { moduleToImport, handlerToWrap }
 }
 
-function requireHandler() {
+function handleRequireImportError(e, moduleToImport) {
+  if (e.code === 'MODULE_NOT_FOUND') {
+    return new Error(`Unable to import module '${moduleToImport}'`)
+  }
+  return e
+}
+
+async function getImportedModule(LAMBDA_TASK_ROOT, moduleToImport) {
+  try {
+    return require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
+  } catch (e) {
+    // require failed, it could be an es module, so we try to import as mjs since v18 aws allows it
+    if (e.code === 'MODULE_NOT_FOUND' && process.version.startsWith('v18')) {
+      try {
+        return await import(`${LAMBDA_TASK_ROOT}/${moduleToImport}.mjs`)
+      } catch (esmError) {
+        throw handleRequireImportError(esmError, moduleToImport)
+      }
+    }
+
+    throw handleRequireImportError(e, moduleToImport)
+  }
+}
+
+async function requireHandler() {
   const { LAMBDA_TASK_ROOT = '.' } = process.env
   const { moduleToImport, handlerToWrap } = getHandlerPath()
-  let importedModule
 
-  try {
-    importedModule = require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      throw new Error(`Unable to import module '${moduleToImport}'`)
-    }
-    throw e
-  }
-
-  const userHandler = importedModule[handlerToWrap]
+  const userHandler = (await getImportedModule(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
 
   if (typeof userHandler === 'undefined') {
     throw new Error(
@@ -66,13 +79,13 @@ function requireHandler() {
   return userHandler
 }
 
-const wrappedHandler = newrelic.setLambdaHandler(requireHandler())
+const patchedHandlerPromise = requireHandler().then(userHandler => newrelic.setLambdaHandler(userHandler))
 
-
-function patchedHandler() {
+async function patchedHandler() {
   const args = Array.prototype.slice.call(arguments)
 
-  return wrappedHandler.apply(this, args)
+  return patchedHandlerPromise
+    .then(wrappedHandler => wrappedHandler.apply(this, args))
 }
 
 module.exports = { handler: patchedHandler, getHandlerPath }

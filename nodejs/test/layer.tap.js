@@ -17,7 +17,8 @@ tap.test('Layer tests', (t) => {
     helper = utils.TestAgent.makeInstrumented() 
     const newrelic = helper.getAgentApi() 
         ;({ handler, getHandlerPath } = proxyquire('../index', {
-      newrelic
+      newrelic,
+      'test/fixtures/esm/handler': null // necessary so that we can test what happens if require will not work
     }))
   })
   t.afterEach(() => {
@@ -34,11 +35,22 @@ tap.test('Layer tests', (t) => {
   })
 
   t.test('should wrap handler in transaction', async(t) => {
-    t.plan(2)
+    t.plan(4)
     helper.agent.on('transactionFinished', (tx) => {
       t.equal(tx.name, 'OtherTransaction/Function/testFn', 'transaction should be properly named')
     })
+
     const res = await handler({ key: 'value'}, { functionName: 'testFn'})
-    t.same(res, { statusCode: 200, body: 'response body' }, 'response should be correct')
+
+    t.same(res, { statusCode: 200, body: 'response body value' }, 'response should be correct')
+    // second run is to ensure that the promise is reused and no the whole process to require the handler
+
+    process.env = Object.assign(process.env, {
+      NEW_RELIC_LAMBDA_HANDLER: 'some_not/existing_path.handler'
+    })
+
+    const resSecond = await handler({ key: 'value second'}, { functionName: 'testFn'})
+
+    t.same(resSecond, { statusCode: 200, body: 'response body value second' }, 'response should be correct')
   })
 })
