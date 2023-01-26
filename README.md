@@ -79,16 +79,16 @@ Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrel
 
 ## Support for ES Modules (Node.js)
 
-In January 2022, AWS announced support for ECMAScript in Lambda and ECMAScript modules as dependencies. The New Relic Node Agent introduced experimental support for ES Modules in version 9.1.0. Unfortunately, Lambda functions do not yet support loading ES Module dependencies from Lambda Layers, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). 
+AWS announced support for Node 18 as a Lambda runtime in late 2022, introducing `aws-sdk` version 3 for Node 18 only. This version of `aws-sdk` patches `NODE_PATH`, so ESM-supporting functions using `import` and top-level `await` should work as expected with Lambda Layer releases `v9.8.1.1` and above. (Numerical layer versions vary by region and runtime.)
 
-If your Lambda functions are written using ES modules, you can still instrument them with New Relic, but you will need to do the following: 
+You may see some warnings from the Extension in CloudWatch logs referring to a non-standard handler; these warnings may be ignored.
 
-1. [instrument your function manually](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy#node) using our [Node Agent](https://github.com/newrelic/node-newrelic/)  
-2. On deploying your function, don't set the function handler to our Node wrapper; instead, use your regular handler function, which you've wrapped with `newrelic.setLambdaHandler()`. 
-3. Install our Extension-only Lambda Layer for delivering telemetry. Use our [layer discovery website](https://layers.newrelic-external.com/) to find the ARN for your region. Look for either NewRelicLambdaExtension or NewRelicLambdaExtensionARM64 (depending on your function's architecture). 
+If your Node functions use `import` and top-level `await` in Node 16 or Node 14 runtimes, layer-installed instrumentation will be unable to find imported modules, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). You can still instrument your functions with New Relic, but you will need to do the following:
+
+1. [instrument your function manually](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy#node) using our [Node Agent](https://github.com/newrelic/node-newrelic/)
+2. On deploying your function, don't set the function handler to our Node wrapper; instead, use your regular handler function, which you've wrapped with `newrelic.setLambdaHandler()`.
+3. Install our Extension-only Lambda Layer for delivering telemetry. Use our [layer discovery website](https://layers.newrelic-external.com/) to find the ARN for your region. Look for either NewRelicLambdaExtension or NewRelicLambdaExtensionARM64 (depending on your function's architecture).
 4. Add your `NEW_RELIC_LICENSE_KEY` as an environment variable.
-
-You may see some warnings from the Extension in CloudWatch logs referring to a non-standard handler; these may be ignored, since you've wrapped manually.
 
 ## Support
 
