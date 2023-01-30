@@ -38,7 +38,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Node 18 unit tests
-          command: cd nodejs && npm run ciTest
+          command: cd nodejs && npm run ciTest && run ciTestEsmHandler
       - run:
           name: Publish layer
           command: make publish-nodejs18x-ci
