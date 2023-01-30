@@ -15,11 +15,11 @@
     "lint:fix": "eslint --fix ./*.js test",
     "test": "npm run lint && npm run testHandler && npm run testHiddenHandler && npm run testEsmHandler",
     "testHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/handler.handler --test-env=NEW_RELIC_LICENSE_KEY=0123456",
-    "testEsmHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/esm/handler.handler --test-env=NEW_RELIC_LICENSE_KEY=0123456",
+    "testEsmHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.mjs)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/esm/handler.handler --test-env=NEW_RELIC_LICENSE_KEY=0123456 --node-arg=--experimental-loader=testdouble",
     "testHiddenHandler": "rm -f newrelic_agent.log && time tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/.hidden/.directory/.handler.handler  --test-env=NEW_RELIC_LICENSE_KEY=0123456",
     "ciTest": "npm install && npm run lint && npm run ciTestHandler && npm run ciTestHiddenHandler && npm run ciTestEsmHandler",
     "ciTestHandler": "c8 -o ./coverage/handler tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/handler.handler --test-env=NEW_RELIC_LICENSE_KEY=0123456",
-    "ciTestEsmHandler": "c8 -o ./coverage/hidden-handler tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/esm/handler.handler  --test-env=NEW_RELIC_LICENSE_KEY=0123456",
+    "ciTestEsmHandler": "c8 -o ./coverage/hidden-handler tap --test-regex='(\\/|^test\\/.*\\.tap\\.mjs)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/esm/handler.handler  --test-env=NEW_RELIC_LICENSE_KEY=0123456 --node-arg=--experimental-loader=testdouble",
     "ciTestHiddenHandler": "c8 -o ./coverage/hidden-handler tap --test-regex='(\\/|^test\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic --test-env=NEW_RELIC_LAMBDA_HANDLER=test/fixtures/.hidden/.directory/.handler.handler  --test-env=NEW_RELIC_LICENSE_KEY=0123456"
   },
   "repository": {
@@ -53,6 +53,7 @@
     "eslint": "^8.23.1",
     "eslint-plugin-import": "^2.26.0",
     "proxyquire": "^2.1.3",
-    "tap": "^16.3.0"
+    "tap": "^16.3.0",
+    "testdouble": "^3.16.8"
   }
 }

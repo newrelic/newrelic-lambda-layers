@@ -36,6 +36,8 @@ function getHandlerPath() {
 
 function handleRequireImportError(e, moduleToImport) {
   if (e.code === 'MODULE_NOT_FOUND') {
+    // console.log("errrrrrr", e)
+    // console.error(e)
     return new Error(`Unable to import module '${moduleToImport}'`)
   }
   return e

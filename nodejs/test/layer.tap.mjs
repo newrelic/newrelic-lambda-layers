@@ -5,23 +5,23 @@
 
 'use strict'
 
-const tap = require('tap')
-const proxyquire = require('proxyquire')
-const utils = require('@newrelic/test-utilities')
+import tap from 'tap'
+import * as td from 'testdouble'
+import * as utils from '@newrelic/test-utilities'
 
 tap.test('Layer tests', (t) => {
   t.autoend()
   let handler, getHandlerPath, helper
 
-  t.beforeEach(() => {
+  t.beforeEach(async () => {
     helper = utils.TestAgent.makeInstrumented()
     const newrelic = helper.getAgentApi()
-        ;({ handler, getHandlerPath } = proxyquire('../index', {
-      newrelic
-    }))
+    ;({ handler, getHandlerPath } = await import('../index.js'))
+    await td.replaceEsm('../index.js', { 'handler': handler, 'getHandlerPath': getHandlerPath }, newrelic)
   })
   t.afterEach(() => {
     helper.unload()
+    td.reset()
   })
   t.test('New Relic handler wraps customer handler', (t) => {
     const p = getHandlerPath()
