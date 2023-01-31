@@ -11,17 +11,21 @@ import * as utils from '@newrelic/test-utilities'
 
 tap.test('Layer tests', (t) => {
   t.autoend()
-  let handler, getHandlerPath, helper
+  let handler, getHandlerPath, helper, wrapper
 
   t.beforeEach(async () => {
     helper = utils.TestAgent.makeInstrumented()
-    const newrelic = helper.getAgentApi()
-    ;({ handler, getHandlerPath } = await import('../index.js'))
-    await td.replaceEsm('../index.js', { 'handler': handler, 'getHandlerPath': getHandlerPath }, newrelic)
+    // const newrelic = helper.getAgentApi();
+    const newrelic = helper.getAgentApi();
+    // await td.replace('newrelic', newrelic);
+    await td.replaceEsm('newrelic', newrelic);
+    await import('newrelic')
+    console.log("NEW RELIC", newrelic);
+    ({ handler, getHandlerPath } = await import('../index.js'))
   })
   t.afterEach(() => {
-    helper.unload()
     td.reset()
+    helper.unload()
   })
   t.test('New Relic handler wraps customer handler', (t) => {
     const p = getHandlerPath()
