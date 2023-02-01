@@ -11,17 +11,16 @@ import * as utils from '@newrelic/test-utilities'
 
 tap.test('Layer tests', (t) => {
   t.autoend()
-  let handler, getHandlerPath, helper, wrapper
+  let handler, getHandlerPath, helper, fakeAgent
 
   t.beforeEach(async () => {
     helper = utils.TestAgent.makeInstrumented()
-    // const newrelic = helper.getAgentApi();
-    const newrelic = helper.getAgentApi();
-    // await td.replace('newrelic', newrelic);
-    await td.replaceEsm('newrelic', newrelic);
-    await import('newrelic')
-    console.log("NEW RELIC", newrelic);
-    ({ handler, getHandlerPath } = await import('../index.js'))
+    fakeAgent = helper.getAgentApi()
+    // await td.replace('newrelic', fakeAgent); // doesn't replace nr
+    const replaced = await (await td.replaceEsm('newrelic', {},  fakeAgent));  // Looks weird and wrong
+        // How to apply the replaced newrelic to this imported file under test?
+        // It's still referencing the real, unmocked NR agent.
+        ({handler, getHandlerPath} = await import('../index.js'));
   })
   t.afterEach(() => {
     td.reset()
