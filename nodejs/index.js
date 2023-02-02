@@ -45,15 +45,14 @@ async function getImportedModule(LAMBDA_TASK_ROOT, moduleToImport) {
   try {
     return require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
   } catch (e) {
-    // require failed, it could be an es module, so we try to import as mjs since v18 aws allows it
-    if (e.code === 'MODULE_NOT_FOUND' && process.version.startsWith('v18')) {
+    // require failed, it could be an es module, so we try to import as mjs
+    if (e.code === 'MODULE_NOT_FOUND') {
       try {
         return await import(`${LAMBDA_TASK_ROOT}/${moduleToImport}.mjs`)
       } catch (esmError) {
         throw handleRequireImportError(esmError, moduleToImport)
       }
     }
-
     throw handleRequireImportError(e, moduleToImport)
   }
 }
