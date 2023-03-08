@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import imp
+import importlib
 import os
+import sys
 import warnings
 
 os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME", ""))
@@ -51,28 +52,17 @@ def get_handler():
             % os.environ["NEW_RELIC_LAMBDA_HANDLER"]
         )
 
-    file_handle, pathname, desc = None, None, None
-
     try:
-        for segment in module_path.split("."):
-            if pathname is not None:
-                pathname = [pathname]
+        # Use the same check as
+        # https://github.com/aws/aws-lambda-python-runtime-interface-client/blob/97dee252434edc56be4cafd54a9af1e7fa041eaf/awslambdaric/bootstrap.py#L33
+        if module_path.split(".")[0] in sys.builtin_module_names:
+            raise ImportError(
+                "Cannot use built-in module %s as a handler module" % module_path
+            )
 
-            file_handle, pathname, desc = imp.find_module(segment, pathname)
-
-        if file_handle is None:
-            module_type = desc[2]
-            if module_type == imp.C_BUILTIN:
-                raise ImportError(
-                    "Cannot use built-in module %s as a handler module" % module_path
-                )
-
-        module = imp.load_module(module_path, file_handle, pathname, desc)
+        module = importlib.import_module(module_path)
     except Exception as e:
         raise ImportError("Failed to import module '%s': %s" % (module_path, e))
-    finally:
-        if file_handle is not None:
-            file_handle.close()
 
     try:
         handler = getattr(module, handler_name)
