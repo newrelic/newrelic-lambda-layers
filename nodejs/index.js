@@ -42,13 +42,23 @@ function handleRequireImportError(e, moduleToImport) {
 }
 
 async function getImportedModule(LAMBDA_TASK_ROOT, moduleToImport) {
+  const modpath = `${LAMBDA_TASK_ROOT}/${moduleToImport}`
   try {
-    return require(`${LAMBDA_TASK_ROOT}/${moduleToImport}`)
+    return require(modpath)
   } catch (e) {
     // require failed, it could be an es module, so we try to import as mjs
     if (e.code === 'MODULE_NOT_FOUND') {
       try {
-        return await import(`${LAMBDA_TASK_ROOT}/${moduleToImport}.mjs`)
+        return await import(`${modpath}.mjs`)
+      } catch (esmError) {
+        throw handleRequireImportError(esmError, moduleToImport)
+      }
+    } else if (e.code === 'ERR_REQUIRE_ESM') {
+      // The name is right, but we attempted to require an ECMAScript module,
+      // probably one ending in `.js` but marked as ESM by `"type": "module"`
+      // in package.json
+      try {
+        return await import(require.resolve(modpath))
       } catch (esmError) {
         throw handleRequireImportError(esmError, moduleToImport)
       }
