@@ -99,6 +99,9 @@ function layer_name_str() {
     "python3.9")
       rt_part="Python39"
       ;;
+    "python3.10")
+      rt_part="Python310"
+      ;;
     "nodejs14.x")
       rt_part="NodeJS14X"
       ;;
@@ -140,6 +143,9 @@ function s3_prefix() {
       ;;
     "python3.9")
       name="nr-python3.9"
+      ;;
+    "python3.10")
+      name="nr-python3.10"
       ;;
     "nodejs14.x")
       name="nr-nodejs14.x"
