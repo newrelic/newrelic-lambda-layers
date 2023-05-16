@@ -13,7 +13,7 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-events:3.8.0")
     implementation("com.amazonaws:aws-lambda-java-core:1.2.0")
     implementation("com.amazonaws:aws-lambda-java-serialization:1.0.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.2")
     testImplementation("junit:junit:4.13")
     testImplementation('com.github.stefanbirkner:system-lambda:1.2.0')
