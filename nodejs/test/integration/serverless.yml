@@ -1,0 +1,226 @@
+service: cjs
+frameworkVersion: '3'
+
+custom:
+  useESM:
+    default: false
+    cjs: false
+    esm: true
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+functions:
+  contextDoneHandler:
+    events:
+      - http:
+          method: get
+          path: context-done-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextDoneHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  contextDoneHandlerDeferred:
+    events:
+      - http:
+          method: get
+          path: context-done-handler-deferred
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextDoneHandlerDeferred
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  contextSucceedHandler:
+    events:
+      - http:
+          method: get
+          path: context-succeed-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  contextSucceedHandlerDeferred:
+    events:
+      - http:
+          method: get
+          path: context-succeed-handler-deferred
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedHandlerDeferred
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  callbackHandler:
+    events:
+      - http:
+          method: get
+          path: callback-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  callbackHandlerDeferred:
+    events:
+      - http:
+          method: get
+          path: callback-handler-deferred
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackHandlerDeferred
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  promiseHandler:
+    events:
+      - http:
+          method: get
+          path: promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  promiseHandlerDeferred:
+    events:
+      - http:
+          method: get
+          path: promise-handler-deferred
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseHandlerDeferred
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  asyncFunctionHandler:
+    events:
+      - http:
+          method: get
+          path: async-function-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.asyncFunctionHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  promiseWithDefinedCallbackHandler:
+    events:
+      - http:
+          method: get
+          path: promise-with-defined-callback-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseWithDefinedCallbackHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  contextSucceedWithContextDoneHandler:
+    events:
+      - http:
+          method: get
+          path: context-succeed-with-context-done-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedWithContextDoneHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  callbackWithContextDoneHandler:
+    events:
+      - http:
+          method: get
+          path: callback-with-context-done-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackWithContextDoneHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  callbackWithPromiseHandler:
+    events:
+      - http:
+          method: get
+          path: callback-with-promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackWithPromiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  callbackInsidePromiseHandler:
+    events:
+      - http:
+          method: get
+          path: callback-inside-promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackInsidePromiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  throwExceptionInPromiseHandler:
+    events:
+      - http:
+          method: get
+          path: throw-exception-in-promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.throwExceptionInPromiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  throwExceptionInCallbackHandler:
+    events:
+      - http:
+          method: get
+          path: throw-exception-in-callback-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.throwExceptionInCallbackHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  NoAnswerInPromiseHandler:
+    events:
+      - http:
+          method: get
+          path: no-answer-in-promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.NoAnswerInPromiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  BadAnswerInPromiseHandler:
+    events:
+      - http:
+          method: get
+          path: bad-answer-in-promise-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.BadAnswerInPromiseHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
+  BadAnswerInCallbackHandler:
+    events:
+      - http:
+          method: get
+          path: bad-answer-in-callback-handler
+    handler: ../../index.handler
+    environment:
+      NEW_RELIC_USE_ESM: ${self:custom.useESM.${env:MODULE_TYPE}, '${self:custom.useESM.default}'}
+      NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.BadAnswerInCallbackHandler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./

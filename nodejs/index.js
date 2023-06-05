@@ -11,6 +11,9 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
 }
 
 const newrelic = require('newrelic')
+const fs = require('node:fs')
+const path = require('node:path')
+
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
@@ -41,60 +44,102 @@ function handleRequireImportError(e, moduleToImport) {
   return e
 }
 
-async function getImportedModule(LAMBDA_TASK_ROOT, moduleToImport) {
-  const modpath = `${LAMBDA_TASK_ROOT}/${moduleToImport}`
-  try {
-    return require(modpath)
-  } catch (e) {
-    // require failed, it could be an es module, so we try to import as mjs
-    if (e.code === 'MODULE_NOT_FOUND') {
-      try {
-        return await import(`${modpath}.mjs`)
-      } catch (esmError) {
-        throw handleRequireImportError(esmError, moduleToImport)
-      }
-    } else if (e.code === 'ERR_REQUIRE_ESM') {
-      // The name is right, but we attempted to require an ECMAScript module,
-      // probably one ending in `.js` but marked as ESM by `"type": "module"`
-      // in package.json
-      try {
-        return await import(require.resolve(modpath))
-      } catch (esmError) {
-        throw handleRequireImportError(esmError, moduleToImport)
-      }
+function getFullyQualifiedModulePath(modulePath, extensions) {
+  let fullModulePath
+
+  extensions.forEach((extension) => {
+    const filePath = modulePath + extension
+    if (fs.existsSync(filePath)) {
+      fullModulePath = filePath
+      return
     }
-    throw handleRequireImportError(e, moduleToImport)
+  })
+
+  if (!fullModulePath) {
+    throw new Error(
+      `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
+    )
+  }
+
+  return fullModulePath
+}
+
+async function getModuleWithImport(appRoot, moduleToImport) {
+  const modulePath = path.resolve(appRoot, moduleToImport)
+  const validExtensions = ['.mjs', '.js']
+  const fullModulePath = getFullyQualifiedModulePath(modulePath, validExtensions)
+
+  try {
+    return await import(fullModulePath)
+  } catch (err) {
+    throw handleRequireImportError(err, moduleToImport)
   }
 }
 
-async function requireHandler() {
-  const { LAMBDA_TASK_ROOT = '.' } = process.env
-  const { moduleToImport, handlerToWrap } = getHandlerPath()
+function getModuleWithRequire(appRoot, moduleToImport) {
+  const modulePath = path.resolve(appRoot, moduleToImport)
+  const validExtensions = ['.cjs', '.js']
+  const fullModulePath = getFullyQualifiedModulePath(modulePath, validExtensions)
 
-  const userHandler = (await getImportedModule(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
+  try {
+    return require(fullModulePath)
+  } catch (err) {
+    throw handleRequireImportError(err, moduleToImport)
+  }
+}
 
+function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   if (typeof userHandler === 'undefined') {
     throw new Error(
-      `Handler '${handlerToWrap}' missing on module '${moduleToImport}'`
+      `Handler '${handlerName}' missing on module '${moduleName}'`
     )
   }
 
   if (typeof userHandler !== 'function') {
     throw new Error(
-      `Handler '${handlerToWrap}' from '${moduleToImport}' is not a function`
+      `Handler '${handlerName}' from '${moduleName}' is not a function`
     )
   }
+}
+
+async function importHandler() {
+  const { LAMBDA_TASK_ROOT = '.' } = process.env
+  const { moduleToImport, handlerToWrap } = getHandlerPath()
+
+  const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
+  validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
-const patchedHandlerPromise = requireHandler().then(userHandler => newrelic.setLambdaHandler(userHandler))
+function requireHandler() {
+  const { LAMBDA_TASK_ROOT = '.' } = process.env
+  const { moduleToImport, handlerToWrap } = getHandlerPath()
 
-async function patchedHandler() {
-  const args = Array.prototype.slice.call(arguments)
+  const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
+  validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
-  return patchedHandlerPromise
-    .then(wrappedHandler => wrappedHandler.apply(this, args))
+  return userHandler
 }
 
-module.exports = { handler: patchedHandler, getHandlerPath }
+
+async function patchESModuleHandler() {
+  const userHandler = await importHandler()
+  const wrappedHandler = newrelic.setLambdaHandler(userHandler)
+  const args = Array.prototype.slice.call(arguments)
+
+  return wrappedHandler.apply(this, args)
+}
+
+function patchCommonJSHandler() {
+  const userHandler = requireHandler()
+  const wrappedHandler = newrelic.setLambdaHandler(userHandler)
+  const args = Array.prototype.slice.call(arguments)
+
+  return wrappedHandler.apply(this, args)
+}
+
+module.exports = { 
+  handler: process.env.NEW_RELIC_USE_ESM === 'true' ? patchESModuleHandler : patchCommonJSHandler,
+  getHandlerPath
+}
