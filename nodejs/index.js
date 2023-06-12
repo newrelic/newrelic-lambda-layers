@@ -85,7 +85,15 @@ async function requireHandler() {
     )
   }
 
-  return userHandler
+  return function (...rest) {
+    const headers = rest[0]?.headers || {};
+
+    if (headers.newrelic) {
+      console.log('Applying W3C headers')
+      newrelic.getTransaction().acceptDistributedTraceHeaders("HTTP", headers)
+    }
+    return userHandler.apply(this, rest)
+  }
 }
 
 const patchedHandlerPromise = requireHandler().then(userHandler => newrelic.setLambdaHandler(userHandler))
