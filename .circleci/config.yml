@@ -144,11 +144,8 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
           post-steps:
             - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-14-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-14-hidden-handler
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-14-unit
       - publish-nodejs16x:
           filters:
             branches:
@@ -157,11 +154,8 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
           post-steps:
             - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-16-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-16-hidden-handler
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-16-unit
       - publish-nodejs18x:
           filters:
             branches:
@@ -170,11 +164,8 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
           post-steps:
             - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-18-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-18-hidden-handler
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-18-unit
       - publish-python37:
           filters:
             branches:
