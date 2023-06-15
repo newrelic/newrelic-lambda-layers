@@ -2,10 +2,19 @@
 
 const tap = require('tap')
 const fetch = require('node-fetch')
+const { startSlsOffline, stopSlsOffline } = require('../helpers.cjs')
 const BASE_URL = 'http://localhost:3000'
 
 tap.test('CJS Handler Integration Tests', (t) => {
   t.autoend()
+
+  t.before(async() => {
+    await startSlsOffline()
+  })
+
+  t.teardown(() => {
+    stopSlsOffline()
+  })
   
   ;[
     {

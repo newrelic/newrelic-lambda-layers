@@ -75,3 +75,5 @@ jobs:
             - name: Run Integration Tests
               run: npm run test:integration
               working-directory: nodejs
+              env:
+                NODE_RUNTIME: nodejs${{ matrix.node-version }}

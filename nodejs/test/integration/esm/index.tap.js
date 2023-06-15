@@ -1,9 +1,18 @@
 import tap from 'tap'
 import fetch from 'node-fetch'
+import { startSlsOffline, stopSlsOffline } from '../helpers.cjs'
 const BASE_URL = 'http://localhost:3000'
 
 tap.test('ESM Handler Integration Tests', (t) => {
   t.autoend()
+
+  t.before(async() => {
+    await startSlsOffline()
+  })
+
+  t.teardown(() => {
+    stopSlsOffline()
+  })
   
   ;[
     {

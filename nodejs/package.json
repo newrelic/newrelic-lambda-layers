@@ -16,12 +16,8 @@
     "test": "npm run lint && npm run test:unit && npm run test:integration",
     "test:unit": "rm -f newrelic_agent.log && c8 -o ./coverage/unit tap --test-regex='(\\/|^test\\/unit\\/.*\\.tap\\.js)$' --timeout=180 --no-coverage --reporter classic",
     "test:integration": "npm run test:integration:cjs && npm run test:integration:esm",
-    "pretest:integration:cjs": "MODULE_TYPE=cjs ./scripts/start-offline.sh",
-    "test:integration:cjs": "tap --no-coverage --reporter classic test/integration/cjs/*.tap.js",
-    "posttest:integration:cjs": "MODULE_TYPE=cjs ./scripts/stop-offline.sh",
-    "pretest:integration:esm": "MODULE_TYPE=esm ./scripts/start-offline.sh",
-    "test:integration:esm": "tap --no-coverage --reporter classic test/integration/esm/*.tap.js",
-    "posttest:integration:esm": "MODULE_TYPE=esm ./scripts/stop-offline.sh"
+    "test:integration:cjs": "NEW_RELIC_USE_ESM=false MODULE_TYPE=cjs tap --timeout=180 --no-coverage --reporter classic test/integration/cjs/*.tap.js",
+    "test:integration:esm": "NEW_RELIC_USE_ESM=true MODULE_TYPE=esm tap --timeout=180 --no-coverage --reporter classic test/integration/esm/*.tap.js"
   },
   "repository": {
     "type": "git",
