@@ -74,13 +74,13 @@ tap.test('ESM Handler Integration Tests', (t) => {
     },
     {
       description:
-        'when handler throws an expection in promise should return 502',
+        'when handler throws an exception in promise should return 502',
       path: '/dev/throw-exception-in-promise-handler',
       status: 502,
     },
     {
       description:
-        'when handler throws an expection before calling callback should return 502',
+        'when handler throws an exception before calling callback should return 502',
       path: '/dev/throw-exception-in-callback-handler',
       status: 502,
     },
