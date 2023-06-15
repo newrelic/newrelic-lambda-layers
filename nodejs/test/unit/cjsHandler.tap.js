@@ -11,7 +11,7 @@ tap.test('Layer Handler - CJS Function', (t) => {
   let originalEnv
 
   t.beforeEach(() => {
-    originalEnv = process.env
+    originalEnv = { ...process.env }
     process.env.NEW_RELIC_USE_ESM = 'false'
     
     helper = utils.TestAgent.makeInstrumented() 
@@ -24,7 +24,7 @@ tap.test('Layer Handler - CJS Function', (t) => {
   })
 
   t.afterEach(() => {
-    process.env = originalEnv
+    process.env = { ...originalEnv }
     helper.unload()
   })
   
