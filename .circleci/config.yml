@@ -45,7 +45,7 @@ jobs:
 
   publish-python37:
     docker:
-      - image: circleci/python:3.7
+      - image: cimg/python:3.7
     steps:
       - checkout
       - run:
@@ -59,7 +59,7 @@ jobs:
 
   publish-python38:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - checkout
       - run:
@@ -73,7 +73,7 @@ jobs:
 
   publish-python39:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
@@ -101,7 +101,7 @@ jobs:
 
   publish-java8-al2:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - checkout
       - setup_remote_docker
@@ -111,7 +111,7 @@ jobs:
 
   publish-java11:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - checkout
       - setup_remote_docker
@@ -121,7 +121,7 @@ jobs:
 
   publish-extension:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - checkout
       - run:
