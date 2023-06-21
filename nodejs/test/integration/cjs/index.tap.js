@@ -75,7 +75,7 @@ tap.test('CJS Handler Integration Tests', (t) => {
     // nonetheless, we test some of the behaviour to match AWS execution precedence
     {
       description:
-        'when handler returns a callback but defines a callback parameter',
+        'when handler returns a promise but defines a callback parameter',
       expected: 'Hello Promise!',
       path: '/dev/promise-with-defined-callback-handler',
       status: 200,
