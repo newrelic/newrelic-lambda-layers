@@ -89,9 +89,9 @@ tap.test('Edge cases (CJS)', (t) => {
     handlerMethod = 'handler'
     process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
     t.throws(() => {
-          return handler({ key: 'this is a test'}, { functionName: handlerMethod })
-        }, `Unable to import module '${handlerPath}${handlerFile}'`,
-        `when handler file can't load dependencies`)
+      return handler({ key: 'this is a test'}, { functionName: handlerMethod })
+    }, `Unable to import module '${handlerPath}${handlerFile}'`,
+    `when handler file can't load dependencies`)
 
     t.end()
   })
