@@ -95,6 +95,9 @@ function layer_name_str() {
     "java11")
       rt_part="Java11"
       ;;
+    "java17")
+      rt_part="Java17"
+      ;;
     "python3.7")
       rt_part="Python37"
       ;;
