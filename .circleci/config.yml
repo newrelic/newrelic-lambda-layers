@@ -50,7 +50,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -64,7 +64,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -78,7 +78,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -92,7 +92,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -126,7 +126,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
