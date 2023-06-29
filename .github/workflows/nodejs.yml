@@ -1,0 +1,79 @@
+name: Node.js Layer CI
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - 'nodejs/**'
+    pull_request:
+        paths:
+            - 'nodejs/**'
+    workflow_dispatch:
+
+jobs:
+
+    lint:
+        runs-on: ubuntu-latest
+    
+        strategy:
+          matrix:
+            node-version: [lts/*]
+    
+        steps:
+        - uses: actions/checkout@v3
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v3
+          with:
+            node-version: ${{ matrix.node-version }}
+        - name: Install Dependencies
+          run: npm ci
+          working-directory: nodejs
+        - name: Run Linting
+          run: npm run lint
+          working-directory: nodejs
+    
+    unit:
+        runs-on: ubuntu-latest
+        
+        strategy:
+            matrix:
+                node-version: [14.x, 16.x, 18.x]
+        steps:
+        - uses: actions/checkout@v3
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v3
+          with:
+            node-version: ${{ matrix.node-version }}
+        - name: Install Dependencies
+          run: npm ci
+          working-directory: nodejs
+        - name: Run Unit Tests
+          run: npm run test:unit
+          working-directory: nodejs
+        - name: Archive Unit Test Coverage
+          uses: actions/upload-artifact@v3
+          with:
+            name: unit-tests-${{ matrix.node-version }}
+            path: ./nodejs/coverage/unit/lcov.info
+        
+    integration:
+            runs-on: ubuntu-latest
+        
+            strategy:
+              matrix:
+                node-version: [14.x, 16.x, 18.x]
+        
+            steps:
+            - uses: actions/checkout@v3
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v3
+              with:
+                node-version: ${{ matrix.node-version }}
+            - name: Install Dependencies
+              run: npm ci
+              working-directory: nodejs
+            - name: Run Integration Tests
+              run: npm run test:integration
+              working-directory: nodejs
+              env:
+                NODE_RUNTIME: nodejs${{ matrix.node-version }}

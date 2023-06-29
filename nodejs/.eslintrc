@@ -35,7 +35,7 @@
     "no-multi-spaces": ["off", { "ignoreEOLComments": true }],
     "no-new": "error",
     "no-new-func": "warn",
-    "no-shadow": ["warn", {"allow": ["shim"]}],
+    "no-shadow": ["warn", {"allow": ["shim", "t"]}],
     "no-undef": "error",
     "no-unused-vars": "error",
     "no-use-before-define": ["off", {"functions": false}],
