@@ -139,7 +139,7 @@ function patchCommonJSHandler() {
   return wrappedHandler.apply(this, args)
 }
 
-module.exports = { 
+module.exports = {
   handler: process.env.NEW_RELIC_USE_ESM === 'true' ? patchESModuleHandler : patchCommonJSHandler,
   getHandlerPath
 }
