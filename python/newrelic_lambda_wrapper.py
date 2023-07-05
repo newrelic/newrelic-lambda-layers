@@ -83,6 +83,7 @@ def handler(event, context):
     context.iopipe = IOpipeNoOp()
     try:
         return wrapped_handler(event, context)
-    except err
-        print("Caught exception:", err)
+    except Exception as err:
+        import traceback
+        traceback.print_exc()
         raise 
