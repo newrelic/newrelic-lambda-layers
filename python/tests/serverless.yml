@@ -1,0 +1,24 @@
+service: integration-tests
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+
+custom:
+  PYTHON_RUNTIME: ${env:PYTHON_RUNTIME, 'python3.10'}
+
+provider:
+  name: aws
+  runtime: ${self:custom.PYTHON_RUNTIME}
+
+functions:
+  testhandler:
+    events:
+      - http:
+          method: get
+          path: "/"
+    handler: src/handler.handler
+    environment:
+      NEW_RELIC_LAMBDA_HANDLER: src/handler.handler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
+      LAMBDA_TASK_ROOT: ./
