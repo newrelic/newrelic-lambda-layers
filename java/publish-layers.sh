@@ -156,6 +156,9 @@ case "$1" in
 	publish-java11-arm64
 	publish-java11-x86
 	;;
+"build-java17")
+	build-java17-arm64
+	build-java17-x86
 "publish-java17")
 	publish-java17-arm64
 	publish-java17-x86
