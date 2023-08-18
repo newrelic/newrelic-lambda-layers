@@ -87,7 +87,7 @@ jobs:
 
   publish-python310:
     docker:
-      - image: circleci/python:3.10
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
@@ -101,7 +101,7 @@ jobs:
 
   publish-python311:
     docker:
-      - image: circleci/python:3.11
+      - image: cimg/python:3.11
     steps:
       - checkout
       - run:
