@@ -23,7 +23,7 @@ jobs:
       - name: Run Snyk To Check For Vulnerabilities
         uses: snyk/actions/gradle-jdk11@master
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.JAVA_AGENT_SNYK_TOKEN }}
         with:
           command: monitor
           args: --org=java-agent-test --file=$GITHUB_WORKSPACE/java/build.gradle --configuration-matching='(^compileClasspath$)|(^runtimeClasspath$)'
