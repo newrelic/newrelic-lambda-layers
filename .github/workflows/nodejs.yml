@@ -14,11 +14,11 @@ jobs:
 
     lint:
         runs-on: ubuntu-latest
-    
+
         strategy:
           matrix:
             node-version: [lts/*]
-    
+
         steps:
         - uses: actions/checkout@v3
         - name: Use Node.js ${{ matrix.node-version }}
@@ -31,13 +31,13 @@ jobs:
         - name: Run Linting
           run: npm run lint
           working-directory: nodejs
-    
+
     unit:
         runs-on: ubuntu-latest
-        
+
         strategy:
             matrix:
-                node-version: [14.x, 16.x, 18.x]
+                node-version: [16.x, 18.x]
         steps:
         - uses: actions/checkout@v3
         - name: Use Node.js ${{ matrix.node-version }}
@@ -55,14 +55,14 @@ jobs:
           with:
             name: unit-tests-${{ matrix.node-version }}
             path: ./nodejs/coverage/unit/lcov.info
-        
+
     integration:
             runs-on: ubuntu-latest
-        
+
             strategy:
               matrix:
-                node-version: [14.x, 16.x, 18.x]
-        
+                node-version: [16.x, 18.x]
+
             steps:
             - uses: actions/checkout@v3
             - name: Use Node.js ${{ matrix.node-version }}
