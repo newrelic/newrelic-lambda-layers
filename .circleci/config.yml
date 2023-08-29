@@ -4,19 +4,6 @@ orbs:
   codecov: codecov/codecov@3.2.4
 
 jobs:
-  publish-nodejs14x:
-    docker:
-      - image: cimg/node:14.21
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Node 14 unit tests
-          command: cd nodejs && npm install && npm run test
-      - run:
-          name: Publish layer
-          command: make publish-nodejs14x-ci
-
   publish-nodejs16x:
     docker:
       - image: cimg/node:16.18
@@ -150,16 +137,6 @@ jobs:
 workflows:
   publish-layers:
     jobs:
-      - publish-nodejs14x:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
-          post-steps:
-            - codecov/upload:
-                file: ./nodejs/coverage/unit/lcov.info
-                flags: nodejs-14-unit
       - publish-nodejs16x:
           filters:
             branches:
