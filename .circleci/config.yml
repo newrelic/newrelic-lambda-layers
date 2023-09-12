@@ -4,19 +4,6 @@ orbs:
   codecov: codecov/codecov@3.2.4
 
 jobs:
-  publish-nodejs14x:
-    docker:
-      - image: cimg/node:14.21
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Node 14 unit tests
-          command: cd nodejs && npm run ciTest
-      - run:
-          name: Publish layer
-          command: make publish-nodejs14x-ci
-
   publish-nodejs16x:
     docker:
       - image: cimg/node:16.18
@@ -25,7 +12,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Node 16 unit tests
-          command: cd nodejs && npm run ciTest
+          command: cd nodejs && npm install && npm run test
       - run:
           name: Publish layer
           command: make publish-nodejs16x-ci
@@ -38,7 +25,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Node 18 unit tests
-          command: cd nodejs && npm run ciTest
+          command: cd nodejs && npm install && npm run test
       - run:
           name: Publish layer
           command: make publish-nodejs18x-ci
@@ -50,7 +37,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -64,7 +51,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -78,7 +65,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -87,17 +74,31 @@ jobs:
 
   publish-python310:
     docker:
-      - image: circleci/python:3.10
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
             cd python
             ./publish-layers.sh python3.10
+
+  publish-python311:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd python
+            ./publish-layers.sh python3.11
 
   publish-java8-al2:
     docker:
@@ -136,7 +137,7 @@ jobs:
       - checkout
       - run:
           name: Install publish dependencies
-          command: sudo pip install -U awscli
+          command: pip install -U awscli
       - run:
           name: Publish layer
           command: |
@@ -146,19 +147,6 @@ jobs:
 workflows:
   publish-layers:
     jobs:
-      - publish-nodejs14x:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*_nodejs/
-          post-steps:
-            - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-14-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-14-hidden-handler
       - publish-nodejs16x:
           filters:
             branches:
@@ -167,11 +155,8 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
           post-steps:
             - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-16-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-16-hidden-handler
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-16-unit
       - publish-nodejs18x:
           filters:
             branches:
@@ -180,11 +165,8 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*_nodejs/
           post-steps:
             - codecov/upload:
-                file: ./nodejs/coverage/handler/lcov.info
-                flags: nodejs-18-handler
-            - codecov/upload:
-                file: ./nodejs/coverage/hidden-handler/lcov.info
-                flags: nodejs-18-hidden-handler
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-18-unit
       - publish-python37:
           filters:
             branches:
@@ -204,6 +186,12 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-python310:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_python/
+      - publish-python311:
           filters:
             branches:
               ignore: /.*/

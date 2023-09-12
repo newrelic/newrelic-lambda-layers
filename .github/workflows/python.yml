@@ -1,0 +1,43 @@
+name: Python Layer CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "python/**"
+  pull_request:
+    paths:
+      - "python/**"
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install Python Dependencies
+        run: pip install pytest requests
+
+      - name: Install Node Dependencies
+        run: npm ci
+        working-directory: python
+
+      - name: Run Tests
+        run: pytest tests/
+        working-directory: python
+        env: 
+          PYTHON_RUNTIME: "python${{ matrix.python-version }}"

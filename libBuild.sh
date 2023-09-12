@@ -60,7 +60,7 @@ EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
-EXTENSION_VERSION=2.3.6
+EXTENSION_VERSION=2.3.9
 
 function list_all_regions {
     aws ec2 describe-regions \
@@ -110,8 +110,8 @@ function layer_name_str() {
     "python3.10")
       rt_part="Python310"
       ;;
-    "nodejs14.x")
-      rt_part="NodeJS14X"
+    "python3.11")
+      rt_part="Python311"
       ;;
     "nodejs16.x")
       rt_part="NodeJS16X"
@@ -155,8 +155,8 @@ function s3_prefix() {
     "python3.10")
       name="nr-python3.10"
       ;;
-    "nodejs14.x")
-      name="nr-nodejs14.x"
+    "python3.11")
+      name="nr-python3.11"
       ;;
     "nodejs16.x")
       name="nr-nodejs16.x"

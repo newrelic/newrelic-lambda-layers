@@ -60,7 +60,7 @@ def get_handler():
                 "Cannot use built-in module %s as a handler module" % module_path
             )
 
-        module = importlib.import_module(module_path)
+        module = importlib.import_module(module_path.replace("/", "."))
     except Exception as e:
         raise ImportError("Failed to import module '%s': %s" % (module_path, e))
 
