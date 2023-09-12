@@ -1,3 +1,7 @@
 .gradle
 .idea
 build
+bin
+extensions
+gradlew.bat
+preview-extensions*

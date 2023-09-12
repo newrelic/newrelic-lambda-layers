@@ -38,12 +38,27 @@ task packageLayer(type: Zip) {
     with extensions
 }
 
-ext.javaVersion = hasProperty('javaVersion') && project.getProperty('javaVersion') == 11 ?
-        JavaVersion.VERSION_11 : JavaVersion.VERSION_1_8
+if (hasProperty('javaVersion')) {
+    switch(project.getProperty('javaVersion')) {
+        case 11:
+            ext.javaVersion = JavaVersion.VERSION_11
+            break
+        case 17:
+            ext.javaVersion = JavaVersion.VERSION_17
+            break
+    }
+} else {
+    ext.javaVersion = JavaVersion.VERSION_1_8
+}
+logger.lifecycle("Using javaVersion: ${ext.javaVersion}")
 
 java {
     sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
+}
+
+test {
+    jvmArgs = ['--add-opens', 'java.base/java.lang=ALL-UNNAMED', '--add-opens', 'java.base/java.util=ALL-UNNAMED']
 }
 
 packageLayer.dependsOn build
