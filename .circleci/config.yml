@@ -120,6 +120,16 @@ jobs:
           name: Publish layer
           command: make publish-java11-ci
 
+  publish-java17:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Publish layer
+          command: make publish-java17-ci
+
   publish-extension:
     docker:
       - image: cimg/python:3.8
@@ -188,6 +198,12 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-java11:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_java/
+      - publish-java17:
           filters:
             branches:
               ignore: /.*/
