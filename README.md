@@ -103,8 +103,7 @@ In order to wrap ESM functions without a code change, our wrapper awaits the com
 First import the New Relic Node agent into your handler file:
 
 ```javascript
-import  * as nr  from 'newrelic'
-const { default: newrelic } = nr
+import newrelic from 'newrelic'
 ```
 
 Then wrap your handler function using the `.setLambdaHandler` method: 
