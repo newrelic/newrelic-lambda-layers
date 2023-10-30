@@ -88,10 +88,34 @@ You may see some warnings from the Extension in CloudWatch logs referring to a n
 
 If your Node functions use `import` and top-level `await` in Node 16 or Node 14 runtimes, layer-installed instrumentation will be unable to find imported modules, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). You can still instrument your functions with New Relic, but you will need to do the following:
 
-1. [instrument your function manually](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy#node) using our [Node Agent](https://github.com/newrelic/node-newrelic/)
+1. [instrument your function manually](#manual-instrumentation-for-es-modules) using our [Node Agent](https://github.com/newrelic/node-newrelic/) 
 2. On deploying your function, don't set the function handler to our Node wrapper; instead, use your regular handler function, which you've wrapped with `newrelic.setLambdaHandler()`.
-3. Install our Extension-only Lambda Layer for delivering telemetry. Use our [layer discovery website](https://layers.newrelic-external.com/) to find the ARN for your region. Look for either NewRelicLambdaExtension or NewRelicLambdaExtensionARM64 (depending on your function's architecture).
+3. If you're using Node 18 or above, apply the latest Lambda Layer for your runtime. It will install both the Node agent and our Lambda Extension.
+4. If you're using Node 14 or Node 16, you will have to deploy our agent with your function code, but you could use our Extension-only Lambda Layer for delivering telemetry. Use our [layer discovery website](https://layers.newrelic-external.com/) to find the ARN for your region. Look for either NewRelicLambdaExtension or NewRelicLambdaExtensionARM64 (depending on your function's architecture).
 4. Add your `NEW_RELIC_LICENSE_KEY` as an environment variable.
+
+## Note on performance for ES Module functions
+
+In order to wrap ESM functions without a code change, our wrapper awaits the completion of a dynamic import. If your ESM function depends on a large number of dependency and file imports, you may see long cold start times as a result. As a workaround, we recommend instrumenting manually, following the instructions below.
+
+## Manual instrumentation for ES Modules
+
+First import the New Relic Node agent into your handler file:
+
+```javascript
+import newrelic from 'newrelic'
+```
+
+Then wrap your handler function using the `.setLambdaHandler` method: 
+```javascript
+export const handler = newrelic.setLambdaHandler(async (event, context) => {
+    // TODO implement
+    return {
+        statusCode: 200,
+        body: JSON.stringify('Hello from Lambda!')
+    }
+})
+```
 
 ## Support
 
