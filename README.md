@@ -68,6 +68,7 @@ These steps will help you configure the layers correctly:
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: `newrelic_lambda_wrapper.handler`
   * Node: `newrelic-lambda-wrapper.handler`
+    * NOTE: if you are using callback-based Lambda functions, set your handler to `newrelic-lambda-callback-wrapper.handler`. This wrapper can instrument functions relying on deferred callbacks.
   * Java:
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
     * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`
@@ -82,7 +83,7 @@ Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrel
 
 AWS announced support for Node 18 as a Lambda runtime in late 2022, introducing `aws-sdk` version 3 for Node 18 only. This version of `aws-sdk` patches `NODE_PATH`, so ESM-supporting functions using `import` and top-level `await` should work as expected with Lambda Layer releases `v9.8.1.1` and above (Numerical layer versions vary by region and runtime). To configure the layer to leverage `import`, add the environment variable `NEW_RELIC_USE_ESM: true`.
 
-Note that if you use layer-installed instrumentation with the `NEW_RELIC_USE_ESM` environment variable, your function must use promises or async/await; callback based functions are not supported. The Node wrapper uses a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) to attach to your function, which is an asynchronous operation. If you still need support for callback based functions, you will have to use the CommonJS based wrapper, which can be done by removing the `NEW_RELIC_USE_ESM` environment variable.
+Note that if you use layer-installed instrumentation with the `NEW_RELIC_USE_ESM` environment variable, your function must use promises or async/await; callback based functions are not supported. The Node wrapper uses a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) to attach to your function, which is an asynchronous operation. If you still need support for callback based functions, you will have to use the CommonJS based wrapper, which can be done by removing the `NEW_RELIC_USE_ESM` environment variable, and setting your handler to `newrelic-lambda-callback-wrapper.handler`.
 
 You may see some warnings from the Extension in CloudWatch logs referring to a non-standard handler; these warnings may be ignored.
 

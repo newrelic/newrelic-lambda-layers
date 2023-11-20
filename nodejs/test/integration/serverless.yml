@@ -28,7 +28,7 @@ functions:
       - http:
           method: get
           path: context-done-handler-deferred
-    handler: ../../index.handler
+    handler: ../../callback-wrapper.handler
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextDoneHandlerDeferred
@@ -50,7 +50,7 @@ functions:
       - http:
           method: get
           path: context-succeed-handler-deferred
-    handler: ../../index.handler
+    handler: ../../callback-wrapper.handler
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedHandlerDeferred
@@ -72,7 +72,7 @@ functions:
       - http:
           method: get
           path: callback-handler-deferred
-    handler: ../../index.handler
+    handler: ../../callback-wrapper.handler
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackHandlerDeferred
