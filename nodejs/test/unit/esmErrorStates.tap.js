@@ -5,15 +5,64 @@ const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
 const utils = require('@newrelic/test-utilities')
 const path = require('node:path')
 
+const handlerPath = 'test/unit/fixtures/esm/'
+const handlerAndPath = [
+  {
+    handlerFile: 'handler',
+    handlerMethod: 'handler'
+  },
+  {
+    handlerFile: undefined,
+    handlerMethod: undefined
+  },
+  {
+    handlerFile: 'handler',
+    handlerMethod: undefined
+  },
+  {
+    handlerFile: 'notFound',
+    handlerMethod: 'noMethodFound'
+  },
+  {
+    handlerFile: 'errors',
+    handlerMethod: 'noMethodFound'
+  },
+  {
+    handlerFile: 'errors',
+    handlerMethod: 'notAfunction'
+  },
+  {
+    handlerFile: 'badImport',
+    method: 'handler'
+  },
+]
+
+
 tap.test('ESM Edge Cases', (t) => {
   t.autoend()
   let handler
   let helper
   let originalEnv
 
+  // used in validating error messages:
+  let handlerFile
+  let handlerMethod
+
+  let testIndex = 0
+
   t.beforeEach(() => {
     originalEnv = { ...process.env }
     process.env.NEW_RELIC_USE_ESM = 'true'
+    process.env.LAMBDA_TASK_ROOT = './'
+    process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true' // only need to check this once.
+
+    ;({ handlerFile, handlerMethod } = handlerAndPath[testIndex])
+    if (handlerFile && handlerMethod) {
+      process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
+    } else if (handlerFile) {
+      process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}`
+    }
+    testIndex++
 
     helper = utils.TestAgent.makeInstrumented()
 
@@ -30,16 +79,6 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should delete serverless mode env var if defined', async(t) => {
-    process.env.LAMBDA_TASK_ROOT = './'
-    process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true'
-
-    // redundant, but needed for this test
-    const newrelic = helper.getAgentApi()
-
-    ;({ handler } = proxyquire('../../index', {
-      'newrelic': newrelic
-    }))
-
     t.notOk(process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED,
       'NEW_RELIC_SERVERLESS_MODE_ENABLED env var should have been deleted')
     t.end()
@@ -55,9 +94,6 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER is malformed', async(t) => {
-    // Missing the .functionName part
-    process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/esm/handler'
-
     t.rejects(
       () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
       'Improperly formatted handler environment variable: test/unit/fixtures/esm/handler',
@@ -67,12 +103,8 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER module cannot be resolved', async(t) => {
-    const handlerPath = 'test/unit/fixtures/esm/'
-    const handlerFile = 'notFound'
-    const handlerMethod = 'noMethodFound'
     const modulePath = path.resolve('./', handlerPath)
     const extensions = ['.mjs', '.js']
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
 
     t.rejects(
       () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
@@ -83,12 +115,6 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER does not export provided function', async(t) => {
-    const handlerPath = 'test/unit/fixtures/esm/'
-    const handlerFile = 'errors'
-    const handlerMethod = 'noMethodFound'
-
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.rejects(
       () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
       `Handler '${handlerMethod}' missing on module '${handlerPath}'`,
@@ -98,12 +124,6 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER export is not a function', async(t) => {
-    const handlerPath = 'test/unit/fixtures/esm/'
-    const handlerFile = 'errors'
-    const handlerMethod = 'notAfunction'
-
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.rejects(
       () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
       `Handler '${handlerMethod}' from 'test/unit/fixtures/esm/errors' is not a function`,
@@ -113,12 +133,6 @@ tap.test('ESM Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER throws on import', async(t) => {
-    const handlerPath = 'test/unit/fixtures/esm/'
-    const handlerFile = 'badImport'
-    const handlerMethod = 'handler'
-
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.rejects(
       () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
       `Unable to import module '${handlerPath}${handlerFile}'`,
