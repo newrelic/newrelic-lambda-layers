@@ -86,7 +86,7 @@ tap.test('ESM Edge Cases', (t) => {
     const handlerPath = 'test/unit/fixtures/esm/'
     const handlerFile = 'errors'
     const handlerMethod = 'noMethodFound'
-    
+
     process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
 
     t.rejects(
@@ -101,7 +101,7 @@ tap.test('ESM Edge Cases', (t) => {
     const handlerPath = 'test/unit/fixtures/esm/'
     const handlerFile = 'errors'
     const handlerMethod = 'notAfunction'
-    
+
     process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
 
     t.rejects(
@@ -116,7 +116,7 @@ tap.test('ESM Edge Cases', (t) => {
     const handlerPath = 'test/unit/fixtures/esm/'
     const handlerFile = 'badImport'
     const handlerMethod = 'handler'
-    
+
     process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
 
     t.rejects(
