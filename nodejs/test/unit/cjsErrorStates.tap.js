@@ -79,22 +79,22 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should delete serverless mode env var if defined', async(t) => {
     t.notOk(process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED,
-        'NEW_RELIC_SERVERLESS_MODE_ENABLED env var should have been deleted')
+      'NEW_RELIC_SERVERLESS_MODE_ENABLED env var should have been deleted')
     t.end()
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER is missing', (t) => {
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
-        'No NEW_RELIC_LAMBDA_HANDLER environment variable set.',
+      () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
+      'No NEW_RELIC_LAMBDA_HANDLER environment variable set.',
     )
     t.end()
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER is malformed', async(t) => {
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
-        'Improperly formatted handler environment variable: test/unit/fixtures/cjs/handler',
+      () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
+      'Improperly formatted handler environment variable: test/unit/fixtures/cjs/handler',
     )
     t.end()
   })
@@ -104,8 +104,8 @@ tap.test('CJS Edge Cases', (t) => {
     const extensions = ['.cjs', '.js']
 
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
-        `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
+      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
     )
 
     t.end()
@@ -113,8 +113,8 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER does not export provided function', async(t) => {
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
-        `Handler '${handlerMethod}' missing on module '${handlerPath}'`,
+      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      `Handler '${handlerMethod}' missing on module '${handlerPath}'`,
     )
 
     t.end()
@@ -122,8 +122,8 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER export is not a function', async(t) => {
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
-        `Handler '${handlerMethod}' from 'test/unit/fixtures/cjs/errors' is not a function`,
+      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      `Handler '${handlerMethod}' from 'test/unit/fixtures/cjs/errors' is not a function`,
     )
 
     t.end()
@@ -131,8 +131,8 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER throws on import', async(t) => {
     t.rejects(
-        () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
-        `Unable to import module '${handlerPath}${handlerFile}'`,
+      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      `Unable to import module '${handlerPath}${handlerFile}'`,
     )
 
     t.end()

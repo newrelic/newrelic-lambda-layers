@@ -114,14 +114,13 @@ async function getHandler() {
 }
 
 const patchedHandlerPromise = getHandler().then(userHandler => {
-      return newrelic.setLambdaHandler(userHandler)
-    }
-)
+  return newrelic.setLambdaHandler(userHandler)
+})
 
 async function patchHandler() {
   const args = Array.prototype.slice.call(arguments)
   return patchedHandlerPromise
-      .then(wrappedHandler => wrappedHandler.apply(this, args))
+    .then(wrappedHandler => wrappedHandler.apply(this, args))
 }
 
 module.exports = {

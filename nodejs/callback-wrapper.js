@@ -28,7 +28,7 @@ function getHandlerPath() {
 
   if (parts.length < 2) {
     throw new Error(
-        `Improperly formatted handler environment variable: ${handler}`
+      `Improperly formatted handler environment variable: ${handler}`
     )
   }
 
@@ -57,7 +57,7 @@ function getFullyQualifiedModulePath(modulePath, extensions) {
 
   if (!fullModulePath) {
     throw new Error(
-        `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
+      `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
     )
   }
 
@@ -79,13 +79,13 @@ function getModuleWithRequire(appRoot, moduleToImport) {
 function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   if (typeof userHandler === 'undefined') {
     throw new Error(
-        `Handler '${handlerName}' missing on module '${moduleName}'`
+      `Handler '${handlerName}' missing on module '${moduleName}'`
     )
   }
 
   if (typeof userHandler !== 'function') {
     throw new Error(
-        `Handler '${handlerName}' from '${moduleName}' is not a function`
+      `Handler '${handlerName}' from '${moduleName}' is not a function`
     )
   }
 }
