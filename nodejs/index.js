@@ -102,28 +102,42 @@ function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   }
 }
 
-async function getHandler() {
-  const loadMethod = process.env.NEW_RELIC_USE_ESM === 'true' ? getModuleWithImport : getModuleWithRequire
-  const { LAMBDA_TASK_ROOT = '.' } = process.env
-  const { moduleToImport, handlerToWrap } = getHandlerPath()
+let wrappedHandler
+const { LAMBDA_TASK_ROOT = '.' } = process.env
+const { moduleToImport, handlerToWrap } = getHandlerPath()
 
-  const userHandler = (await loadMethod(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
+if (process.env.NEW_RELIC_USE_ESM === 'true') {
+  wrappedHandler = getHandler().then(userHandler => {
+    return newrelic.setLambdaHandler(userHandler)
+  })
+} else {
+  wrappedHandler = getHandlerSync()
+}
+
+async function getHandler() {
+  const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
-const patchedHandlerPromise = getHandler().then(userHandler => {
-  return newrelic.setLambdaHandler(userHandler)
-})
+function getHandlerSync() {
+  const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
+  validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
+
+  return userHandler
+}
 
 async function patchHandler() {
   const args = Array.prototype.slice.call(arguments)
-  return patchedHandlerPromise
-    .then(wrappedHandler => wrappedHandler.apply(this, args))
+  return wrappedHandler.apply(this, args)
+}
+function patchHandlerSync() {
+  const args = Array.prototype.slice.call(arguments)
+  return wrappedHandler.apply(this, args)
 }
 
 module.exports = {
-  handler: patchHandler,
+  handler: process.env.NEW_RELIC_USE_ESM === 'true' ? patchHandler : patchHandlerSync,
   getHandlerPath
 }
