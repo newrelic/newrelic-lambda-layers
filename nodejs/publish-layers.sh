@@ -24,8 +24,6 @@ function build-nodejs16x-arm64 {
 	npm install --prefix $BUILD_DIR newrelic@latest
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
 	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper
-	cp callback-wrapper.js $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper/index.js
 	download_extension arm64
 	zip -rq $NJS16X_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
@@ -39,8 +37,6 @@ function build-nodejs16x-x86 {
 	npm install --prefix $BUILD_DIR newrelic@latest
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
 	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper
-	cp callback-wrapper.js $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper/index.js
 	download_extension x86_64
 	zip -rq $NJS16X_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
@@ -76,8 +72,6 @@ function build-nodejs18x-arm64 {
 	npm install --prefix $BUILD_DIR newrelic@latest
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
 	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper
-	cp callback-wrapper.js $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper/index.js
 	download_extension arm64
 	zip -rq $NJS18X_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
@@ -91,8 +85,6 @@ function build-nodejs18x-x86 {
 	npm install --prefix $BUILD_DIR newrelic@latest
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
 	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper
-	cp callback-wrapper.js $BUILD_DIR/node_modules/newrelic-lambda-callback-wrapper/index.js
 	download_extension x86_64
 	zip -rq $NJS18X_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
