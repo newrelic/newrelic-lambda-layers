@@ -65,6 +65,8 @@ tap.test('CJS Edge Cases', (t) => {
 
     helper = utils.TestAgent.makeInstrumented()
 
+    // Some loading-related errors happen early; to test these, we have to wrap
+    // in the test assertion, so we can compare the surfaced error to what we expect.
     testFn = () => {
       const newrelic = helper.getAgentApi()
 
@@ -131,7 +133,7 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER export is not a function', (t) => {
     t.throws(
-        () => testFn(),
+      () => testFn(),
       `Handler '${handlerMethod}' from 'test/unit/fixtures/cjs/errors' is not a function`,
     )
 
