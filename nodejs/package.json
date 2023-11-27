@@ -1,6 +1,6 @@
 {
   "name": "newrelic-lambda-layers",
-  "version": "11.2.1",
+  "version": "11.5.0",
   "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
