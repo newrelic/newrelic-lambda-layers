@@ -103,15 +103,17 @@ function validateHandlerDefinition(userHandler, handlerName, moduleName) {
 }
 
 let wrappedHandler
+let patchedHandlerPromise
+
 const { LAMBDA_TASK_ROOT = '.' } = process.env
 const { moduleToImport, handlerToWrap } = getHandlerPath()
 
 if (process.env.NEW_RELIC_USE_ESM === 'true') {
-  wrappedHandler = getHandler().then(userHandler => {
+  patchedHandlerPromise = getHandler().then(userHandler => {
     return newrelic.setLambdaHandler(userHandler)
   })
 } else {
-  wrappedHandler = getHandlerSync()
+  wrappedHandler = newrelic.setLambdaHandler(getHandlerSync())
 }
 
 async function getHandler() {
@@ -130,7 +132,8 @@ function getHandlerSync() {
 
 async function patchHandler() {
   const args = Array.prototype.slice.call(arguments)
-  return wrappedHandler.apply(this, args)
+  return patchedHandlerPromise
+    .then(_wrappedHandler => _wrappedHandler.apply(this, args))
 }
 function patchHandlerSync() {
   const args = Array.prototype.slice.call(arguments)
