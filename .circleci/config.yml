@@ -30,6 +30,19 @@ jobs:
           name: Publish layer
           command: make publish-nodejs18x-ci
 
+  publish-nodejs20x:
+    docker:
+      - image: cimg/node:20.4.0
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Node 20 unit tests
+          command: cd nodejs && npm install && npm run test
+      - run:
+          name: Publish layer
+          command: make publish-nodejs20x-ci
+
   publish-python37:
     docker:
       - image: cimg/python:3.7
@@ -167,6 +180,16 @@ workflows:
             - codecov/upload:
                 file: ./nodejs/coverage/unit/lcov.info
                 flags: nodejs-18-unit
+      - publish-nodejs20x:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_nodejs/
+          post-steps:
+            - codecov/upload:
+                file: ./nodejs/coverage/unit/lcov.info
+                flags: nodejs-20-unit
       - publish-python37:
           filters:
             branches:
