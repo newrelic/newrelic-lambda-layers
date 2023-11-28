@@ -5,35 +5,85 @@ const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
 const utils = require('@newrelic/test-utilities')
 const path = require('node:path')
 
+const handlerPath = 'test/unit/fixtures/cjs/'
+const handlerAndPath = [
+  {
+    handlerFile: 'handler',
+    handlerMethod: 'handler'
+  },
+  {
+    handlerFile: undefined,
+    handlerMethod: undefined
+  },
+  {
+    handlerFile: 'handler',
+    handlerMethod: undefined
+  },
+  {
+    handlerFile: 'notFound',
+    handlerMethod: 'noMethodFound'
+  },
+  {
+    handlerFile: 'errors',
+    handlerMethod: 'noMethodFound'
+  },
+  {
+    handlerFile: 'errors',
+    handlerMethod: 'notAfunction'
+  },
+  {
+    handlerFile: 'badImport',
+    method: 'handler'
+  },
+]
+
 tap.test('CJS Edge Cases', (t) => {
   t.autoend()
   let handler
   let helper
   let originalEnv
 
+  // used in validating error messages:
+  let handlerFile
+  let handlerMethod
+  let testIndex = 0
+  let testFn
+
   t.beforeEach(() => {
     originalEnv = { ...process.env }
     process.env.NEW_RELIC_USE_ESM = 'false'
+    process.env.LAMBDA_TASK_ROOT = './'
+    process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true' // only need to check this once.
+
+    ;({ handlerFile, handlerMethod } = handlerAndPath[testIndex])
+    if (handlerFile && handlerMethod) {
+      process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
+    } else if (handlerFile) {
+      process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}`
+    }
+    testIndex++
 
     helper = utils.TestAgent.makeInstrumented()
 
-    const newrelic = helper.getAgentApi()
+    // Some loading-related errors happen early; to test these, we have to wrap
+    // in the test assertion, so we can compare the surfaced error to what we expect.
+    testFn = () => {
+      const newrelic = helper.getAgentApi()
 
-    ;({ handler } = proxyquire('../../index', {
-      'newrelic': newrelic
-    }))
+      ;({ handler } = proxyquire('../../index', {
+        'newrelic': newrelic
+      }))
+      return handler({ key: 'this is a test'}, { functionName: handlerMethod })
+    }
   })
 
   t.afterEach(() => {
     process.env = { ...originalEnv }
     helper.unload()
+    testFn = null
   })
 
-  t.test('should delete serverless mode env var if defined', (t) => {
-    process.env.LAMBDA_TASK_ROOT = './'
-    process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true'
-
-    // redundant, but needed for this test
+  t.test('should delete serverless mode env var if defined', async(t) => {
     const newrelic = helper.getAgentApi()
 
     ;({ handler } = proxyquire('../../index', {
@@ -47,35 +97,25 @@ tap.test('CJS Edge Cases', (t) => {
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER is missing', (t) => {
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
+      () => testFn(),
       'No NEW_RELIC_LAMBDA_HANDLER environment variable set.',
     )
-
     t.end()
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER is malformed', (t) => {
-    // Missing the .functionName part
-    process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/cjs/handler'
-
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: 'testFn'}),
+      () => testFn(),
       'Improperly formatted handler environment variable: test/unit/fixtures/cjs/handler',
     )
-
     t.end()
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER module cannot be resolved', (t) => {
-    const handlerPath = 'test/unit/fixtures/cjs/'
-    const handlerFile = 'notFound'
-    const handlerMethod = 'noMethodFound'
     const modulePath = path.resolve('./', handlerPath)
     const extensions = ['.cjs', '.js']
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      () => testFn(),
       `Unable to resolve module file at ${modulePath} with the following extensions: ${extensions.join(',')}`
     )
 
@@ -83,14 +123,8 @@ tap.test('CJS Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER does not export provided function', (t) => {
-    const handlerPath = 'test/unit/fixtures/cjs/'
-    const handlerFile = 'errors'
-    const handlerMethod = 'noMethodFound'
-    
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      () => testFn(),
       `Handler '${handlerMethod}' missing on module '${handlerPath}'`,
     )
 
@@ -98,32 +132,20 @@ tap.test('CJS Edge Cases', (t) => {
   })
 
   t.test('should throw when NEW_RELIC_LAMBDA_HANDLER export is not a function', (t) => {
-    const handlerPath = 'test/unit/fixtures/cjs/'
-    const handlerFile = 'errors'
-    const handlerMethod = 'notAfunction'
-    
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      () => testFn(),
       `Handler '${handlerMethod}' from 'test/unit/fixtures/cjs/errors' is not a function`,
     )
 
     t.end()
   })
 
-  t.test('should throw when NEW_RELIC_LAMBDA_HANDLER throws on require', (t) => {
-    const handlerPath = 'test/unit/fixtures/cjs/'
-    const handlerFile = 'badRequire'
-    const handlerMethod = 'handler'
-    
-    process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
-
+  t.test('should throw when NEW_RELIC_LAMBDA_HANDLER throws on import', (t) => {
     t.throws(
-      () => handler({ key: 'this is a test'}, { functionName: handlerMethod }),
+      () => testFn(),
       `Unable to import module '${handlerPath}${handlerFile}'`,
     )
-
     t.end()
   })
+  t.end()
 })

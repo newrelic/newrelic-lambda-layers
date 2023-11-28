@@ -102,44 +102,45 @@ function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   }
 }
 
-async function importHandler() {
-  const { LAMBDA_TASK_ROOT = '.' } = process.env
-  const { moduleToImport, handlerToWrap } = getHandlerPath()
+let wrappedHandler
+let patchedHandlerPromise
 
+const { LAMBDA_TASK_ROOT = '.' } = process.env
+const { moduleToImport, handlerToWrap } = getHandlerPath()
+
+if (process.env.NEW_RELIC_USE_ESM === 'true') {
+  patchedHandlerPromise = getHandler().then(userHandler => {
+    return newrelic.setLambdaHandler(userHandler)
+  })
+} else {
+  wrappedHandler = newrelic.setLambdaHandler(getHandlerSync())
+}
+
+async function getHandler() {
   const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
-function requireHandler() {
-  const { LAMBDA_TASK_ROOT = '.' } = process.env
-  const { moduleToImport, handlerToWrap } = getHandlerPath()
-
+function getHandlerSync() {
   const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
-
-async function patchESModuleHandler() {
-  const userHandler = await importHandler()
-  const wrappedHandler = newrelic.setLambdaHandler(userHandler)
+async function patchHandler() {
   const args = Array.prototype.slice.call(arguments)
-
-  return wrappedHandler.apply(this, args)
+  return patchedHandlerPromise
+    .then(_wrappedHandler => _wrappedHandler.apply(this, args))
 }
-
-function patchCommonJSHandler() {
-  const userHandler = requireHandler()
-  const wrappedHandler = newrelic.setLambdaHandler(userHandler)
+function patchHandlerSync() {
   const args = Array.prototype.slice.call(arguments)
-
   return wrappedHandler.apply(this, args)
 }
 
 module.exports = {
-  handler: process.env.NEW_RELIC_USE_ESM === 'true' ? patchESModuleHandler : patchCommonJSHandler,
+  handler: process.env.NEW_RELIC_USE_ESM === 'true' ? patchHandler : patchHandlerSync,
   getHandlerPath
 }
