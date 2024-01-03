@@ -113,6 +113,20 @@ jobs:
             cd python
             ./publish-layers.sh python3.11
 
+  publish-python312:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run:
+          name: Install publish dependencies
+          command: pip install -U awscli
+      - run:
+          name: Publish layer
+          command: |
+            cd python
+            ./publish-layers.sh python3.12
+
   publish-java8-al2:
     docker:
       - image: cimg/python:3.8
@@ -215,6 +229,12 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*_python/
       - publish-python311:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*_python/
+      - publish-python312:
           filters:
             branches:
               ignore: /.*/
