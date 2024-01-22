@@ -54,7 +54,7 @@ function build-python38-arm64 {
     echo "Building New Relic layer for python3.8 (arm64)"
     rm -rf $BUILD_DIR $PY38_DIST_ARM64
     mkdir -p $DIST_DIR
-    pip3 install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
+    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     if [ "$LOCAL" -eq 1 ]; then
@@ -72,7 +72,7 @@ function build-python38-x86 {
     echo "Building New Relic layer for python3.8 (x86_64)"
     rm -rf $BUILD_DIR $PY38_DIST_X86_64
     mkdir -p $DIST_DIR
-    pip3 install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
+    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     if [ "$LOCAL" -eq 1 ]; then
