@@ -50,26 +50,36 @@ function publish-python37-x86 {
 }
 
 function build-python38-arm64 {
+    extDir=$1
     echo "Building New Relic layer for python3.8 (arm64)"
     rm -rf $BUILD_DIR $PY38_DIST_ARM64
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
+    pip3 install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    download_extension arm64
+    if [ "$LOCAL" -eq 1 ]; then
+        build_and_fetch_local arm64 ${extDir}
+    else 
+        download_extension arm64
+    fi
     zip -rq $PY38_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY38_DIST_ARM64}"
 }
 
 function build-python38-x86 {
+    extDir=$1
     echo "Building New Relic layer for python3.8 (x86_64)"
     rm -rf $BUILD_DIR $PY38_DIST_X86_64
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
+    pip3 install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.8/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.8/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
-    download_extension x86_64
+    if [ "$LOCAL" -eq 1 ]; then
+        build_and_fetch_local x86_64 ${extDir}
+    else 
+        download_extension x86_64
+    fi
     zip -rq $PY38_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
     echo "Build complete: ${PY38_DIST_X86_64}"
@@ -298,6 +308,13 @@ case "$1" in
         publish-python38-arm64
         build-python38-x86
         publish-python38-x86
+        ;;
+    "build-python3.8")
+        export LOCAL=1
+        set -x
+        build-python38-arm64 "$2"
+        build-python38-x86 "$2"
+        set +x
         ;;
     "python3.9")
         build-python39-arm64
