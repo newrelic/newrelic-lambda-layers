@@ -40,12 +40,18 @@ task packageLayer(type: Zip) {
 
 if (hasProperty('javaVersion')) {
     switch(project.getProperty('javaVersion')) {
-        case 11:
+        case "8":
+            ext.javaVersion = JavaVersion.VERSION_1_8
+            break
+        case "11":
             ext.javaVersion = JavaVersion.VERSION_11
             break
-        case 17:
+        case "17":
             ext.javaVersion = JavaVersion.VERSION_17
             break
+        default:
+            logger.lifecycle("Unrecognized javaVersion. Using 8.")
+            ext.javaVersion = JavaVersion.VERSION_1_8
     }
 } else {
     ext.javaVersion = JavaVersion.VERSION_1_8
@@ -58,7 +64,9 @@ java {
 }
 
 test {
-    jvmArgs = ['--add-opens', 'java.base/java.lang=ALL-UNNAMED', '--add-opens', 'java.base/java.util=ALL-UNNAMED']
+    if (javaVersion != JavaVersion.VERSION_1_8) {
+        jvmArgs = ['--add-opens', 'java.base/java.lang=ALL-UNNAMED', '--add-opens', 'java.base/java.util=ALL-UNNAMED']
+    }
 }
 
 packageLayer.dependsOn build
