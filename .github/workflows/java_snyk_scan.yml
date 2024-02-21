@@ -29,5 +29,5 @@ jobs:
       - name: Run Snyk Dependency Scan
         run: |
           cd java
-          snyk monitor --all-sub-projects --org=java-agent --configuration-matching='(^compileClasspath$)|(^runtimeClasspath$)'
+          snyk monitor --project-name='newrelic-lambda-layers (Java)' --all-sub-projects --org=java-agent --configuration-matching='(^compileClasspath$)|(^runtimeClasspath$)'
 
