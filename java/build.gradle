@@ -3,12 +3,12 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
     implementation("io.opentracing:opentracing-util:0.33.0")
-    implementation("com.newrelic.opentracing:newrelic-java-lambda:2.2.2")
+    implementation("com.newrelic.opentracing:newrelic-java-lambda:2.2.3")
     implementation("com.newrelic.opentracing:java-aws-lambda:2.1.1")
     implementation("com.amazonaws:aws-lambda-java-events:3.8.0")
     implementation("com.amazonaws:aws-lambda-java-core:1.2.0")
@@ -48,6 +48,9 @@ if (hasProperty('javaVersion')) {
             break
         case "17":
             ext.javaVersion = JavaVersion.VERSION_17
+            break
+        case "21":
+            ext.javaVersion = JavaVersion.VERSION_21
             break
         default:
             logger.lifecycle("Unrecognized javaVersion. Using 8.")
