@@ -77,7 +77,7 @@ public class JavaClassLoader implements RequestHandler<Object, Object> {
         try {
             return executor.handle(mappingInputToHandlerType(inputParam, inputType), contextParam);
         } catch (Throwable e) {
-            throw new RuntimeException("Error occurred while invoking handler method: " + e);
+            throw new RuntimeException("Error occurred while invoking handler method: " + e, e);
         }
     }
 
