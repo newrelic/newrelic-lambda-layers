@@ -1,0 +1,24 @@
+service: integration-tests
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+
+custom:
+  RUBY_RUNTIME: ${env:RUBY_RUNTIME, 'ruby3.2'}
+
+provider:
+  name: aws
+  runtime: ${self:custom.RUBY_RUNTIME}
+
+functions:
+  testhandler:
+    events:
+      - http:
+          method: get
+          path: '/'
+    handler: ../../newrelic_lambda_wrapper.handler
+    environment:
+      AWS_LAMBDA_FUNCTION_NAME: CalvinAndHobbes
+      NEW_RELIC_LAMBDA_HANDLER: src/handler.handler
+      NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false

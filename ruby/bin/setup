@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if (command -v bundle >/dev/null); then
+  rm -rf .bundle
+  bundle install
+else
+  echo "'bundle' command not found!"
+  exit -1
+fi
+
+cd test/support
+npm install
+
+echo 'Setup complete'
