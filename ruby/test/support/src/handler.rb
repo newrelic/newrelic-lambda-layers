@@ -2,7 +2,7 @@
 
 require 'json'
 
-def handler(_event, _context)
+def handler(event:, context:)
   puts 'Running handler'
   { statusCode: 200, body: 'handled' }
 end

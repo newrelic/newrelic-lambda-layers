@@ -42,6 +42,6 @@ rescue StandardError => e
   raise "Failed to prep the Lambda function to be wrapped - #{e}"
 end
 
-def handler(event = nil, context = nil)
-  NewRelic::Agent.agent.serverless_handler.lambda_handler(method_name:, event:, context:)
+def handler(event:, context:)
+  NewRelic::Agent.agent.serverless_handler.invoke_lambda_function_with_new_relic(event:, context:, method_name:)
 end
