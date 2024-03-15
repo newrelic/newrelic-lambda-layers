@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+bin/clean
+
 if (command -v bundle >/dev/null); then
   rm -rf .bundle
   bundle install

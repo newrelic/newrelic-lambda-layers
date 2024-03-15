@@ -5,9 +5,14 @@ require 'minitest/autorun'
 require 'minitest/pride'
 require 'net/http'
 
-# LambdaWrapperTest - tests to confirm the successful New Relic wrapping of
-#                     unaltered customer Lambda functions
-class LambdaWrapperTest < Minitest::Test
+# LambdaWrapperIntegrationTest - tests to confirm the successful New Relic
+#                                wrapping of unaltered customer Lambda
+#                                functions via a complete integration process
+#                                that includes a customer function, the
+#                                wrapper script, the New Relic Ruby agent,
+#                                and the 'serverless' Node.js module behaving
+#                                as an AWS Lambda service
+class LambdaWrapperIntegrationTest < Minitest::Test
   METADATA_PATTERN = /"agent_language":"ruby"/
   SERVERLESS_ROOT = 'test/support'
   SERVERLESS_OUTPUT_FILE = 'serverless_log'

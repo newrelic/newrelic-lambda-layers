@@ -20,5 +20,5 @@ functions:
     handler: ../../newrelic_lambda_wrapper.handler
     environment:
       AWS_LAMBDA_FUNCTION_NAME: CalvinAndHobbes
-      NEW_RELIC_LAMBDA_HANDLER: src/handler.handler
+      NEW_RELIC_LAMBDA_HANDLER: src/handler.An::Example.handler
       NEW_RELIC_LAMBDA_EXTENSION_ENABLED: false
