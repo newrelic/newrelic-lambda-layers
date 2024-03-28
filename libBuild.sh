@@ -128,6 +128,9 @@ function layer_name_str() {
     "nodejs20.x")
       rt_part="NodeJS20X"
       ;;
+    "ruby3.2")
+      rt_part="Ruby32"
+      ;;
     esac
 
     case $2 in
@@ -178,6 +181,9 @@ function s3_prefix() {
       ;;
     "nodejs20.x")
       name="nr-nodejs20.x"
+      ;;
+    "ruby3.2")
+      name="nr-ruby3.2"
       ;;
     esac
 

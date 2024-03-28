@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# for cleanup when conducting manual .zip file creation
+
+rm -rf .bundle dist ruby Gemfile.lock extensions preview-extensions*
