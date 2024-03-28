@@ -17,6 +17,11 @@ set -Eeuo pipefail
 RUBY_DIR=ruby
 DIST_DIR=dist
 WRAPPER_FILE=newrelic_lambda_wrapper.rb
+# Set this to a path to a clone of newrelic-lambda-extension to build
+# an extension from scratch instead of downloading one. Set the path to ''
+# to simply download a prebuilt one.
+# EXTENSION_CLONE_PATH='../../newrelic-lambda-extension'
+EXTENSION_CLONE_PATH=''
 
 source ../libBuild.sh
 
@@ -79,10 +84,20 @@ function build_and_publish_ruby_for_arch {
     echo -e "Gem::Specification.new {|s| s.name = 'newrelic_rpm'; s.version = '$phony_version'}" > $base_dir/specifications/newrelic_rpm-$phony_version.gemspec
     for sub_dir in '.git' '.github' '.gitignore' '.rubocop.yml' '.rubocop_todo.yml' '.simplecov' '.snyk' '.yardopts' 'Brewfile' 'config' 'CONTRIBUTING.md' 'docker-compose.yml' 'DOCKER.md' 'Dockerfile' 'Gemfile' 'Guardfile' 'infinite_tracing' 'init.rb' 'install.rb' 'lefthook.yml' 'newrelic.yml' 'README.md' 'test' 'THIRD_PARTY_NOTICES.md' 'Thorfile' 'recipes' '.build_ignore'; do
       rm -rf "$nr_dir/$sub_dir"
-    done
-  fi
+    done fi
 
-  download_extension $arch
+  if [ "$EXTENSION_CLONE_PATH" == "" ]; then
+    echo "Downloading prebuilt extension..."
+    download_extension $arch
+  else
+    echo "Building an extension from a local clone..."
+    here=$PWD
+    cd "$EXTENSION_CLONE_PATH"
+    make "dist-$arch"
+    mv "$EXTENSION_DIST_DIR" "$here/$EXTENSION_DIST_DIR"
+    mv "$EXTENSION_DIST_PREVIEW_FILE" "$here/$EXTENSION_DIST_PREVIEW_FILE"
+    cd $here
+  fi
 
   zip -rq $dist_file $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
   rm -rf $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
