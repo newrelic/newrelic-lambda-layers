@@ -207,7 +207,7 @@ function publish_layer {
 
     compat_list=( $runtime_name )
     if [[ $runtime_name == "provided" ]]
-    then compat_list=("provided" "provided.al2" "dotnetcore3.1" "dotnet6")
+    then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1" "dotnet6")
     fi
 
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
