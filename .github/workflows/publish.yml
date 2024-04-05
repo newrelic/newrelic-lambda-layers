@@ -4,6 +4,20 @@ on:
   push:
     tags: [master]
   workflow_dispatch:
+    inputs:
+      layer_runtime:
+        description: 'Which kind of layer should be published?'
+        required: true
+        type: choice
+        options:
+          - nodejs
+          - python
+          - java
+          - extension
+      tag:
+        description: 'Enter a tagged release to publish.'
+        required: true
+        type: string
 
 jobs:
   publish-node:
@@ -20,7 +34,7 @@ jobs:
       - name: Check Tag
         id: node-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs/$ ]]; then
+          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs/$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Run Node ${{ matrix.node-version }} unit tests
@@ -47,7 +61,7 @@ jobs:
       - name: Check Tag
         id: python-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_python/$ ]]; then
+          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_python/$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Install python dependencies
@@ -69,7 +83,7 @@ jobs:
       - name: Check Tag
         id: java-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java/$ ]]; then
+          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java/$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Publish ${{ matrix.java-version }} layer
@@ -86,7 +100,7 @@ jobs:
       - name: Check Tag
         id: extension-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension/$ ]]; then
+          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension/$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Install publish dependencies
@@ -99,5 +113,17 @@ jobs:
 
   publish-layers:
     runs-on: ubuntu-latest
+    steps:
+      - name: Set env var
+        id: release_tag
+        run: |
+          if [ ! -z ${{ github.event.inputs.tag }} && ! -z ${{ github.event.inputs.layer_runtime }} ]; then 
+            echo "release_tag=${{ github.event.inputs.tag }}_${{ github.event.inputs.layer_runtime }}" >> "$GITHUB_ENV"
+            echo "Publishing from workflow_dispatch $release_tag"
+          else
+            echo "Publishing from GitHub event"
+            echo "release_tag=${{ github.event.ref }}" >> "$GITHUB_ENV"
+          fi
+        shell: bash
     if: ${{ always() }}
     needs: [publish-node, publish-python, publish-java, publish-extension]
