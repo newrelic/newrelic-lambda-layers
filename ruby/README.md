@@ -13,15 +13,17 @@ Lambda functions for observability.
 
 A layer is created for every region, architecture, and Ruby runtime combination.
 
-NOTE that as of February 2024, AWS Lambda supports Ruby v3.2 only
-
 
 ## Layer building and publishing
 
-With Ruby 3.2's `bundle` binary in your path:
+With Ruby v3.2 or v3.3 `bundle` binary in your path:
 
 ```shell
 ./publish_layers.sh ruby3.2
+
+# or
+
+./publish_layers.sh ruby3.3
 ```
 
 
@@ -53,3 +55,4 @@ NOTES:
   the same Ruby version as the layer is targetting, a simple `mv` hack currently
   exists in `publish-layers.sh` that would allow say an instance of Ruby 3.3 to
   build a Ruby 3.2 layer.
+- By default, the `ruby/publish-layers.sh` script will use the prebuilt extension version defined at `libBuild.sh` for the `EXTENSION_VERSION` variable. That variable can be changed to use other extension versions. To instead build a new extension from scratch, edit `ruby/publish-layers.sh` and point to a local git clone of the extension.

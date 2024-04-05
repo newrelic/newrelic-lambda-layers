@@ -20,13 +20,13 @@ WRAPPER_FILE=newrelic_lambda_wrapper.rb
 # Set this to a path to a clone of newrelic-lambda-extension to build
 # an extension from scratch instead of downloading one. Set the path to ''
 # to simply download a prebuilt one.
-# EXTENSION_CLONE_PATH='../../newrelic-lambda-extension'
+# EXTENSION_CLONE_PATH='../../newrelic-lambda-extension_fallwith'
 EXTENSION_CLONE_PATH=''
 
 source ../libBuild.sh
 
 function usage {
-  echo "./publish-layers.sh [ruby3.2]"
+  echo "./publish-layers.sh [ruby3.2|ruby3.3]"
 }
 
 function build_and_publish_ruby {
@@ -112,6 +112,9 @@ function build_and_publish_ruby_for_arch {
 
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
+  "ruby3.3")
+    build_and_publish_ruby '3.3'
+    ;;
   "ruby3.2")
     build_and_publish_ruby '3.2'
     ;;

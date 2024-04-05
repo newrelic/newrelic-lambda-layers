@@ -131,6 +131,9 @@ function layer_name_str() {
     "ruby3.2")
       rt_part="Ruby32"
       ;;
+    "ruby3.3")
+      rt_part="Ruby33"
+      ;;
     esac
 
     case $2 in
@@ -182,8 +185,8 @@ function s3_prefix() {
     "nodejs20.x")
       name="nr-nodejs20.x"
       ;;
-    "ruby3.2")
-      name="nr-ruby3.2"
+    "ruby3.3")
+      name="nr-ruby3.3"
       ;;
     esac
 
