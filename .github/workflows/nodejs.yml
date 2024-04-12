@@ -9,6 +9,9 @@ on:
         paths:
             - 'nodejs/**'
     workflow_dispatch:
+      branches: [master]
+      paths:
+        - 'nodejs/**'
 
 jobs:
 
@@ -20,9 +23,9 @@ jobs:
             node-version: [lts/*]
 
         steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v3
+          uses: actions/setup-node@v4
           with:
             node-version: ${{ matrix.node-version }}
         - name: Install Dependencies
@@ -39,9 +42,9 @@ jobs:
             matrix:
                 node-version: [16.x, 18.x, 20.x]
         steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v3
+          uses: actions/setup-node@v4
           with:
             node-version: ${{ matrix.node-version }}
         - name: Install Dependencies
@@ -51,7 +54,7 @@ jobs:
           run: npm run test:unit
           working-directory: nodejs
         - name: Archive Unit Test Coverage
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: unit-tests-${{ matrix.node-version }}
             path: ./nodejs/coverage/unit/lcov.info
@@ -64,9 +67,9 @@ jobs:
                 node-version: [16.x, 18.x, 20.x]
 
             steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                 node-version: ${{ matrix.node-version }}
             - name: Install Dependencies
