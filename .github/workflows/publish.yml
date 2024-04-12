@@ -20,104 +20,13 @@ on:
         type: string
 
 jobs:
-  publish-node:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16, 18, 20]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Check Tag
-        id: node-check-tag
-        run: |
-          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs/$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
-      - name: Run Node ${{ matrix.node-version }} unit tests
-        if: steps.node-check-tag.outputs.match == 'true'
-        run: cd nodejs && npm ci && npm run test
-      - name: Publish layer
-        run: make publish-nodejs${{ matrix.node-version }}x-ci
-      - name: Upload Unit Test Coverage
-        uses: codecov/codecov-action@v3
-        with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         file: ./nodejs/coverage/unit/lcov.info
-         fail_ci_if_error: true
-         flags: unit-tests
-
-
-  publish-python:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.7, 3.8, 3.9, 3.10, 3.11, 3.12 ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check Tag
-        id: python-check-tag
-        run: |
-          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_python/$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
-      - name: Install python dependencies
-        if: steps.python-check-tag.outputs.match == 'true'
-        run: pip install -U awscli
-      - name: Publish Python ${{ matrix.python-version }} layer
-        run: |
-          cd python
-          ./publish-layers.sh python${{ matrix.python-version }}
-
-  publish-java:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java-version: [ java8al2, java11, java17, java21 ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check Tag
-        id: java-check-tag
-        run: |
-          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java/$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
-      - name: Publish ${{ matrix.java-version }} layer
-        if: steps.java-check-tag.outputs.match == 'true'
-        run: make publish-${{ matrix.java-version }}-ci
-
-  publish-extension:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.9 ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check Tag
-        id: extension-check-tag
-        run: |
-          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension/$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
-      - name: Install publish dependencies
-        if: steps.extension-check-tag.outputs.match == 'true'
-        run: pip install -U awscli
-      - name: Publish extension layer
-        run: |
-          cd extension
-          ./publish-layer.sh
-
   publish-layers:
     runs-on: ubuntu-latest
     steps:
       - name: Set env var
         id: release_tag
         run: |
-          if [ ! -z ${{ github.event.inputs.tag }} && ! -z ${{ github.event.inputs.layer_runtime }} ]; then 
+          if [[ ! -z ${{ github.event.inputs.tag }} && ! -z ${{ github.event.inputs.layer_runtime }} ]]; then 
             echo "release_tag=${{ github.event.inputs.tag }}_${{ github.event.inputs.layer_runtime }}" >> "$GITHUB_ENV"
             echo "Publishing from workflow_dispatch $release_tag"
           else

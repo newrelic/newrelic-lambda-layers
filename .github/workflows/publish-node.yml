@@ -1,0 +1,57 @@
+name: Publish Node Layers
+
+on:
+  push:
+    tags: [master]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Enter a tagged release to publish.'
+        required: true
+        type: string
+
+env:
+  release_tag: ''
+
+jobs:
+  publish-node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set tag env var
+        id: release_tag
+        run: |
+          if [[ ! -z ${{ github.event.inputs.tag }} ]]; then 
+            echo "release_tag=${{ github.event.inputs.tag }}_nodejs" >> "$GITHUB_ENV"
+            echo "Publishing from workflow_dispatch ${{ github.event.inputs.tag }}_nodejs"
+          else
+            echo "Publishing from GitHub event"
+            echo "release_tag=${{ github.event.ref }}" >> "$GITHUB_ENV"
+            echo "Publishing from GitHub event: new tag ${{ github.event.ref }}"
+          fi
+        shell: bash
+      - name: Use Node.js ${{ matrix.node-version }}.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Check Tag
+        id: node-check-tag
+        run: |
+          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs/$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Run Node ${{ matrix.node-version }} unit tests
+        if: steps.node-check-tag.outputs.match == 'true'
+        run: cd nodejs && npm ci && npm run test
+      - name: Publish layer
+        run: make publish-nodejs${{ matrix.node-version }}x-ci
+      - name: Upload Unit Test Coverage
+        uses: codecov/codecov-action@v3
+        with:
+         token: ${{ secrets.CODECOV_TOKEN }}
+         file: ./nodejs/coverage/unit/lcov.info
+         fail_ci_if_error: true
+         flags: unit-tests
