@@ -24,6 +24,9 @@ jobs:
         run: pip install -U awscli
       - name: Publish extension layer
         if: steps.python-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd extension
           ./publish-layer.sh

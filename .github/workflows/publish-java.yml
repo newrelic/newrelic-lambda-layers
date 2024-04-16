@@ -22,4 +22,7 @@ jobs:
           fi
       - name: Publish ${{ matrix.java-version }} layer
         if: steps.java-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: make publish-${{ matrix.java-version }}-ci
