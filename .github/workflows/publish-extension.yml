@@ -2,16 +2,8 @@ name: Publish Extension Layer
 
 on:
   push:
-    tags: [master]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Enter a tagged release to publish.'
-        required: true
-        type: string
-
-env:
-  release_tag: ''
+    tags:
+      - v**_extension
 
 jobs:
   publish-extension:
@@ -21,27 +13,17 @@ jobs:
         python-version: [ 3.12 ]
     steps:
       - uses: actions/checkout@v4
-      - name: Set tag env var
-        id: release_tag
-        run: |
-          if [[ ! -z ${{ github.event.inputs.tag }} ]]; then 
-            echo "release_tag=${{ github.event.inputs.tag }}_extension" >> "$GITHUB_ENV"
-            echo "Publishing from workflow_dispatch ${{ github.event.inputs.tag }}_extension"
-          else
-            echo "Publishing from GitHub event"
-            echo "release_tag=${{ github.event.ref }}" >> "$GITHUB_ENV"
-            echo "Publishing from GitHub event: new tag ${{ github.event.ref }}"
-          fi
       - name: Check Tag
         id: extension-check-tag
         run: |
-          if [[ ${{ env.release_tag }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension/$ ]]; then
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Install publish dependencies
         if: steps.extension-check-tag.outputs.match == 'true'
         run: pip install -U awscli
       - name: Publish extension layer
+        if: steps.python-check-tag.outputs.match == 'true'
         run: |
           cd extension
           ./publish-layer.sh
