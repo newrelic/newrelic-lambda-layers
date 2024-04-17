@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 # Regions that support arm64 architecture
 REGIONS_ARM=(
-	af-south-1
+  af-south-1
 	ap-northeast-1
 	ap-northeast-2
 	ap-northeast-3
@@ -239,71 +239,4 @@ function publish_layer {
       --principal "*" \
       --region "$region"
     echo "Public permissions set for ${runtime_name} layer version ${layer_version} in region ${region}"
-
-    # Creating layer as a docker image and publishing it in ECR 
-    if [ "$region" = "us-east-1" ]; then
-        publish_docker_ecr $layer_archive $region $runtime_name $arch $layer_name $layer_version
-    fi
-
-
-}
-
-function publish_docker_ecr {
-    layer_archive=$1
-    region=$2
-    runtime_name=$3
-    arch=$4
-    layer_name=$5
-    layer_version=$6
-
-    if [[ ${arch} =~ 'arm64' ]];
-    then arch_flag="-arm64"
-    else arch_flag=""
-    fi
-
-    version_flag=$(echo "$runtime_name" | sed 's/[^0-9]//g')
-    language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
-
-    echo "runtime_name ${region} ${runtime_name} ${layer_name} ${language_flag} ${version_flag} ${arch}"
-
-    # Remove 'dist/' prefix
-    if [[ $layer_archive == dist/* ]]; then
-      file_without_dist="${layer_archive#dist/}"
-      echo "File without 'dist/': $file_without_dist"
-    else
-      file_without_dist=$layer_archive
-      echo "File does not start with 'dist/': $file_without_dist"
-    fi
-
-    # public ecr repository name 
-    # for testing 
-    #repository="q6k3q1g1"
-    # for prod 
-    repository="x6n7b2o2"
-
-    # copy dockerfile
-    cp ../Dockerfile .
-
-    echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
-    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
-
-    echo "docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
-    --build-arg layer_zip=${layer_archive} \
-    --build-arg file_without_dist=${file_without_dist} \
-    ."
-
-    docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
-    --build-arg layer_zip=${layer_archive} \
-    --build-arg file_without_dist=${file_without_dist} \
-    .
-   
-    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
-    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
-    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
-    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
-
-    # delete dockerfile
-    rm -rf Dockerfile
-
-
 }
