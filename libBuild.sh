@@ -277,9 +277,9 @@ function publish_docker_ecr {
 
     # public ecr repository name 
     # for testting 
-    repository="q6k3q1g1"
+    #repository="q6k3q1g1"
     # for prod 
-    #repository="x6n7b2o2"
+    repository="x6n7b2o2"
 
     # copy dockerfile
     cp ../Dockerfile .
