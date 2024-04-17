@@ -276,7 +276,7 @@ function publish_docker_ecr {
     fi
 
     # public ecr repository name 
-    # for testting 
+    # for testing 
     #repository="q6k3q1g1"
     # for prod 
     repository="x6n7b2o2"
