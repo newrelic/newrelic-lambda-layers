@@ -9,9 +9,6 @@ on:
     paths:
       - "python/**"
   workflow_dispatch:
-    branches: [master]
-    paths:
-      - "python/**"
 
 jobs:
   tests:
