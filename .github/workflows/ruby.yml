@@ -55,5 +55,5 @@ jobs:
     steps:
       - id: ruby-version-without-dot
         run: echo ${{ matrix.ruby-version }} | sed 's/\.//' >> $GITHUB_OUTPUT
-      - run: echo "Ruby v${{ matrix.ruby-version }} -> Ruby ${{ steps.ruby-version-without-dot.outputs }}"
-      - run: echo "make publish-ruby${{ steps.ruby-version-without-dot.outputs }}-ci"
+      - run: echo "Ruby v${{ matrix.ruby-version }} -> Ruby ${{ steps.ruby-version-without-dot.outputs.value }}"
+      - run: echo "make publish-ruby${{ steps.ruby-version-without-dot.outputs.value }}-ci"
