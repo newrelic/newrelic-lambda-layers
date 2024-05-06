@@ -53,4 +53,5 @@ jobs:
       matrix:
         ruby-version: [3.2, 3.3]
     steps:
+      - run: echo "Ruby v${{ matrix.ruby-version }}"
       - run: echo "make publish-ruby${{ matrix.ruby-version }/\./}-ci"
