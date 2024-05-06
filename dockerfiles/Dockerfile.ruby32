@@ -10,7 +10,8 @@ RUN apt install -y curl python3 python3-pip unzip zip
 RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
-RUN pip3 install -U awscli --user
+RUN pip3 install -U awscli --user --no-cache-dir --break-system-packages
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
 
 # Ruby layer building depends on the shared `libBuild.sh` script but is
 # otherwise independent. Copy over only what we need to build Ruby layers.
