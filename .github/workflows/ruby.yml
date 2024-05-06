@@ -23,7 +23,9 @@ jobs:
         with:
           ruby-version: '3.3'
       - run: bundle
+        working-directory: ruby
       - run: rubocop
+        working-directory: ruby
 
   unit:
     runs-on: ubuntu-latest
@@ -46,17 +48,3 @@ jobs:
       - name: Run Unit Tests
         run: bundle exec rake test
         working-directory: ruby
-
-  temptesting:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby-version: [3.2, 3.3]
-    steps:
-      - id: ruby-version-without-dot
-        run: >-
-          echo "::set-output name=VERSION::$(
-            echo ${{ matrix.ruby-version }} | sed 's/\.//'
-          )"
-      - run: echo "Ruby v${{ matrix.ruby-version }} -> Ruby ${{ steps.ruby-version-without-dot.outputs.VERSION }}"
-      - run: echo "make publish-ruby${{ steps.ruby-version-without-dot.outputs.VERSION }}-ci"
