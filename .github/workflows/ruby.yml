@@ -46,3 +46,11 @@ jobs:
       - name: Run Unit Tests
         run: bundle exec rake test
         working-directory: ruby
+
+  temptesting:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: [3.2, 3.3]
+    steps:
+      - run: echo "make publish-ruby${{ matrix.ruby-version }/\./}-ci"
