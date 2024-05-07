@@ -25,4 +25,4 @@ WORKDIR ruby
 # conflict.
 RUN ./bin/clean
 
-RUN ./publish-layers.sh ruby3.3
+CMD ./publish-layers.sh ruby3.3
