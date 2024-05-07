@@ -3,3 +3,7 @@ AllCops:
   TargetRubyVersion: 3.2
   Exclude:
     - 'test/support/node_modules/**/*'
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'test/support/src/handler.rb'

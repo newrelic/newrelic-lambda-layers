@@ -17,7 +17,7 @@
 #               the client caller even when wrapped by New Relic.
 module An
   class Example
-    def self.handler(_event:, _context:)
+    def self.handler(event:, context:)
       puts 'Running handler'
       { statusCode: 200, body: 'handled' }
     end
