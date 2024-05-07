@@ -1,3 +1,5 @@
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
+  Exclude:
+    - 'test/support/node_modules/**/*'
