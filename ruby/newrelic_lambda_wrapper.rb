@@ -5,8 +5,6 @@ ENV['AWS_LAMBDA_FUNCTION_NAME'] ||= 'lambda_function'
 ENV['NEW_RELIC_APP_NAME'] ||= ENV.fetch('AWS_LAMBDA_FUNCTION_NAME', nil)
 ENV['NEW_RELIC_TRUSTED_ACCOUNT_KEY'] = ENV.fetch('NEW_RELIC_ACCOUNT_ID', '')
 
-require 'newrelic_rpm'
-
 # The customer's Lambda function is configured to point to this file and its
 # `handler` method.
 #
@@ -54,6 +52,22 @@ require 'newrelic_rpm'
 #
 class NewRelicLambdaWrapper
   HANDLER_VAR = 'NEW_RELIC_LAMBDA_HANDLER'
+  NR_LAYER_GEM_PATH = "/opt/ruby/gems/#{RUBY_VERSION.rpartition('.').first}/gems".freeze
+
+  def self.adjust_load_path
+    return unless Dir.exist?(NR_LAYER_GEM_PATH)
+
+    Dir.glob(File.join(NR_LAYER_GEM_PATH, '*', 'lib')).each do |gem_lib_dir|
+      $LOAD_PATH.push(gem_lib_dir) unless $LOAD_PATH.include?(gem_lib_dir)
+    end
+  end
+
+  def self.require_ruby_agent
+    adjust_load_path
+    require 'newrelic_rpm'
+  rescue StandardError => e
+    raise "#{self.class.name}: failed to require New Relic layer provided gem(s) - #{e}"
+  end
 
   def self.method_name_and_namespace
     @method_name_and_namespace ||= parse_customer_handler_string
@@ -103,6 +117,7 @@ end
 
 # warm the memoization cache so that the very first customer method invocation
 # isn't made to wait
+NewRelicLambdaWrapper.require_ruby_agent
 NewRelicLambdaWrapper.method_name_and_namespace
 
 def handler(event:, context:)
