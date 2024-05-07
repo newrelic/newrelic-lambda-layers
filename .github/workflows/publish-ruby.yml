@@ -6,7 +6,7 @@ on:
       - v**_ruby
 
 jobs:
-  publish-node:
+  publish-ruby:
     runs-on: ubuntu-latest
     strategy:
       matrix:
