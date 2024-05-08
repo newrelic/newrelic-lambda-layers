@@ -1,0 +1,28 @@
+name: Publish Java Layers
+
+on:
+  push:
+    tags:
+      - v**_java
+
+jobs:
+  publish-java:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ java8al2, java11, java17, java21 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Tag
+        id: java-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Publish ${{ matrix.java-version }} layer
+        if: steps.java-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: make publish-${{ matrix.java-version }}-ci

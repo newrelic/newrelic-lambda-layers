@@ -1,0 +1,42 @@
+name: Publish Node Layers
+
+on:
+  push:
+    tags:
+      - v**_nodejs
+
+jobs:
+  publish-node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Check Tag
+        id: node-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Run Node ${{ matrix.node-version }} unit tests
+        if: steps.node-check-tag.outputs.match == 'true'
+        run: cd nodejs && npm ci && npm run test
+      - name: Publish layer
+        if: steps.node-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: make publish-nodejs${{ matrix.node-version }}x-ci
+      - name: Upload Unit Test Coverage
+        if: steps.node-check-tag.outputs.match == 'true'
+        uses: codecov/codecov-action@v3
+        with:
+         token: ${{ secrets.CODECOV_TOKEN }}
+         file: ./nodejs/coverage/unit/lcov.info
+         fail_ci_if_error: true
+         flags: unit-tests
