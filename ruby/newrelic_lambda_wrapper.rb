@@ -52,7 +52,7 @@ ENV['NEW_RELIC_TRUSTED_ACCOUNT_KEY'] = ENV.fetch('NEW_RELIC_ACCOUNT_ID', '')
 #
 class NewRelicLambdaWrapper
   HANDLER_VAR = 'NEW_RELIC_LAMBDA_HANDLER'
-  NR_LAYER_GEM_PATH = "/opt/ruby/gems/#{RUBY_VERSION.rpartition('.').first}/gems".freeze
+  NR_LAYER_GEM_PATH = "/opt/ruby/gems/#{RUBY_VERSION.rpartition('.').first}.0/gems".freeze
 
   def self.adjust_load_path
     return unless Dir.exist?(NR_LAYER_GEM_PATH)
