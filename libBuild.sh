@@ -242,7 +242,7 @@ function publish_layer {
 
     # Creating layer as a docker image and publishing it in ECR 
     if [ "$region" = "us-east-1" ]; then
-        publish_docker_ecr $layer_archive $region $runtime_name $arch $layer_name $layer_version
+        publish_docker_ecr $layer_archive $runtime_name $arch $layer_name $layer_version
     fi
 
 
@@ -250,11 +250,10 @@ function publish_layer {
 
 function publish_docker_ecr {
     layer_archive=$1
-    region=$2
-    runtime_name=$3
-    arch=$4
-    layer_name=$5
-    layer_version=$6
+    runtime_name=$2
+    arch=$3
+    layer_name=$4
+    layer_version=$5
 
     if [[ ${arch} =~ 'arm64' ]];
     then arch_flag="-arm64"
@@ -264,7 +263,7 @@ function publish_docker_ecr {
     version_flag=$(echo "$runtime_name" | sed 's/[^0-9]//g')
     language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
 
-    echo "runtime_name ${region} ${runtime_name} ${layer_name} ${language_flag} ${version_flag} ${arch}"
+    echo "runtime_name ${runtime_name} ${layer_name} ${language_flag} ${version_flag} ${arch}"
 
     # Remove 'dist/' prefix
     if [[ $layer_archive == dist/* ]]; then
@@ -276,9 +275,7 @@ function publish_docker_ecr {
     fi
 
     # public ecr repository name 
-    # for testing 
-    #repository="q6k3q1g1"
-    # for prod 
+    # maintainer can use this("q6k3q1g1") repo name for testing 
     repository="x6n7b2o2"
 
     # copy dockerfile

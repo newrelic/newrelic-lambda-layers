@@ -1,4 +1,4 @@
-FROM alpine:latest as layer-copy
+FROM alpine:latest
 
 ARG layer_zip
 ARG file_without_dist
