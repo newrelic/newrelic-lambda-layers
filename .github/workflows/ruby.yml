@@ -1,0 +1,50 @@
+name: Ruby Layer CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+        - 'ruby/**'
+  pull_request:
+    paths:
+        - 'ruby/**'
+  workflow_dispatch:
+    branches: [master]
+    paths:
+      - 'ruby/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # tag v4.1.2
+      - uses: ruby/setup-ruby@1198b074305f9356bd56dd4b311757cc0dab2f1c # tag v1.175.1
+        with:
+          ruby-version: '3.3'
+      - run: bundle
+        working-directory: ruby
+      - run: rubocop
+        working-directory: ruby
+
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # tag v4.1.2
+      - uses: ruby/setup-ruby@1198b074305f9356bd56dd4b311757cc0dab2f1c # tag v1.175.1
+        with:
+          ruby-version: '3.3'
+      # Node.js powers serverless-offline, used for unit tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install Node.js Dependencies
+        run: npm install
+        working-directory: ruby/test/support
+      - name: Install Ruby Depedencies
+        run: bundle
+        working-directory: ruby
+      - name: Run Unit Tests
+        run: bundle exec rake test
+        working-directory: ruby

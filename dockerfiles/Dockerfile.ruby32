@@ -1,0 +1,28 @@
+FROM ruby:3.2
+
+RUN apt update 
+
+# curl - downloads the prebuilt NR Lambda extension
+# python3/pip3 - for the AWS CLI
+# zip/unzip - for building AWS Lambda layers .zip files
+RUN apt install -y curl python3 python3-pip unzip zip
+
+RUN useradd -m newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+RUN pip3 install -U awscli --user --no-cache-dir --break-system-packages
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
+
+# Ruby layer building depends on the shared `libBuild.sh` script but is
+# otherwise independent. Copy over only what we need to build Ruby layers.
+COPY --chown=newrelic-lambda-layers libBuild.sh .
+COPY --chown=newrelic-lambda-layers ruby ruby/
+
+WORKDIR ruby
+
+# Run ruby/bin/clean just in case Docker is being ran from a developer's
+# workstation and their git clone directory has some stray files that could
+# conflict.
+RUN ./bin/clean
+
+CMD ./publish-layers.sh ruby3.2
