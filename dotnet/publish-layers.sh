@@ -13,7 +13,7 @@ AGENT_DIST_ZIP=agent.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [dotnet]"
+    echo "./publish-layers.sh"
 }
 
 function build-dotnet-x86-64 {
@@ -79,14 +79,8 @@ if [ -z $AGENT_VERSION ]; then
     exit 1
 fi
 
-case "${1:-default}" in
-    "dotnet")
-        build-dotnet-arm64
-        #publish-dotnet-arm64
-        build-dotnet-x86-64
-        #publish-dotnet-x86-64
-        ;;
-    *)
-        usage
-        ;;
-esac
+build-dotnet-arm64
+publish-dotnet-arm64
+build-dotnet-x86-64
+publish-dotnet-x86-64
+

@@ -1,0 +1,29 @@
+name: Publish Dotnet Layers
+
+on:
+  push:
+    tags:
+      - v**_dotnet
+
+jobs:
+  publish-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Tag
+        id: dotnet-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_dotnet ]]; then
+              AGENT_VERSION=$( echo ${{ github.event.ref }} | grep -Eo "[0-9]+(\.[0-9]+)*" )
+              echo "version=$AGENT_VERSION" >> $GITHUB_OUTPUT
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/checkout@v4
+      - name: Publish Dotnet Layer
+        if: steps.dotnet-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AGENT_VERSION: ${{ steps.dotnet-check-tag.outputs.version }}
+        run: |
+          cd dotnet
+          ./publish-layers.sh
