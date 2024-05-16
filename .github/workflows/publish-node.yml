@@ -26,18 +26,20 @@ jobs:
       - name: Run Node ${{ matrix.node-version }} unit tests
         if: steps.node-check-tag.outputs.match == 'true'
         run: cd nodejs && npm ci && npm run test
-      - name: Publish layer
-        if: steps.node-check-tag.outputs.match == 'true'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make publish-nodejs${{ matrix.node-version }}x-ci
-      - name: Publish ecr image for ${{ matrix.node-version }} layer
+      # - name: Publish layer
+      #   if: steps.node-check-tag.outputs.match == 'true'
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #   run: make publish-nodejs${{ matrix.node-version }}x-ci
+      - name: Publish ECR image for nodejs${{ matrix.node-version }}
         if: steps.node-check-tag.outputs.match == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
+          pwd
+          ls
           ./publish-ecr-images.sh build-publish-nodejs${{ matrix.node-version }}x-ecr-image
       - name: Upload Unit Test Coverage
         if: steps.node-check-tag.outputs.match == 'true'
