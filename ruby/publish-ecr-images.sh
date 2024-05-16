@@ -35,7 +35,6 @@ RUBY32_DIST_ARM64=$DIST_DIR/ruby32.arm64.zip
 RUBY33_DIST_X86_64=$DIST_DIR/ruby33.x86_64.zip
 RUBY32_DIST_X86_64=$DIST_DIR/ruby32.x86_64.zip
 
-# local dist_file="$DIST_DIR/ruby${ruby_version//./}.$arch.zip"
 
 function build_and_publish_ruby_for_arch {
   local dist_file=$1
