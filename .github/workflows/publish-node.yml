@@ -38,8 +38,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          pwd
-          ls
           cd nodejs
           ./publish-ecr-images.sh build-publish-nodejs${{ matrix.node-version }}x-ecr-image
       - name: Upload Unit Test Coverage

@@ -278,18 +278,19 @@ function publish_docker_ecr {
     repository="q6k3q1g1"
 
     # copy dockerfile
-    cp ../Dockerfile .
-    ls 
+    cp ../Dockerfile.ecrImage .
 
     echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
     aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
 
     echo "docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
     ."
 
     docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
     .
