@@ -40,6 +40,7 @@ jobs:
         run: |
           pwd
           ls
+          cd nodejs
           ./publish-ecr-images.sh build-publish-nodejs${{ matrix.node-version }}x-ecr-image
       - name: Upload Unit Test Coverage
         if: steps.node-check-tag.outputs.match == 'true'
