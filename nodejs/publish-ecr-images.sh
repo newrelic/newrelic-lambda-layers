@@ -16,7 +16,7 @@ NJS18X_DIST_X86_64=$DIST_DIR/nodejs18x.x86_64.zip
 NJS20X_DIST_X86_64=$DIST_DIR/nodejs20x.x86_64.zip
 
 function usage {
-  	echo "./publish-layers.sh [nodejs16x|nodejs18x|nodejs20x]"
+  	echo "./nodejs/publish-ecr-images.sh [nodejs16x|nodejs18x|nodejs20x]"
 }
 
 function build-nodejs16x-arm64 {
