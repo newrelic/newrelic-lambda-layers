@@ -4,55 +4,55 @@ set -Eeuo pipefail
 
 # Regions that support arm64 architecture
 REGIONS_ARM=(
-  af-south-1
-	ap-northeast-1
-	ap-northeast-2
-	ap-northeast-3
-	ap-south-1
-	ap-southeast-1
-	ap-southeast-2
-	ap-southeast-3
-	ca-central-1
-	eu-central-1
-	eu-north-1
-	eu-south-1
-	eu-west-1
-	eu-west-2
-	eu-west-3
-	me-south-1
-	sa-east-1
+  # af-south-1
+	# ap-northeast-1
+	# ap-northeast-2
+	# ap-northeast-3
+	# ap-south-1
+	# ap-southeast-1
+	# ap-southeast-2
+	# ap-southeast-3
+	# ca-central-1
+	# eu-central-1
+	# eu-north-1
+	# eu-south-1
+	# eu-west-1
+	# eu-west-2
+	# eu-west-3
+	# me-south-1
+	# sa-east-1
 	us-east-1
-	us-east-2
-	us-west-1
+	# us-east-2
+	# us-west-1
 	us-west-2
 )
 
 REGIONS_X86=(
-  af-south-1
-  ap-northeast-1
-  ap-northeast-2
-  ap-northeast-3
-  ap-south-1
-  ap-south-2
-  ap-southeast-1
-  ap-southeast-2
-  ap-southeast-3
-  ap-southeast-4
-  ca-central-1
-  eu-central-1
-  eu-central-2
-  eu-north-1
-  eu-south-1
-  eu-south-2
-  eu-west-1
-  eu-west-2
-  eu-west-3
-  me-central-1
-  me-south-1
-  sa-east-1
+  # af-south-1
+  # ap-northeast-1
+  # ap-northeast-2
+  # ap-northeast-3
+  # ap-south-1
+  # ap-south-2
+  # ap-southeast-1
+  # ap-southeast-2
+  # ap-southeast-3
+  # ap-southeast-4
+  # ca-central-1
+  # eu-central-1
+  # eu-central-2
+  # eu-north-1
+  # eu-south-1
+  # eu-south-2
+  # eu-west-1
+  # eu-west-2
+  # eu-west-3
+  # me-central-1
+  # me-south-1
+  # sa-east-1
   us-east-1
-  us-east-2
-  us-west-1
+  # us-east-2
+  # us-west-1
   us-west-2
 )
 
@@ -211,7 +211,7 @@ function publish_layer {
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
-    bucket_name="nr-layers-${region}"
+    bucket_name="nr-test-saket-layers-${region}"
     s3_key="$( s3_prefix $runtime_name )/${hash}.${arch}.zip"
 
     compat_list=( $runtime_name )
@@ -248,4 +248,57 @@ function publish_layer {
       --principal "*" \
       --region "$region"
     echo "Public permissions set for ${runtime_name} layer version ${layer_version} in region ${region}"
+}
+
+function publish_docker_ecr {
+    layer_archive=$1
+    runtime_name=$2
+    arch=$3
+
+    if [[ ${arch} =~ 'arm64' ]];
+    then arch_flag="-arm64"
+    else arch_flag=""
+    fi
+
+    version_flag=$(echo "$runtime_name" | sed 's/[^0-9]//g')
+    language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
+
+
+    # Remove 'dist/' prefix
+    if [[ $layer_archive == dist/* ]]; then
+      file_without_dist="${layer_archive#dist/}"
+      echo "File without 'dist/': $file_without_dist"
+    else
+      file_without_dist=$layer_archive
+      echo "File does not start with 'dist/': $file_without_dist"
+    fi
+
+    # public ecr repository name 
+    # maintainer can use this("q6k3q1g1") repo name for testing 
+    repository="q6k3q1g1"
+
+    # copy dockerfile
+    cp ../Dockerfile .
+    ls 
+
+    echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
+    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
+
+    echo "docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    --build-arg layer_zip=${layer_archive} \
+    --build-arg file_without_dist=${file_without_dist} \
+    ."
+
+    docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    --build-arg layer_zip=${layer_archive} \
+    --build-arg file_without_dist=${file_without_dist} \
+    .
+
+    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
+    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
+    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
+    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
+
+    # delete dockerfile
+    rm -rf Dockerfile
 }

@@ -29,7 +29,7 @@ function build-python37-x86 {
     echo "Building New Relic layer for python3.7 (x86_64)"
     rm -rf $BUILD_DIR $PY37_DIST_X86_64
     mkdir -p $DIST_DIR
-    pip install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.7/site-packages
+    pip3 install --no-cache-dir -qU newrelic newrelic-lambda -t $BUILD_DIR/lib/python3.7/site-packages
     cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.7/site-packages/newrelic_lambda_wrapper.py
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     download_extension x86_64
@@ -288,10 +288,12 @@ function publish-python312-x86 {
       publish_layer $PY312_DIST_X86_64 $region python3.12 x86_64
     done
 }
+
 case "$1" in
     "python3.7")
         build-python37-x86
         publish-python37-x86
+        publish_docker_ecr $PY37_DIST_X86_64 python3.7 x86_64
         ;;
     "python3.8")
         build-python38-arm64
