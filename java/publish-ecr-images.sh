@@ -18,7 +18,7 @@ JAVA21_DIST_X86_64=$DIST_DIR/java21.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-	  echo "./publish-layers.sh [java8al2, java11, java17, java21]"
+	  echo "./publish-ecr-images.sh [java8al2, java11, java17, java21]"
 }
 
 function build-arm() {
