@@ -38,12 +38,12 @@ jobs:
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
-      # - name: Publish ${{ matrix.java-version }} layer
-      #   if: steps.java-check-tag.outputs.match == 'true'
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #   run: make publish-${{ matrix.java-version }}-ci
+      - name: Publish ${{ matrix.java-version }} layer
+        if: steps.java-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: make publish-${{ matrix.java-version }}-ci
       - name: Publish ECR image for ${{ matrix.java-version }}
         if: steps.java-check-tag.outputs.match == 'true'
         env:
