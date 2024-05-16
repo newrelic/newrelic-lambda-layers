@@ -108,16 +108,16 @@ set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
   "ruby3.3")
     build_and_publish_ruby_for_arch $RUBY33_DIST_X86_64 '3.3' 'x86_64' 
-	  publish_docker_ecr $RUBY33_DIST_X86_64 ruby3.3 x86_64
+    publish_docker_ecr $RUBY33_DIST_X86_64 ruby3.3 x86_64
     build_and_publish_ruby_for_arch $RUBY33_DIST_ARM64 '3.3' 'arm64' 
-	  publish_docker_ecr $RUBY33_DIST_ARM64 ruby3.3 arm64
+    publish_docker_ecr $RUBY33_DIST_ARM64 ruby3.3 arm64
 
     ;;
   "ruby3.2")
     build_and_publish_ruby_for_arch $RUBY32_DIST_X86_64 '3.2' 'x86_64'
-	  publish_docker_ecr $RUBY32_DIST_X86_64 ruby3.2 x86_64
+    publish_docker_ecr $RUBY32_DIST_X86_64 ruby3.2 x86_64
     build_and_publish_ruby_for_arch $RUBY32_DIST_ARM64 '3.2' 'arm64'
-	  publish_docker_ecr $RUBY32_DIST_ARM64 ruby3.2 arm64
+    publish_docker_ecr $RUBY32_DIST_ARM64 ruby3.2 arm64
     ;;
   *)
     usage
