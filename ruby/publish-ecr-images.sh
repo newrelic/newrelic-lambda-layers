@@ -38,9 +38,9 @@ RUBY32_DIST_X86_64=$DIST_DIR/ruby32.x86_64.zip
 # local dist_file="$DIST_DIR/ruby${ruby_version//./}.$arch.zip"
 
 function build_and_publish_ruby_for_arch {
-  local ruby_version=$1
-  local arch=$2
-  local dist_file=$3
+  local dist_file=$1
+  local ruby_version=$2
+  local arch=$3
   echo "Building New Relic layer for ruby v$ruby_version ($arch)"
 
 
@@ -108,15 +108,17 @@ function build_and_publish_ruby_for_arch {
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
   "ruby3.3")
-    build_and_publish_ruby_for_arch '3.3' 'x86_64' 
-	  publish_docker_ecr $RUBY33_DIST_ARM64 nodejs16.x arm64
-    build_and_publish_ruby_for_arch '3.3' 'arm64' $RUBY33_DIST_ARM64
-	  publish_docker_ecr $RUBY33_DIST_ARM64 nodejs16.x arm64
+    build_and_publish_ruby_for_arch $RUBY33_DIST_X86_64 '3.3' 'x86_64' 
+	  publish_docker_ecr $RUBY33_DIST_X86_64 ruby3.3 arm64
+    build_and_publish_ruby_for_arch $RUBY33_DIST_ARM64 '3.3' 'arm64' 
+	  publish_docker_ecr $RUBY33_DIST_ARM64 ruby3.3 arm64
 
     ;;
   "ruby3.2")
-    build_and_publish_ruby_for_arch '3.2' 'x86_64'
-    build_and_publish_ruby_for_arch '3.2' 'arm64' $RUBY32_DIST_ARM64
+    build_and_publish_ruby_for_arch $RUBY32_DIST_X86_64 '3.2' 'x86_64'
+	  publish_docker_ecr $RUBY32_DIST_X86_64 ruby3.2 arm64
+    build_and_publish_ruby_for_arch $RUBY32_DIST_ARM64 '3.2' 'arm64'
+	  publish_docker_ecr $RUBY32_DIST_ARM64 ruby3.2 arm64
     ;;
   *)
     usage
