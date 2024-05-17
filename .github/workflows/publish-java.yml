@@ -51,4 +51,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd java
-          ./publish-ecr-images.sh build-publish-${{ matrix.java-version }}-ecr-image
+          ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image
