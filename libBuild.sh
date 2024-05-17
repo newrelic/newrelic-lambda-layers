@@ -301,5 +301,5 @@ function publish_docker_ecr {
     docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
 
     # delete dockerfile
-    rm -rf Dockerfile
+    rm -rf Dockerfile.ecrImage
 }
