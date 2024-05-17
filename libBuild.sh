@@ -4,55 +4,55 @@ set -Eeuo pipefail
 
 # Regions that support arm64 architecture
 REGIONS_ARM=(
-  # af-south-1
-	# ap-northeast-1
-	# ap-northeast-2
-	# ap-northeast-3
-	# ap-south-1
-	# ap-southeast-1
-	# ap-southeast-2
-	# ap-southeast-3
-	# ca-central-1
-	# eu-central-1
-	# eu-north-1
-	# eu-south-1
-	# eu-west-1
-	# eu-west-2
-	# eu-west-3
-	# me-south-1
-	# sa-east-1
+  af-south-1
+	ap-northeast-1
+	ap-northeast-2
+	ap-northeast-3
+	ap-south-1
+	ap-southeast-1
+	ap-southeast-2
+	ap-southeast-3
+	ca-central-1
+	eu-central-1
+	eu-north-1
+	eu-south-1
+	eu-west-1
+	eu-west-2
+	eu-west-3
+	me-south-1
+	sa-east-1
 	us-east-1
-	# us-east-2
-	# us-west-1
+	us-east-2
+	us-west-1
 	us-west-2
 )
 
 REGIONS_X86=(
-  # af-south-1
-  # ap-northeast-1
-  # ap-northeast-2
-  # ap-northeast-3
-  # ap-south-1
-  # ap-south-2
-  # ap-southeast-1
-  # ap-southeast-2
-  # ap-southeast-3
-  # ap-southeast-4
-  # ca-central-1
-  # eu-central-1
-  # eu-central-2
-  # eu-north-1
-  # eu-south-1
-  # eu-south-2
-  # eu-west-1
-  # eu-west-2
-  # eu-west-3
-  # me-central-1
-  # me-south-1
-  # sa-east-1
+  af-south-1
+  ap-northeast-1
+  ap-northeast-2
+  ap-northeast-3
+  ap-south-1
+  ap-south-2
+  ap-southeast-1
+  ap-southeast-2
+  ap-southeast-3
+  ap-southeast-4
+  ca-central-1
+  eu-central-1
+  eu-central-2
+  eu-north-1
+  eu-south-1
+  eu-south-2
+  eu-west-1
+  eu-west-2
+  eu-west-3
+  me-central-1
+  me-south-1
+  sa-east-1
   us-east-1
-  # us-east-2
-  # us-west-1
+  us-east-2
+  us-west-1
   us-west-2
 )
 
@@ -211,7 +211,7 @@ function publish_layer {
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
-    bucket_name="nr-test-saket-layers-${region}"
+    bucket_name="nr-layers-${region}"
     s3_key="$( s3_prefix $runtime_name )/${hash}.${arch}.zip"
 
     compat_list=( $runtime_name )
@@ -274,8 +274,8 @@ function publish_docker_ecr {
     fi
 
     # public ecr repository name 
-    # maintainer can use this("q6k3q1g1") repo name for testing  "x6n7b2o2" 
-    repository="q6k3q1g1"
+    # maintainer can use this("q6k3q1g1") repo name for testing 
+    repository="x6n7b2o2"
 
     # copy dockerfile
     cp ../Dockerfile.ecrImage .
