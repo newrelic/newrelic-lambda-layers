@@ -15,18 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Java version
-        id: set-java-version
         run: |
-          declare -A java_version_map
-          java_version_map=(
+          declare -A map_java_version
+          map_java_version=(
             ["java8al2"]="8"
             ["java11"]="11"
             ["java17"]="17"
             ["java21"]="21"
           )
-          numeric_version=${java_version_map[${{ matrix.java-version }}]}
-          echo "JAVA_NUMERIC_VERSION=$numeric_version" >> $GITHUB_ENV
-
+          java_numeric_version=${map_java_version[${{ matrix.java-version }}]}
+          echo "JAVA_NUMERIC_VERSION=$java_numeric_version" >> $GITHUB_ENV
       - name: Use Java ${{ env.JAVA_NUMERIC_VERSION }}
         uses: actions/setup-java@v4
         with:
