@@ -44,6 +44,12 @@ cd ..
 ```
 
 ```
+cd dotnet
+./publish-layers.sh
+cd ..
+```
+
+```
 cd extension
 ./publish-layer.sh
 cd ..
@@ -78,10 +84,15 @@ These steps will help you configure the layers correctly:
   * Java:
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
     * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`
+  * .NET: This step is not required.
 4. Add these environment variables to your Lambda console:
   * NEW_RELIC_ACCOUNT_ID: Your New Relic account ID
   * NEW_RELIC_LAMBDA_HANDLER: Path to your initial handler.
   * NEW_RELIC_USE_ESM: For Node.js handlers using ES Modules, set to `true`.
+  * CORECLR_ENABLE_PROFILING (.NET only): 1
+  * CORECLR_PROFILER (.NET only): {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+  * CORECLR_NEWRELIC_HOME (.NET only): /opt/lib/newrelic-dotnet-agent
+  * CORECLR_PROFILER_PATH (.NET only): /opt/lib/newrelic-dotnet-agent/libNewRelicProfiler.so
 
 Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda) for instructions on completing your configuration by linking your AWS Account and Cloudwatch Log Streams to New Relic.
 
