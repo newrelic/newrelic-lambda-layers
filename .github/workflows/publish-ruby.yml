@@ -1,0 +1,40 @@
+name: Publish Ruby Layers
+
+on:
+  push:
+    tags:
+      - v**_ruby
+
+jobs:
+  publish-ruby:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: [3.2, 3.3]
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # tag v4.1.2
+      - name: Use Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@1198b074305f9356bd56dd4b311757cc0dab2f1c # tag v1.175.1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - name: Check Tag
+        id: ruby-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_ruby$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Install Ruby Dependencies
+        run: bundle
+        working-directory: ruby
+      - name: Obtain Ruby version without the dot
+        id: ruby-version-without-dot
+        run: >-
+          echo "::set-output name=VERSION::$(
+            echo ${{ matrix.ruby-version }} | sed 's/\.//'
+          )"
+      - name: Publish layer
+        if: steps.ruby-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: make publish-ruby${{ steps.ruby-version-without-dot.outputs.VERSION }}-ci
