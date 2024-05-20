@@ -241,9 +241,10 @@ function publish_layer {
     echo "Public permissions set for ${runtime_name} layer version ${layer_version} in region ${region}"
 
     # Creating layer as a docker image and publishing it in ECR 
-    if [ "$region" = "us-east-1" ]; then
-        publish_docker_ecr $layer_archive $runtime_name $arch $layer_name $layer_version
-    fi
+    # Commeting below code for to merge publish docker ecr function code. Will remove this comment once the docker cmd issue fixed. 
+    # if [ "$region" = "us-east-1" ]; then
+    #     publish_docker_ecr $layer_archive $runtime_name $arch $layer_name $layer_version
+    # fi
 
 
 }
