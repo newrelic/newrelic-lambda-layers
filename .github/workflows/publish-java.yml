@@ -13,7 +13,7 @@ jobs:
         java-version: [ java8al2, java11, java17, java21 ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
       - name: Check Tag
         id: java-check-tag
         run: |
