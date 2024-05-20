@@ -1,80 +1,79 @@
 name: Node.js Layer CI
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'nodejs/**'
-  pull_request:
-    paths:
-      - 'nodejs/**'
-  workflow_dispatch:
-
+    push:
+        branches: [master]
+        paths:
+            - 'nodejs/**'
+    pull_request:
+        paths:
+            - 'nodejs/**'
+    workflow_dispatch:
 
 jobs:
 
-  lint:
-    runs-on: ubuntu-latest
+    lint:
+        runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [ lts/* ]
+        strategy:
+          matrix:
+            node-version: [lts/*]
 
-    steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 # pin@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Install Dependencies
-        run: npm ci
-        working-directory: nodejs
-      - name: Run Linting
-        run: npm run lint
-        working-directory: nodejs
+        steps:
+        - uses: actions/checkout@v3
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v3
+          with:
+            node-version: ${{ matrix.node-version }}
+        - name: Install Dependencies
+          run: npm ci
+          working-directory: nodejs
+        - name: Run Linting
+          run: npm run lint
+          working-directory: nodejs
 
-  unit:
-    runs-on: ubuntu-latest
+    unit:
+        runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [ 16.x, 18.x ]
-    steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 # pin@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Install Dependencies
-        run: npm ci
-        working-directory: nodejs
-      - name: Run Unit Tests
-        run: npm run test:unit
-        working-directory: nodejs
-      - name: Archive Unit Test Coverage
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
-        with:
-          name: unit-tests-${{ matrix.node-version }}
-          path: ./nodejs/coverage/unit/lcov.info
+        strategy:
+            matrix:
+                node-version: [16.x, 18.x]
+        steps:
+        - uses: actions/checkout@v3
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v3
+          with:
+            node-version: ${{ matrix.node-version }}
+        - name: Install Dependencies
+          run: npm ci
+          working-directory: nodejs
+        - name: Run Unit Tests
+          run: npm run test:unit
+          working-directory: nodejs
+        - name: Archive Unit Test Coverage
+          uses: actions/upload-artifact@v3
+          with:
+            name: unit-tests-${{ matrix.node-version }}
+            path: ./nodejs/coverage/unit/lcov.info
 
-  integration:
-    runs-on: ubuntu-latest
+    integration:
+            runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [ 16.x, 18.x ]
+            strategy:
+              matrix:
+                node-version: [16.x, 18.x]
 
-    steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 # pin@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Install Dependencies
-        run: npm ci
-        working-directory: nodejs
-      - name: Run Integration Tests
-        run: npm run test:integration
-        working-directory: nodejs
-        env:
-          NODE_RUNTIME: nodejs${{ matrix.node-version }}
+            steps:
+            - uses: actions/checkout@v3
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v3
+              with:
+                node-version: ${{ matrix.node-version }}
+            - name: Install Dependencies
+              run: npm ci
+              working-directory: nodejs
+            - name: Run Integration Tests
+              run: npm run test:integration
+              working-directory: nodejs
+              env:
+                NODE_RUNTIME: nodejs${{ matrix.node-version }}
