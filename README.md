@@ -26,19 +26,25 @@ cd ..
 ```
 
 ```
-cd nodejs;
+cd nodejs
 ./publish-layers.sh
 cd ..
 ```
 
 ```
-cd java;
+cd ruby
 ./publish-layers.sh
 cd ..
 ```
 
 ```
-cd extension;
+cd java
+./publish-layers.sh
+cd ..
+```
+
+```
+cd extension
 ./publish-layer.sh
 cd ..
 ```
@@ -68,6 +74,7 @@ These steps will help you configure the layers correctly:
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: `newrelic_lambda_wrapper.handler`
   * Node: `newrelic-lambda-wrapper.handler`
+  * Ruby: `newrelic_lambda_wrapper.handler`
   * Java:
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
     * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`

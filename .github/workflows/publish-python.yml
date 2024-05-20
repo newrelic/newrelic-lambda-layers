@@ -1,0 +1,32 @@
+name: Publish Python Layers
+
+on:
+  push:
+    tags:
+      - v**_python
+
+jobs:
+  publish-python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11', '3.12' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Tag
+        id: python-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_python$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Install python dependencies
+        if: steps.python-check-tag.outputs.match == 'true'
+        run: pip install -U awscli
+      - name: Publish Python ${{ matrix.python-version }} layer
+        if: steps.python-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd python
+          ./publish-layers.sh python${{ matrix.python-version }}
