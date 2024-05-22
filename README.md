@@ -4,7 +4,7 @@
 
 This repository contains source code and utilities to build and publish New Relic's public AWS Lambda layers.
 
-Most users should use our published layers which are chosen automatically via the [CLI tool](https://github.com/newrelic/newrelic-lambda-cli). Those layers are published to be public and are available [here](https://nr-layers.iopipe.com).
+Most users should use our published layers which are chosen automatically via the [CLI tool](https://github.com/newrelic/newrelic-lambda-cli). Those layers are published to be public and are available [here](https://layers.newrelic-external.com/).
 
 This tool is released for users seeking to deploy their own copies of the New Relic Lambda Layers into their accounts, or to modify and publish their own customized wrapper layers.
 
