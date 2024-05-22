@@ -14,6 +14,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
+      - name: Set up Java version
+        run: |
+          declare -A map_java_version
+          map_java_version=(
+            ["java8al2"]="8"
+            ["java11"]="11"
+            ["java17"]="17"
+            ["java21"]="21"
+          )
+          java_numeric_version=${map_java_version[${{ matrix.java-version }}]}
+          echo "JAVA_NUMERIC_VERSION=$java_numeric_version" >> $GITHUB_ENV
+      - name: Use Java ${{ env.JAVA_NUMERIC_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: ${{ env.JAVA_NUMERIC_VERSION }}
       - name: Check Tag
         id: java-check-tag
         run: |
@@ -26,3 +42,11 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: make publish-${{ matrix.java-version }}-ci
+      - name: Publish ECR image for ${{ matrix.java-version }}
+        if: steps.java-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd java
+          ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image

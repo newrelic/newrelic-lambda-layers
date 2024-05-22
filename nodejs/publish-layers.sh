@@ -188,6 +188,24 @@ case "$1" in
 	publish-nodejs20x-arm64
 	publish-nodejs20x-x86
 	;;
+"build-publish-nodejs16x-ecr-image")
+	build-nodejs16x-arm64
+	publish_docker_ecr $NJS16X_DIST_ARM64 nodejs16.x arm64
+	build-nodejs16x-x86
+	publish_docker_ecr $NJS16X_DIST_X86_64 nodejs16.x x86_64
+	;;
+"build-publish-nodejs18x-ecr-image")
+	build-nodejs18x-arm64
+	publish_docker_ecr $NJS18X_DIST_ARM64 nodejs18.x arm64
+	build-nodejs18x-x86
+	publish_docker_ecr $NJS18X_DIST_X86_64 nodejs18.x x86_64
+	;;
+"build-publish-nodejs20x-ecr-image")
+	build-nodejs20x-arm64
+	publish_docker_ecr $NJS20X_DIST_ARM64 nodejs20.x arm64
+	build-nodejs20x-x86
+	publish_docker_ecr $NJS20X_DIST_X86_64 nodejs20.x x86_64
+	;;
 "nodejs16x")
 	$0 build-nodejs16x
 	$0 publish-nodejs16x

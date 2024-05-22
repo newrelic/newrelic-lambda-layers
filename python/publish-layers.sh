@@ -288,40 +288,52 @@ function publish-python312-x86 {
       publish_layer $PY312_DIST_X86_64 $region python3.12 x86_64
     done
 }
+
 case "$1" in
     "python3.7")
         build-python37-x86
         publish-python37-x86
+        publish_docker_ecr $PY37_DIST_X86_64 python3.7 x86_64
         ;;
     "python3.8")
         build-python38-arm64
         publish-python38-arm64
+        publish_docker_ecr $PY38_DIST_ARM64 python3.8 arm64
         build-python38-x86
         publish-python38-x86
+        publish_docker_ecr $PY38_DIST_X86_64 python3.8 x86_64
         ;;
     "python3.9")
         build-python39-arm64
         publish-python39-arm64
+        publish_docker_ecr $PY39_DIST_ARM64 python3.9 arm64
         build-python39-x86
         publish-python39-x86
+        publish_docker_ecr $PY39_DIST_X86_64 python3.9 x86_64
         ;;
     "python3.10")
         build-python310-arm64
         publish-python310-arm64
+        publish_docker_ecr $PY310_DIST_ARM64 python3.10 arm64
         build-python310-x86
         publish-python310-x86
+        publish_docker_ecr $PY310_DIST_X86_64 python3.10 x86_64
         ;;
     "python3.11")
         build-python311-arm64
         publish-python311-arm64
+        publish_docker_ecr $PY311_DIST_ARM64 python3.11 arm64
         build-python311-x86
         publish-python311-x86
+        publish_docker_ecr $PY311_DIST_X86_64 python3.11 x86_64
         ;;
     "python3.12")
         build-python312-arm64
         publish-python312-arm64
+        publish_docker_ecr $PY312_DIST_ARM64 python3.12 arm64
         build-python312-x86
         publish-python312-x86
+        publish_docker_ecr $PY312_DIST_X86_64 python3.12 x86_64
         ;;
     *)
         usage

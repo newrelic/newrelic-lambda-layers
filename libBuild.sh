@@ -324,3 +324,57 @@ function publish_docker_ecr {
 
 
 }
+
+function publish_docker_ecr {
+    layer_archive=$1
+    runtime_name=$2
+    arch=$3
+
+    if [[ ${arch} =~ 'arm64' ]];
+    then arch_flag="-arm64"
+    else arch_flag=""
+    fi
+
+    version_flag=$(echo "$runtime_name" | sed 's/[^0-9]//g')
+    language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
+
+
+    # Remove 'dist/' prefix
+    if [[ $layer_archive == dist/* ]]; then
+      file_without_dist="${layer_archive#dist/}"
+      echo "File without 'dist/': $file_without_dist"
+    else
+      file_without_dist=$layer_archive
+      echo "File does not start with 'dist/': $file_without_dist"
+    fi
+
+    # public ecr repository name 
+    # maintainer can use this("q6k3q1g1") repo name for testing 
+    repository="x6n7b2o2"
+
+    # copy dockerfile
+    cp ../Dockerfile.ecrImage .
+
+    echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
+    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
+
+    echo "docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    -f Dockerfile.ecrImage \
+    --build-arg layer_zip=${layer_archive} \
+    --build-arg file_without_dist=${file_without_dist} \
+    ."
+
+    docker build -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    -f Dockerfile.ecrImage \
+    --build-arg layer_zip=${layer_archive} \
+    --build-arg file_without_dist=${file_without_dist} \
+    .
+
+    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
+    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
+    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
+    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
+
+    # delete dockerfile
+    rm -rf Dockerfile.ecrImage
+}
