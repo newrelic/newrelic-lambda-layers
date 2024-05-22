@@ -6,7 +6,7 @@ name: Snyk Vulnerability Scan
 on:
   workflow_dispatch:
   schedule:
-  - cron: '00 15 * * 1'
+    - cron: '00 15 * * 1'
   push:
     branches:
       - master
@@ -15,19 +15,18 @@ jobs:
   security:
     runs-on: ubuntu-latest
     container: "docker://snyk/snyk:gradle-jdk11"
-    
+
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
         with:
           ref: 'master'
-    
+
       - name: Setup Authentication
         run: |
           snyk auth ${{ secrets.JAVA_AGENT_SNYK_TOKEN }}
-    
+
       - name: Run Snyk Dependency Scan
         run: |
           cd java
           snyk monitor --all-sub-projects --org=java-agent --configuration-matching='(^compileClasspath$)|(^runtimeClasspath$)'
-
