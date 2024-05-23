@@ -58,7 +58,7 @@ function publish-ruby32-arm64 {
 }
 
 function publish-ruby33-arm64 {
-  publush_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
+  publish_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
 }
 
 function publish-ruby32-x86 {
