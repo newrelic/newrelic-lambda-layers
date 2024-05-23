@@ -2,11 +2,11 @@
 
 set -Eeuo pipefail
 
-# This script creates an AWS Lambda Ruby layer .zip file for each supported
-# architecture. The Ruby content does not change between architectures, but
-# the included Go based AWS Lambda extension does. The .zip files are written
-# to dist/ and from there they are uploaded to AWS via ../libBuild.sh
-# functionality.
+# This script creates and publishes an AWS Lambda Ruby layer .zip file for each
+# supported architecture. The Ruby content does not change between
+# architectures or targeted Ruby versions, but the included Go based AWS Lambda
+# extension does. The .zip files are written to dist/ and from there they are
+# uploaded to AWS via functionality defined in the ../libBuild.sh script.
 #
 # Each .zip file is structured like so for Ruby:
 #   ruby/gems/<RUBY MAJOR><RUBY MINOR>.0  -- AWS sets this as GEM_PATH. It's where the agent lives
@@ -23,25 +23,60 @@ WRAPPER_FILE=newrelic_lambda_wrapper.rb
 # EXTENSION_CLONE_PATH='../../newrelic-lambda-extension_fallwith'
 EXTENSION_CLONE_PATH=''
 
+# Distribution paths for ARM64
+RB32_DIST_ARM64=$DIST_DIR/ruby32.arm64.zip
+RB33_DIST_ARM64=$DIST_DIR/ruby33.arm64.zip
+
+# Distribution paths for X86_64
+RB32_DIST_X64_64=$DIST_DIR/ruby32.x86_64.zip
+RB33_DIST_X64_64=$DIST_DIR/ruby33.x86_64.zip
+
 source ../libBuild.sh
 
 function usage {
   echo "./publish-layers.sh [ruby3.2|ruby3.3]"
 }
 
-function build_and_publish_ruby {
-  local ruby_version=$1
-  build_and_publish_ruby_for_arch $ruby_version 'x86_64'
-  build_and_publish_ruby_for_arch $ruby_version 'arm64'
+function build-ruby32-arm64 {
+  build_ruby_for_arch 3.2 'arm64' $RB32_DIST_ARM64
 }
 
-function build_and_publish_ruby_for_arch {
+function build-ruby33-arm64 {
+  build_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
+}
+
+function build-ruby32-x86 {
+  build_ruby_for_arch 3.2 'x86_64' $RB32_DIST_X64_64
+}
+
+function build-ruby33-x86 {
+  build_ruby_for_arch 3.3 'x86_64' $RB33_DIST_X86_64
+}
+
+function publish-ruby32-arm64 {
+  publish_ruby_for_arch 3.2 'arm64' $RB32_DIST_ARM64
+}
+
+function publish-ruby33-arm64 {
+  publush_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
+}
+
+function publish-ruby32-x86 {
+  publish_ruby_for_arch 3.2 'x86_64' $RB32_DIST_X86_64
+}
+
+function publish-ruby33-x86 {
+  publish_ruby_for_arch 3.3 'x86_64' $RB33_DIST_X86_64
+}
+
+function build_ruby_for_arch {
   local ruby_version=$1
   local arch=$2
+  # dynamic filenames are harder to grab for other consumers of this script
+  # local dist_file="$DIST_DIR/ruby${ruby_version//./}.$arch.zip"
+  local dist_file=$3
 
   echo "Building New Relic layer for ruby v$ruby_version ($arch)"
-
-  local dist_file="$DIST_DIR/ruby${ruby_version//./}.$arch.zip"
 
   rm -rf $RUBY_DIR $dist_file
   mkdir -p $DIST_DIR
@@ -102,6 +137,12 @@ function build_and_publish_ruby_for_arch {
   zip -rq $dist_file $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
   rm -rf $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
   echo "Build complete: ${dist_file}"
+}
+
+function publish_ruby_for_arch {
+  local ruby_version=$1
+  local arch=$2
+  local dist_file=$3
 
   for region in "${REGIONS_X86[@]}"; do
     echo "Publishing $dist_file for region=$region, ruby=$ruby_version, arch=$arch"
@@ -113,10 +154,16 @@ function build_and_publish_ruby_for_arch {
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
   "ruby3.3")
-    build_and_publish_ruby '3.3'
+    build-ruby33-arm64
+    publish-ruby33-arm64
+    build-ruby33-x86
+    publish-ruby33-x86
     ;;
   "ruby3.2")
-    build_and_publish_ruby '3.2'
+    build-ruby32-arm64
+    publish-ruby32-arm64
+    build-ruby32-x86
+    publish-ruby32-x86
     ;;
   *)
     usage
