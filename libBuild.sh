@@ -69,6 +69,16 @@ function list_all_regions {
       --output text | sort
 }
 
+function build_and_fetch_local {
+  arch=$1
+  extDir=$2
+  cd ${extDir}
+  make dist-${arch}
+
+  cd -
+  cp -r ${extDir}/extensions .
+}
+
 function fetch_extension {
     arch=$1
 
