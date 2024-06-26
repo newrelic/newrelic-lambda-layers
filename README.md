@@ -20,25 +20,25 @@ To publish the layer, modify the runtime according to the options provided in th
 
 ```
 cd python
-./publish-layers.sh python3.10 
+./publish-layers.sh python3.12 
 cd ..
 ```
 
 ```
 cd nodejs
-./publish-layers.sh nodejs18x 
+./publish-layers.sh nodejs20x 
 cd ..
 ```
 
 ```
 cd ruby
-./publish-layers.sh ruby3.2 
+./publish-layers.sh ruby3.3 
 cd ..
 ```
 
 ```
 cd java
-./publish-layers.sh java17
+./publish-layers.sh java21
 cd ..
 ```
 
