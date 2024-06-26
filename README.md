@@ -16,30 +16,29 @@ This tool is released for users seeking to deploy their own copies of the New Re
 The AWS cli must be configured, please refer to its [documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 
 ## Publishing Layers:
-
-Run the following in your shell:
+To publish the layer, modify the runtime according to the options provided in the `.publish-layers.sh` script. Then, run the following command in your shell:
 
 ```
 cd python
-./publish-layers.sh
+./publish-layers.sh python3.10 
 cd ..
 ```
 
 ```
 cd nodejs
-./publish-layers.sh
+./publish-layers.sh nodejs18x 
 cd ..
 ```
 
 ```
 cd ruby
-./publish-layers.sh
+./publish-layers.sh ruby3.2 
 cd ..
 ```
 
 ```
 cd java
-./publish-layers.sh
+./publish-layers.sh java17
 cd ..
 ```
 
