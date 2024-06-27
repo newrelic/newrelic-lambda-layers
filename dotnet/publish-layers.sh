@@ -62,11 +62,11 @@ function publish-dotnet-arm64 {
     done
 }
 
-# exmaple https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_10.22.0_amd64.tar.gz
+# exmaple https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_amd64.tar.gz
 function get_agent {
     arch=$1
     
-    url="https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_${AGENT_VERSION}_${arch}.tar.gz"
+    url="https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_${arch}.tar.gz"
     rm -rf $AGENT_DIST_ZIP
     curl -L $url -o $AGENT_DIST_ZIP
     mkdir -p $BUILD_DIR
@@ -74,10 +74,6 @@ function get_agent {
     rm -f $AGENT_DIST_ZIP
 }
 
-if [ -z $AGENT_VERSION ]; then
-    echo "Missing required AGENT_VERSION environment variable: ${AGENT_VERSION}."
-    exit 1
-fi
 
 build-dotnet-arm64
 publish-dotnet-arm64
