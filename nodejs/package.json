@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/newrelic/newrelic-lambda-layers#readme",
   "dependencies": {
-    "newrelic": "^11.5.0"
+    "newrelic": "^11.22.0"
   },
   "keywords": [
     "lambda",
