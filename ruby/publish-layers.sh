@@ -157,17 +157,21 @@ case "$1" in
     build-ruby33-arm64
     publish-ruby33-arm64
     publish_docker_ecr $RB33_DIST_ARM64 ruby3.3 arm64
+    publish_docker_hub $RB33_DIST_ARM64 ruby3.3 arm64
     build-ruby33-x86
     publish-ruby33-x86
     publish_docker_ecr $RB33_DIST_X86_64 ruby3.3 x86_64
+    publish_docker_hub $RB33_DIST_X86_64 ruby3.3 x86_64 
     ;;
   "ruby3.2")
     build-ruby32-arm64
     publish-ruby32-arm64
     publish_docker_ecr $RB32_DIST_ARM64 ruby3.2 arm64
+    publish_docker_hub $RB32_DIST_ARM64 ruby3.2 arm64
     build-ruby32-x86
     publish-ruby32-x86
     publish_docker_ecr $RB32_DIST_X86_64 ruby3.2 x86_64
+    publish_docker_hub $RB32_DIST_X86_64 ruby3.2 x86_64
     ;;
   *)
     usage
