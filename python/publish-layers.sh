@@ -21,7 +21,7 @@ PY312_DIST_X86_64=$DIST_DIR/python312.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.7|python3.8|python3.9|python3.10|python3.11|python3.12]"
+    echo "./publish-layers.sh [python3.8|python3.9|python3.10|python3.11|python3.12]"
 }
 
 
