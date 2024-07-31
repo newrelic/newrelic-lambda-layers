@@ -119,9 +119,6 @@ function layer_name_str() {
     "python3.12")
       rt_part="Python312"
       ;;
-    "nodejs16.x")
-      rt_part="NodeJS16X"
-      ;;
     "nodejs18.x")
       rt_part="NodeJS18X"
       ;;
@@ -178,9 +175,6 @@ function s3_prefix() {
       ;;
     "python3.12")
       name="nr-python3.12"
-      ;;
-    "nodejs16.x")
-      name="nr-nodejs16.x"
       ;;
     "nodejs18.x")
       name="nr-nodejs18.x"
