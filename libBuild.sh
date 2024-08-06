@@ -269,6 +269,9 @@ function publish_docker_ecr {
     version_flag=$(echo "$runtime_name" | sed 's/[^0-9]//g')
     language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
 
+    if [[ ${runtime_name} =~ 'extension' ]];
+    then version_flag=$EXTENSION_VERSION
+    fi
 
     # Remove 'dist/' prefix
     if [[ $layer_archive == dist/* ]]; then
