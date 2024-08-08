@@ -270,7 +270,7 @@ function publish_docker_ecr {
     language_flag=$(echo "$runtime_name" | sed 's/[0-9].*//')
 
     if [[ ${runtime_name} =~ 'extension' ]];
-    then version_flag=$EXTENSION_VERSION
+    then version_flag=$EXTENSION_VERSION && language_flag="lambdaextension"
     fi
 
     # Remove 'dist/' prefix
