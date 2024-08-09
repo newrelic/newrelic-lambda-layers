@@ -60,7 +60,7 @@ EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
-EXTENSION_VERSION=2.3.12
+EXTENSION_VERSION=2.3.13
 
 function list_all_regions {
     aws ec2 describe-regions \
