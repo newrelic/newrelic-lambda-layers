@@ -273,6 +273,11 @@ function publish_docker_ecr {
     version_flag=$EXTENSION_VERSION
     language_flag="lambdaextension"
     fi
+    
+    if [[ ${runtime_name} =~ 'dotnet' ]]; then
+    version_flag=""
+    arch_flag=${arch}
+    fi
 
     # Remove 'dist/' prefix
     if [[ $layer_archive == dist/* ]]; then
