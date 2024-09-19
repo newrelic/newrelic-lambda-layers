@@ -9,7 +9,7 @@ repositories {
 dependencies {
     implementation("io.opentracing:opentracing-util:0.33.0")
     implementation("com.newrelic.opentracing:newrelic-java-lambda:2.2.3")
-    implementation("com.newrelic.opentracing:java-aws-lambda:2.1.1")
+    implementation("com.newrelic.opentracing:java-aws-lambda:2.2.0")
     implementation("com.amazonaws:aws-lambda-java-events:3.8.0")
     implementation("com.amazonaws:aws-lambda-java-core:1.2.0")
     implementation("com.amazonaws:aws-lambda-java-serialization:1.0.0")
