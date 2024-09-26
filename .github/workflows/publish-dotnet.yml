@@ -16,6 +16,10 @@ jobs:
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
       - name: Publish Dotnet Layer
         if: steps.dotnet-check-tag.outputs.match == 'true'
         env:
