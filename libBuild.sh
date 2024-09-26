@@ -302,13 +302,13 @@ function publish_docker_ecr {
     echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
     aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
 
-    echo "docker build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    echo "docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
     -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
     ."
 
-    docker build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
     -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
