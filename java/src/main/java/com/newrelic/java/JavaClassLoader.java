@@ -75,8 +75,7 @@ public class JavaClassLoader implements RequestHandler<Object, Object> {
         this.inputType = inputType;
         if (numberOfArguments == 0) {
             this.executor = (input, context) -> methodHandle.invoke();
-        } else
-        if (numberOfArguments == 1) {
+        } else if (numberOfArguments == 1) {
             this.executor = (input, context) -> methodHandle.invokeWithArguments(input);
         } else {
             this.executor = methodHandle::invokeWithArguments;
