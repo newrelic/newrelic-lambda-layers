@@ -42,6 +42,10 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: make publish-${{ matrix.java-version }}-ci
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
       - name: Publish ECR image for ${{ matrix.java-version }}
         if: steps.java-check-tag.outputs.match == 'true'
         env:

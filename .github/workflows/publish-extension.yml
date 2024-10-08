@@ -22,6 +22,10 @@ jobs:
       - name: Install publish dependencies
         if: steps.extension-check-tag.outputs.match == 'true'
         run: pip install -U awscli
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
       - name: Publish extension layer
         if: steps.extension-check-tag.outputs.match == 'true'
         env:

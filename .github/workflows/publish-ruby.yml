@@ -35,6 +35,10 @@ jobs:
           echo "::set-output name=VERSION::$(
             echo ${{ matrix.ruby-version }} | sed 's/\.//'
           )"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
       - name: Build and Publish layer
         if: steps.ruby-check-tag.outputs.match == 'true'
         env:
