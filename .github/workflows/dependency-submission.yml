@@ -7,7 +7,7 @@
 #
 # Excludes:
 # - Test-only dependencies
-# - Module with name 'smoke-tests'
+# - Modules with name 'dotnet', 'extension', 'nodejs', 'python', 'ruby', and 'dockerfiles'
 
 name: Dependency Submission
 
