@@ -51,4 +51,10 @@ public class JavaClassLoaderTest {
         Assert.assertEquals("Hello World", loader.handleRequest(STRING_INPUT, null));
     }
 
+    @Test
+    public void testWithoutArgumentRequestHandler() throws ReflectiveOperationException {
+        JavaClassLoader loader = JavaClassLoader.initializeRequestHandler(PojoHandlerWithNoArgument.class, "handleRequest");
+        Assert.assertEquals("Hello World!", loader.handleRequest(INPUT_AS_OBJECT, null));
+    }
+
 }
