@@ -5,9 +5,12 @@
 # Purpose: It generates and submits a dependency graph for the java layer to the GitHub Dependency Submission API. The graph is used to
 # trigger Dependabot Alerts for vulnerable dependencies, and to populate the Dependency Graph insights view in GitHub.
 #
+# Includes:
+# - Java layer
+#
 # Excludes:
 # - Test-only dependencies
-# - Modules with name 'dotnet', 'extension', 'nodejs', 'python', 'ruby', and 'dockerfiles'
+
 
 name: Dependency Submission
 
@@ -33,9 +36,8 @@ jobs:
         uses: gradle/actions/dependency-submission@d156388eb19639ec20ade50009f3d199ce1e2808 # pin@v4
         with:
           gradle-version: 8.6
+          build-root-directory: 'java'
           dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime)Classpath'
-          dependency-graph-include-projects: ':java'
-          dependency-graph-exclude-projects: ':dotnet, :extension, :nodejs, :python, :ruby, :dockerfiles'
           build-scan-publish: true
           build-scan-terms-of-use-url: "https://gralde.com/help/legal-terms-of-use"
           build-scan-terms-of-use-agree: "yes"
