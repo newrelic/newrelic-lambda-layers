@@ -2,6 +2,6 @@
   "description": "Offline serverless function wrapping tester",
   "devDependencies": {
     "serverless": "^3.38.0",
-    "serverless-offline": "^13.3.3"
+    "serverless-offline": "^13.8.3"
   }
 }
