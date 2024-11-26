@@ -128,6 +128,9 @@ function layer_name_str() {
     "nodejs20.x")
       rt_part="NodeJS20X"
       ;;
+    "nodejs22.x")
+      rt_part="NodeJS22X"
+      ;;
     "ruby3.2")
       rt_part="Ruby32"
       ;;
@@ -187,6 +190,9 @@ function s3_prefix() {
       ;;
     "nodejs20.x")
       name="nr-nodejs20.x"
+      ;;
+    "nodejs22.x")
+      name="nr-nodejs22.x"
       ;;
     "ruby3.3")
       name="nr-ruby3.3"
