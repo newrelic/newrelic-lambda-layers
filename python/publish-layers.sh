@@ -10,13 +10,14 @@ PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 PY310_DIST_ARM64=$DIST_DIR/python310.arm64.zip
 PY311_DIST_ARM64=$DIST_DIR/python311.arm64.zip
 PY312_DIST_ARM64=$DIST_DIR/python312.arm64.zip
+PY313_DIST_ARM64=$DIST_DIR/python313.arm64.zip
 
 PY38_DIST_X86_64=$DIST_DIR/python38.x86_64.zip
 PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
 PY310_DIST_X86_64=$DIST_DIR/python310.x86_64.zip
 PY311_DIST_X86_64=$DIST_DIR/python311.x86_64.zip
 PY312_DIST_X86_64=$DIST_DIR/python312.x86_64.zip
-
+PY313_DIST_X86_64=$DIST_DIR/python313.x86_64.zip
 
 source ../libBuild.sh
 
@@ -365,6 +366,14 @@ case "$1" in
         build-python312-x86
         publish-python312-x86
         publish_docker_ecr $PY312_DIST_X86_64 python3.12 x86_64
+        ;;
+    "python3.13")
+        build-python313-arm64
+        publish-python313-arm64
+        publish_docker_ecr $PY313_DIST_ARM64 python3.13 arm64
+        build-python313-x86
+        publish-python313-x86
+        publish_docker_ecr $PY313_DIST_X86_64 python3.13 x86_64
         ;;
     *)
         usage
