@@ -10,13 +10,14 @@ PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 PY310_DIST_ARM64=$DIST_DIR/python310.arm64.zip
 PY311_DIST_ARM64=$DIST_DIR/python311.arm64.zip
 PY312_DIST_ARM64=$DIST_DIR/python312.arm64.zip
+PY313_DIST_ARM64=$DIST_DIR/python313.arm64.zip
 
 PY38_DIST_X86_64=$DIST_DIR/python38.x86_64.zip
 PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
 PY310_DIST_X86_64=$DIST_DIR/python310.x86_64.zip
 PY311_DIST_X86_64=$DIST_DIR/python311.x86_64.zip
 PY312_DIST_X86_64=$DIST_DIR/python312.x86_64.zip
-
+PY313_DIST_X86_64=$DIST_DIR/python313.x86_64.zip
 
 source ../libBuild.sh
 
@@ -275,6 +276,56 @@ function publish-python312-x86 {
     done
 }
 
+function build-python313-arm64 {
+    echo "Building New Relic layer for python3.13 (arm64)"
+    rm -rf $BUILD_DIR $PY313_DIST_ARM64
+    mkdir -p $DIST_DIR
+    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.13/site-packages
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.13/site-packages/newrelic_lambda_wrapper.py
+    cp -r newrelic_lambda $BUILD_DIR/lib/python3.13/site-packages/newrelic_lambda
+    find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
+    download_extension arm64
+    zip -rq $PY313_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    echo "Build complete: ${PY313_DIST_ARM64}"
+}
+
+function build-python313-x86 {
+    echo "Building New Relic layer for python3.13 (x86_64)"
+    rm -rf $BUILD_DIR $PY313_DIST_X86_64
+    mkdir -p $DIST_DIR
+    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python3.13/site-packages
+    cp newrelic_lambda_wrapper.py $BUILD_DIR/lib/python3.13/site-packages/newrelic_lambda_wrapper.py
+    cp -r newrelic_lambda $BUILD_DIR/lib/python3.13/site-packages/newrelic_lambda
+    find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
+    download_extension x86_64
+    zip -rq $PY313_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    echo "Build complete: ${PY313_DIST_X86_64}"
+}
+
+function publish-python313-arm64 {
+    if [ ! -f $PY313_DIST_ARM64 ]; then
+        echo "Package not found: ${PY313_DIST_ARM64}"
+        exit 1
+    fi
+
+    for region in "${REGIONS_ARM[@]}"; do
+      publish_layer $PY313_DIST_ARM64 $region python3.13 arm64
+    done
+}
+
+function publish-python313-x86 {
+    if [ ! -f $PY313_DIST_X86_64 ]; then
+        echo "Package not found: ${PY313_DIST_X86_64}"
+        exit 1
+    fi
+
+    for region in "${REGIONS_X86[@]}"; do
+      publish_layer $PY313_DIST_X86_64 $region python3.13 x86_64
+    done
+}
+
 case "$1" in
     "python3.8")
         build-python38-arm64
@@ -315,6 +366,14 @@ case "$1" in
         build-python312-x86
         publish-python312-x86
         publish_docker_ecr $PY312_DIST_X86_64 python3.12 x86_64
+        ;;
+    "python3.13")
+        build-python313-arm64
+        publish-python313-arm64
+        publish_docker_ecr $PY313_DIST_ARM64 python3.13 arm64
+        build-python313-x86
+        publish-python313-x86
+        publish_docker_ecr $PY313_DIST_X86_64 python3.13 x86_64
         ;;
     *)
         usage
