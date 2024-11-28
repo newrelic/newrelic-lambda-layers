@@ -9,9 +9,11 @@ source ../libBuild.sh
 
 NJS18X_DIST_ARM64=$DIST_DIR/nodejs18x.arm64.zip
 NJS20X_DIST_ARM64=$DIST_DIR/nodejs20x.arm64.zip
+NJS22X_DIST_ARM64=$DIST_DIR/nodejs22x.arm64.zip
 
 NJS18X_DIST_X86_64=$DIST_DIR/nodejs18x.x86_64.zip
 NJS20X_DIST_X86_64=$DIST_DIR/nodejs20x.x86_64.zip
+NJS22X_DIST_X86_64=$DIST_DIR/nodejs22x.x86_64.zip
 
 function usage {
   	echo "./publish-layers.sh [nodejs18x|nodejs20x]"
