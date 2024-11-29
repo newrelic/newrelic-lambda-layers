@@ -112,6 +112,25 @@ publish-nodejs20x-local: build-nodejs20x
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-nodejs20x
 
+build-nodejs22x:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-nodejs22x \
+		-f ./dockerfiles/Dockerfile.nodejs22x \
+		.
+
+publish-nodejs22x-ci: build-nodejs22x
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-nodejs22x
+
+publish-nodejs22x-local: build-nodejs22x
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-nodejs22x
+
 build-ruby32:
 	docker build \
 		--no-cache \
