@@ -39,13 +39,13 @@ public class JavaClassLoader implements RequestHandler<Object, Object> {
         for (Method method : loadedClass.getMethods()) {
             if (isUserHandlerMethod(method, methodName, loadedClass)) {
                 methodReturnType = method.getReturnType();
-                if (method.getParameterTypes().length == 1) {
+                numberOfArguments = method.getParameterTypes().length;
+                if (numberOfArguments == 1) {
                     methodInputType = method.getParameterTypes()[0];
-                } else if (method.getParameterTypes().length == 2) {
+                } else if (numberOfArguments == 2) {
                     methodInputType = method.getParameterTypes()[0];
                     methodContextType = method.getParameterTypes()[1];
                 }
-                numberOfArguments = method.getParameterTypes().length;
                 break;
             }
         }
@@ -114,10 +114,7 @@ public class JavaClassLoader implements RequestHandler<Object, Object> {
     }
 
     private Object mappingInputToHandlerType(Object inputParam, Class<?> inputType) throws JsonProcessingException {
-        if (inputType == null) {
-            return inputParam;
-        }
-        if (inputType.isAssignableFrom(Number.class) || inputType.isAssignableFrom(String.class)) {
+        if (inputType == null || inputType.isAssignableFrom(Number.class) || inputType.isAssignableFrom(String.class)) {
             return inputParam;
         } else if (LambdaEventSerializers.isLambdaSupportedEvent(inputType.getName())) {
             PojoSerializer<?> serializer = LambdaEventSerializers.serializerFor(inputType, JavaClassLoader.class.getClassLoader());
