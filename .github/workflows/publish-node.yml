@@ -46,7 +46,7 @@ jobs:
           ./publish-layers.sh build-publish-nodejs${{ matrix.node-version }}x-ecr-image
       - name: Upload Unit Test Coverage
         if: steps.node-check-tag.outputs.match == 'true'
-        uses: codecov/codecov-action@v5.0.7
+        uses: codecov/codecov-action@v5.3.1
         with:
          token: ${{ secrets.CODECOV_TOKEN }}
          files: ./nodejs/coverage/unit/lcov.info
