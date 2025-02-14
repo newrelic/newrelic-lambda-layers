@@ -61,8 +61,11 @@ def get_handler():
             )
 
         module = importlib.import_module(module_path.replace("/", "."))
+    except ImportError as e:
+            raise ImportError("Failed to import module '%s': %s" % (module_path, e))
     except Exception as e:
-        raise ImportError("Failed to import module '%s': %s" % (module_path, e))
+        raise type(e)(f"Error while importing '{module_path}': {type(e).__name__} {str(e)}").with_traceback(e.__traceback__)
+    
 
     try:
         handler = getattr(module, handler_name)
