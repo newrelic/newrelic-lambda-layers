@@ -12,6 +12,7 @@ os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
 os.environ.setdefault(
     "NEW_RELIC_TRUSTED_ACCOUNT_KEY", os.getenv("NEW_RELIC_ACCOUNT_ID", "")
 )
+os.environ.setdefault("NEW_RELIC_PACKAGE_REPORTING_ENABLED", "false")
 
 # The agent will load some environment variables on module import so we need
 # to perform the import after setting the necessary environment variables.
