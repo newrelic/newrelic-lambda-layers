@@ -4,13 +4,12 @@ const tap = require('tap')
 const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
 const utils = require('@newrelic/test-utilities')
 
-tap.test('Layer Handler - CJS Function', (t) => {
+tap.test('Legacy Layer Handler - ESM Function', (t) => {
   t.autoend()
-
   t.beforeEach((t) => {
     t.context.originalEnv = { ...process.env }
-    process.env.NEW_RELIC_USE_ESM = 'false'
-    process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/cjs/handler.handler'
+    process.env.NEW_RELIC_USE_ESM = 'true'
+    process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/esm/handler.handler'
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'testFn'
 
     const helper = utils.TestAgent.makeInstrumented()
@@ -40,8 +39,6 @@ tap.test('Layer Handler - CJS Function', (t) => {
     })
 
     t.equal(typeof handler, 'function', 'handler should be a function')
-    // TODO: Once we release agent this will work
-    //t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
     const res = await handler({ key: 'this is a test'}, { functionName: 'testFn'})
     t.same(res, { statusCode: 200, body: 'response body this is a test' }, 'response should be correct')
     await promise
