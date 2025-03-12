@@ -80,7 +80,7 @@ These steps will help you configure the layers correctly:
   * Python: `newrelic_lambda_wrapper.handler`
   * Node: 
     * CommonJS: `newrelic-lambda-wrapper.handler`
-    * ESM: `newrelic-esm-lambda-wrapper.handler`
+    * ESM: `/opt/nodejs/node_modules/newrelic-esm-lambda-wrapper/index.handler` - You must specify the full path to the wrapper in the layer because the AWS Lambda Runtime doesn't support importing from a layer.
   * Ruby: `newrelic_lambda_wrapper.handler`
   * Java:
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
@@ -103,26 +103,7 @@ AWS announced support for Node 18 as a Lambda runtime in late 2022, introducing 
 
 ### Note on performance for ES Module functions
 
-In order to wrap ESM functions without a code change, our wrapper awaits the completion of a dynamic import. If your ESM function depends on a large number of dependency and file imports, you may see long cold start times as a result. As a workaround, we recommend instrumenting manually, following the instructions below.
-
-### Manual instrumentation for ES Modules
-
-First import the New Relic Node agent into your handler file:
-
-```javascript
-import newrelic from 'newrelic'
-```
-
-Then wrap your handler function using the `.setLambdaHandler` method: 
-```javascript
-export const handler = newrelic.setLambdaHandler(async (event, context) => {
-    // TODO implement
-    return {
-        statusCode: 200,
-        body: JSON.stringify('Hello from Lambda!')
-    }
-})
-```
+If you are using the legacy `NEW_RELIC_USE_ESM` flag on the `newrelic-lambda-wrapper.handler`, and your ESM function depends on a large number of dependency and file imports, you may see long cold start times as a result. As a workaround, we recommend  using the ESM wrapper. Set your handler to `/opt/nodejs/node_modules/newrelic-esm-lambda-wrapper/index.handler`.
 
 ### Note on legacy `NEW_RELIC_USE_ESM` environment variable
 Prior to Lambda Layer releases `v12.16.0`, the wrapper for CommonJS and ESM were the same. If you wanted to wrap a ESM lambda handler you had to set `NEW_RELIC_USE_ESM` to `true`. This functionality still exists but has been deprecated.  If you have a ESM lambda handler set the function handler to point to `newrelic-esm-lambda-wrapper.handler`.  We will be removing `NEW_RELIC_USE_ESM` at a future date. 
