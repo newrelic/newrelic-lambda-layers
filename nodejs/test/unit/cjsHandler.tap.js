@@ -41,7 +41,7 @@ tap.test('Layer Handler - CJS Function', (t) => {
 
     t.equal(typeof handler, 'function', 'handler should be a function')
     // TODO: Once we release agent this will work
-    //t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
+    // t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
     const res = await handler({ key: 'this is a test'}, { functionName: 'testFn'})
     t.same(res, { statusCode: 200, body: 'response body this is a test' }, 'response should be correct')
     await promise

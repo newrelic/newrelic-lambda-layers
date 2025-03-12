@@ -152,7 +152,6 @@ if (process.env.NEW_RELIC_USE_ESM === 'true') {
 }
 
 
-
 module.exports = {
   handler,
   getHandlerPath

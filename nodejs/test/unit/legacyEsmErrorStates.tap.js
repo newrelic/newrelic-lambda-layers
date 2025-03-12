@@ -55,7 +55,8 @@ tap.test('Early-throwing ESM Edge Cases', (t) => {
     helper.unload()
   })
 
-  testCases.forEach(({ type, handlerMethod, handlerFile }) => {
+  for (const test of testCases ) {
+    const { handlerFile, handlerMethod, type } = test
     let testName = `should ${type} because 'NEW_RELIC_LAMBDA_HANDLER' is not an expected value for ${handlerPath}`
     if (handlerFile) {
       testName += handlerFile
@@ -84,5 +85,5 @@ tap.test('Early-throwing ESM Edge Cases', (t) => {
 
       t.end()
     })
-  })
+  }
 })

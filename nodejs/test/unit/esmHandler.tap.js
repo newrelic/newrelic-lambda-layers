@@ -7,7 +7,7 @@ const td = require('testdouble')
 tap.test('Layer Handler - ESM Function', (t) => {
   t.autoend()
 
-  t.beforeEach(async (t) => {
+  t.beforeEach(async(t) => {
     const originalEnv = { ...process.env }
     process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/esm/handler.handler'
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'testFn'
@@ -39,7 +39,7 @@ tap.test('Layer Handler - ESM Function', (t) => {
 
     t.equal(typeof handler, 'function', 'handler should be a function')
     // TODO: Once we release agent this will work
-    //t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
+    // t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
     const res = await handler({ key: 'this is a test'}, { functionName: 'testFn'})
     t.same(res, { statusCode: 200, body: 'response body this is a test' }, 'response should be correct')
     await promise

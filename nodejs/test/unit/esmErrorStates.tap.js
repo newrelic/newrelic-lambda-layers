@@ -35,7 +35,7 @@ const testCases = [
 tap.test('Early-throwing ESM Edge Cases', (t) => {
   t.autoend()
 
-  t.beforeEach(async (t) => {
+  t.beforeEach(async(t) => {
     t.context.originalEnv = { ...process.env }
     process.env.LAMBDA_TASK_ROOT = './'
     process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true' // only need to check this once.
@@ -53,7 +53,8 @@ tap.test('Early-throwing ESM Edge Cases', (t) => {
     helper.unload()
   })
 
-  testCases.forEach(({ handlerFile, handlerMethod}) => {
+  for (const test of testCases ) {
+    const { handlerFile, handlerMethod } = test
     let testName = `should reject because 'NEW_RELIC_LAMBDA_HANDLER' is not an expected value for ${handlerPath}`
     if (handlerFile) {
       testName += handlerFile
@@ -69,14 +70,14 @@ tap.test('Early-throwing ESM Edge Cases', (t) => {
         process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}`
       }
       t.rejects(
-        async () => {
-            const { handler } =  await import('../../esm.mjs')
-            return handler({key: 'this is a test'}, {functionName: handlerMethod})
+        async() => {
+          const { handler } =  await import('../../esm.mjs')
+          return handler({key: 'this is a test'}, {functionName: handlerMethod})
         },
         'No NEW_RELIC_LAMBDA_HANDLER environment variable set.',
       )
 
       t.end()
     })
-  })
+  }
 })
