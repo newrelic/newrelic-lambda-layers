@@ -26,7 +26,7 @@ cd ..
 
 ```
 cd nodejs
-./publish-layers.sh nodejs20x 
+./publish-layers.sh nodejs20 
 cd ..
 ```
 
@@ -78,7 +78,9 @@ These steps will help you configure the layers correctly:
   * Using Cloudformation, this refers to adding your layer arn to the Layers property of a [AWS::Lambda::Function resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html).
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: `newrelic_lambda_wrapper.handler`
-  * Node: `newrelic-lambda-wrapper.handler`
+  * Node: 
+    * CommonJS: `newrelic-lambda-wrapper.handler`
+    * ESM: `newrelic-esm-lambda-wrapper.handler`
   * Ruby: `newrelic_lambda_wrapper.handler`
   * Java:
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
@@ -97,25 +99,13 @@ Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrel
 
 ## Support for ES Modules (Node.js)
 
-AWS announced support for Node 18 as a Lambda runtime in late 2022, introducing `aws-sdk` version 3 for Node 18 only. This version of `aws-sdk` patches `NODE_PATH`, so ESM-supporting functions using `import` and top-level `await` should work as expected with Lambda Layer releases `v9.8.1.1` and above (Numerical layer versions vary by region and runtime). To configure the layer to leverage `import`, add the environment variable `NEW_RELIC_USE_ESM: true`, and add this environment variable to use our ESM loader: `NODE_OPTIONS: --experimental-loader newrelic/esm-loader.mjs`.
+AWS announced support for Node 18 as a Lambda runtime in late 2022, introducing `aws-sdk` version 3 for Node 18 only. This version of `aws-sdk` patches `NODE_PATH`, so ESM-supporting functions using `import` and top-level `await` should work as expected with Lambda Layer releases `v9.8.1.1` and above (Numerical layer versions vary by region and runtime). To configure the layer to leverage `import`, add this environment variable to use our ESM loader: `NODE_OPTIONS: --experimental-loader newrelic/esm-loader.mjs`. **Note**: The function handler should also use `newrelic-esm-lambda-wrapper.handler`.
 
-Note that if you use layer-installed instrumentation with the `NEW_RELIC_USE_ESM` environment variable, your function must use promises or async/await; callback based functions are not supported. The Node wrapper uses a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) to attach to your function, which is an asynchronous operation. If you still need support for callback based functions, you will have to use the CommonJS based wrapper, which can be done by removing the `NEW_RELIC_USE_ESM` environment variable.
-
-You may see some warnings from the Extension in CloudWatch logs referring to a non-standard handler; these warnings may be ignored.
-
-If your Node functions use `import` and top-level `await` in Node 16 or Node 14 runtimes, layer-installed instrumentation will be unable to find imported modules, as [`import` specifiers don't resolve with `NODE_PATH`](https://nodejs.org/docs/latest-v16.x/api/esm.html#no-node_path). You can still instrument your functions with New Relic, but you will need to do the following:
-
-1. [instrument your function manually](#manual-instrumentation-for-es-modules) using our [Node Agent](https://github.com/newrelic/node-newrelic/) 
-2. On deploying your function, don't set the function handler to our Node wrapper; instead, use your regular handler function, which you've wrapped with `newrelic.setLambdaHandler()`.
-3. If you're using Node 18 or above, apply the latest Lambda Layer for your runtime. It will install both the Node agent and our Lambda Extension.
-4. If you're using Node 14 or Node 16, you will have to deploy our agent with your function code, but you could use our Extension-only Lambda Layer for delivering telemetry. Use our [layer discovery website](https://layers.newrelic-external.com/) to find the ARN for your region. Look for either NewRelicLambdaExtension or NewRelicLambdaExtensionARM64 (depending on your function's architecture).
-4. Add your `NEW_RELIC_LICENSE_KEY` as an environment variable.
-
-## Note on performance for ES Module functions
+### Note on performance for ES Module functions
 
 In order to wrap ESM functions without a code change, our wrapper awaits the completion of a dynamic import. If your ESM function depends on a large number of dependency and file imports, you may see long cold start times as a result. As a workaround, we recommend instrumenting manually, following the instructions below.
 
-## Manual instrumentation for ES Modules
+### Manual instrumentation for ES Modules
 
 First import the New Relic Node agent into your handler file:
 
@@ -133,6 +123,9 @@ export const handler = newrelic.setLambdaHandler(async (event, context) => {
     }
 })
 ```
+
+### Note on legacy `NEW_RELIC_USE_ESM` environment variable
+Prior to Lambda Layer releases `v12.16.0`, the wrapper for CommonJS and ESM were the same. If you wanted to wrap a ESM lambda handler you had to set `NEW_RELIC_USE_ESM` to `true`. This functionality still exists but has been deprecated.  If you have a ESM lambda handler set the function handler to point to `newrelic-esm-lambda-wrapper.handler`.  We will be removing `NEW_RELIC_USE_ESM` at a future date. 
 
 ## Support
 

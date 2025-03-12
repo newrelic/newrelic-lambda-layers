@@ -74,62 +74,62 @@ publish-java21-local: build-java21
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-java21
 
-build-nodejs18x:
+build-nodejs18:
 	docker build \
 		--no-cache \
-		-t newrelic-lambda-layers-nodejs18x \
-		-f ./dockerfiles/Dockerfile.nodejs18x \
+		-t newrelic-lambda-layers-nodejs18 \
+		-f ./dockerfiles/Dockerfile.nodejs18 \
 		.
 
-publish-nodejs18x-ci: build-nodejs18x
+publish-nodejs18-ci: build-nodejs18
 	docker run \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
-		newrelic-lambda-layers-nodejs18x
+		newrelic-lambda-layers-nodejs18
 
-publish-nodejs18x-local: build-nodejs18x
+publish-nodejs18-local: build-nodejs18
 	docker run \
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
-		newrelic-lambda-layers-nodejs18x
+		newrelic-lambda-layers-nodejs18
 
-build-nodejs20x:
+build-nodejs20:
 	docker build \
 		--no-cache \
-		-t newrelic-lambda-layers-nodejs20x \
-		-f ./dockerfiles/Dockerfile.nodejs20x \
+		-t newrelic-lambda-layers-nodejs20 \
+		-f ./dockerfiles/Dockerfile.nodejs20 \
 		.
 
-publish-nodejs20x-ci: build-nodejs20x
+publish-nodejs20-ci: build-nodejs20
 	docker run \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
-		newrelic-lambda-layers-nodejs20x
+		newrelic-lambda-layers-nodejs20
 
-publish-nodejs20x-local: build-nodejs20x
+publish-nodejs20-local: build-nodejs20
 	docker run \
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
-		newrelic-lambda-layers-nodejs20x
+		newrelic-lambda-layers-nodejs20
 
-build-nodejs22x:
+build-nodejs22:
 	docker build \
 		--no-cache \
-		-t newrelic-lambda-layers-nodejs22x \
-		-f ./dockerfiles/Dockerfile.nodejs22x \
+		-t newrelic-lambda-layers-nodejs22 \
+		-f ./dockerfiles/Dockerfile.nodejs22 \
 		.
 
-publish-nodejs22x-ci: build-nodejs22x
+publish-nodejs22-ci: build-nodejs22
 	docker run \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
-		newrelic-lambda-layers-nodejs22x
+		newrelic-lambda-layers-nodejs22
 
-publish-nodejs22x-local: build-nodejs22x
+publish-nodejs22-local: build-nodejs22
 	docker run \
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
-		newrelic-lambda-layers-nodejs22x
+		newrelic-lambda-layers-nodejs22
 
 build-ruby32:
 	docker build \
