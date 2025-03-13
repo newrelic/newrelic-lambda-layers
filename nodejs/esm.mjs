@@ -92,23 +92,13 @@ const { LAMBDA_TASK_ROOT = '.' } = process.env
 const { moduleToImport, handlerToWrap } = getHandlerPath()
 
 const userHandler  = await getHandler() 
-const wrappedHandler = newrelic.setLambdaHandler(userHandler)
+const handler = newrelic.setLambdaHandler(userHandler)
 
 async function getHandler() {
   const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
-}
-
-async function patchHandler() {
-  const args = Array.prototype.slice.call(arguments)
-  return wrappedHandler.apply(this, args)
-}
-
-let handler = patchHandler
-for (const symbol of Object.getOwnPropertySymbols(wrappedHandler)) {
-  handler[symbol] = wrappedHandler[symbol]
 }
   
 export { handler, getHandlerPath }

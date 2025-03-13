@@ -137,18 +137,11 @@ async function patchHandler() {
 }
 
 let handler 
-function patchHandlerSync() {
-  const args = Array.prototype.slice.call(arguments)
-  return wrappedHandler.apply(this, args)
-}
 
 if (process.env.NEW_RELIC_USE_ESM === 'true') {
   handler = patchHandler
 } else {
-  handler = patchHandlerSync
-  for (const symbol of Object.getOwnPropertySymbols(wrappedHandler)) {
-    handler[symbol] = wrappedHandler[symbol]
-  }
+  handler = wrappedHandler
 }
 
 
