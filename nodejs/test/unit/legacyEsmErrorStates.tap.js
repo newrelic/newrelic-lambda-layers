@@ -1,77 +1,83 @@
 'use strict'
 
 const tap = require('tap')
+const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
 const utils = require('@newrelic/test-utilities')
-const td = require('testdouble')
 
 const handlerPath = 'test/unit/fixtures/esm/'
 const testCases = [
   {
     handlerFile: 'handler',
-    handlerMethod: undefined
+    handlerMethod: undefined,
+    type: 'throws'
   },
   {
     handlerFile: undefined,
-    handlerMethod: undefined
+    handlerMethod: undefined,
+    type: 'throws'
   },
   {
     handlerFile: 'badImport',
-    method: 'handler'
+    method: 'handler',
+    type: 'throws'
   },
   {
     handlerFile: 'notFound',
-    handlerMethod: 'noMethodFound'
+    handlerMethod: 'noMethodFound',
+    type: 'rejects'
   },
   {
     handlerFile: 'errors',
-    handlerMethod: 'noMethodFound'
+    handlerMethod: 'noMethodFound',
+    type: 'rejects'
   },
   {
     handlerFile: 'errors',
-    handlerMethod: 'notAfunction'
+    handlerMethod: 'notAfunction',
+    type: 'rejects'
   },
 ]
 
 tap.test('Early-throwing ESM Edge Cases', (t) => {
   t.autoend()
-
-  t.beforeEach(async(t) => {
+  t.beforeEach((t) => {
     t.context.originalEnv = { ...process.env }
+    process.env.NEW_RELIC_USE_ESM = 'true'
     process.env.LAMBDA_TASK_ROOT = './'
     process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED = 'true' // only need to check this once.
 
-    const helper = utils.TestAgent.makeInstrumented()
-    const newrelic = helper.getAgentApi()
-    await td.replaceEsm('newrelic', {}, newrelic)
-
-    t.context.helper = helper
+    t.context.helper = utils.TestAgent.makeInstrumented()
   })
 
   t.afterEach((t) => {
-    const { helper, originalEnv } = t.context
+    const { helper, originalEnv} = t.context
     process.env = { ...originalEnv }
     helper.unload()
   })
 
   for (const test of testCases ) {
-    const { handlerFile, handlerMethod } = test
-    let testName = `should reject because 'NEW_RELIC_LAMBDA_HANDLER' is not an expected value for ${handlerPath}`
+    const { handlerFile, handlerMethod, type } = test
+    let testName = `should ${type} because 'NEW_RELIC_LAMBDA_HANDLER' is not an expected value for ${handlerPath}`
     if (handlerFile) {
       testName += handlerFile
     }
     if (handlerMethod) {
       testName += `.${handlerMethod}`
     }
-
     t.test(testName, (t) => {
+      const { helper } = t.context
       if (handlerFile && handlerMethod) {
         process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}.${handlerMethod}`
       } else if (handlerFile) {
         process.env.NEW_RELIC_LAMBDA_HANDLER = `${handlerPath}${handlerFile}`
       }
-      t.rejects(
-        async() => {
-          const { handler } =  await import('../../esm.mjs')
+
+      t[type](
+        () => {
+          const newrelic = helper.getAgentApi()
+          const { handler } = proxyquire('../../index', {
+            'newrelic': newrelic
+          })
           return handler({key: 'this is a test'}, {functionName: handlerMethod})
         },
         'No NEW_RELIC_LAMBDA_HANDLER environment variable set.',

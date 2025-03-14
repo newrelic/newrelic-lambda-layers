@@ -17,7 +17,7 @@ functions:
       - http:
           method: get
           path: context-done-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextDoneHandler
@@ -28,7 +28,7 @@ functions:
       - http:
           method: get
           path: context-done-handler-deferred
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextDoneHandlerDeferred
@@ -39,7 +39,7 @@ functions:
       - http:
           method: get
           path: context-succeed-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedHandler
@@ -50,7 +50,7 @@ functions:
       - http:
           method: get
           path: context-succeed-handler-deferred
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedHandlerDeferred
@@ -61,7 +61,7 @@ functions:
       - http:
           method: get
           path: callback-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackHandler
@@ -72,7 +72,7 @@ functions:
       - http:
           method: get
           path: callback-handler-deferred
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackHandlerDeferred
@@ -83,7 +83,7 @@ functions:
       - http:
           method: get
           path: promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseHandler
@@ -94,7 +94,7 @@ functions:
       - http:
           method: get
           path: promise-handler-deferred
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseHandlerDeferred
@@ -105,7 +105,7 @@ functions:
       - http:
           method: get
           path: async-function-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.asyncFunctionHandler
@@ -116,7 +116,7 @@ functions:
       - http:
           method: get
           path: promise-with-defined-callback-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.promiseWithDefinedCallbackHandler
@@ -127,7 +127,7 @@ functions:
       - http:
           method: get
           path: context-succeed-with-context-done-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.contextSucceedWithContextDoneHandler
@@ -138,7 +138,7 @@ functions:
       - http:
           method: get
           path: callback-with-context-done-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackWithContextDoneHandler
@@ -149,7 +149,7 @@ functions:
       - http:
           method: get
           path: callback-with-promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackWithPromiseHandler
@@ -160,7 +160,7 @@ functions:
       - http:
           method: get
           path: callback-inside-promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.callbackInsidePromiseHandler
@@ -171,7 +171,7 @@ functions:
       - http:
           method: get
           path: throw-exception-in-promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.throwExceptionInPromiseHandler
@@ -182,7 +182,7 @@ functions:
       - http:
           method: get
           path: throw-exception-in-callback-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.throwExceptionInCallbackHandler
@@ -193,7 +193,7 @@ functions:
       - http:
           method: get
           path: no-answer-in-promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.NoAnswerInPromiseHandler
@@ -204,7 +204,7 @@ functions:
       - http:
           method: get
           path: bad-answer-in-promise-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.BadAnswerInPromiseHandler
@@ -215,7 +215,7 @@ functions:
       - http:
           method: get
           path: bad-answer-in-callback-handler
-    handler: ../../index.handler
+    handler: ${env:HANDLER}
     environment:
       NEW_RELIC_USE_ESM: ${env:NEW_RELIC_USE_ESM}
       NEW_RELIC_LAMBDA_HANDLER: ./${env:MODULE_TYPE}/handler.BadAnswerInCallbackHandler

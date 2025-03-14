@@ -1,4 +1,6 @@
-'use strict'
+import newrelic from 'newrelic'
+import fs from 'node:fs'
+import path from 'node:path'
 
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
@@ -9,10 +11,6 @@ process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY =
 if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
 }
-
-const newrelic = require('newrelic')
-const fs = require('node:fs')
-const path = require('node:path')
 
 function getHandlerPath() {
   let handler
@@ -76,18 +74,6 @@ async function getModuleWithImport(appRoot, moduleToImport) {
   }
 }
 
-function getModuleWithRequire(appRoot, moduleToImport) {
-  const modulePath = path.resolve(appRoot, moduleToImport)
-  const validExtensions = ['.cjs', '.js']
-  const fullModulePath = getFullyQualifiedModulePath(modulePath, validExtensions)
-
-  try {
-    return require(fullModulePath)
-  } catch (err) {
-    throw handleRequireImportError(err, moduleToImport)
-  }
-}
-
 function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   if (typeof userHandler === 'undefined') {
     throw new Error(
@@ -102,19 +88,11 @@ function validateHandlerDefinition(userHandler, handlerName, moduleName) {
   }
 }
 
-let wrappedHandler
-let patchedHandlerPromise
-
 const { LAMBDA_TASK_ROOT = '.' } = process.env
 const { moduleToImport, handlerToWrap } = getHandlerPath()
 
-if (process.env.NEW_RELIC_USE_ESM === 'true') {
-  patchedHandlerPromise = getHandler().then(userHandler => {
-    return newrelic.setLambdaHandler(userHandler)
-  })
-} else {
-  wrappedHandler = newrelic.setLambdaHandler(getHandlerSync())
-}
+const userHandler  = await getHandler() 
+const handler = newrelic.setLambdaHandler(userHandler)
 
 async function getHandler() {
   const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
@@ -122,30 +100,6 @@ async function getHandler() {
 
   return userHandler
 }
+  
+export { handler, getHandlerPath }
 
-function getHandlerSync() {
-  const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
-  validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
-
-  return userHandler
-}
-
-async function patchHandler() {
-  const args = Array.prototype.slice.call(arguments)
-  return patchedHandlerPromise
-    .then(_wrappedHandler => _wrappedHandler.apply(this, args))
-}
-
-let handler 
-
-if (process.env.NEW_RELIC_USE_ESM === 'true') {
-  handler = patchHandler
-} else {
-  handler = wrappedHandler
-}
-
-
-module.exports = {
-  handler,
-  getHandlerPath
-}

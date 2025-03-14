@@ -1,7 +1,8 @@
 "use strict"
+const test = Symbol.for('test.symbol')
 
 // eslint-disable-next-line no-unused-vars
-exports.handler = async function handler(event, context) {
+const handler = async function handler(event, context) {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
@@ -11,3 +12,6 @@ exports.handler = async function handler(event, context) {
     }, 100)
   })
 }
+handler[test] = 'value'
+
+module.exports.handler = handler
