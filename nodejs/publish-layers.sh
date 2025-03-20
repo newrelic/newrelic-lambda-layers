@@ -7,217 +7,114 @@ DIST_DIR=dist
 
 source ../libBuild.sh
 
-NJS18X_DIST_ARM64=$DIST_DIR/nodejs18x.arm64.zip
-NJS20X_DIST_ARM64=$DIST_DIR/nodejs20x.arm64.zip
-NJS22X_DIST_ARM64=$DIST_DIR/nodejs22x.arm64.zip
-
-NJS18X_DIST_X86_64=$DIST_DIR/nodejs18x.x86_64.zip
-NJS20X_DIST_X86_64=$DIST_DIR/nodejs20x.x86_64.zip
-NJS22X_DIST_X86_64=$DIST_DIR/nodejs22x.x86_64.zip
-
 function usage {
-  	echo "./publish-layers.sh [nodejs18x|nodejs20x]"
+  	echo "./publish-layers.sh [build-18|build-20|build-22|publish-18|publish-20|publish-22]"
 }
 
-function build-nodejs18x-arm64 {
-	echo "Building new relic layer for nodejs18.x (arm64)"
-	rm -rf $BUILD_DIR $NJS18X_DIST_ARM64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
+function make_package_json {
+cat <<EOM >fake-package.json
+{
+  "name": "newrelic-esm-lambda-wrapper",
+  "type": "module"
+}
+EOM
+}
+
+function build_wrapper {
+  node_version=$1
+  arch=$2
+  echo "Building new relic layer for nodejs${node_version}.x (${arch})"
+  ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+  rm -rf $BUILD_DIR $ZIP
+  mkdir -p $DIST_DIR
+  npm install --prefix $BUILD_DIR newrelic@latest
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension arm64
-	zip -rq $NJS18X_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS18X_DIST_ARM64}"
+  cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+	mkdir -p $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper
+  cp esm.mjs $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/index.js
+  make_package_json
+  cp fake-package.json $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/package.json
+  download_extension $arch
+	zip -rq $ZIP $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	rm -rf fake-package.json $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	echo "Build complete: ${ZIP}"
 }
 
-function build-nodejs18x-x86 {
-	echo "Building new relic layer for nodejs18.x (x86_64)"
-	rm -rf $BUILD_DIR $NJS18X_DIST_X86_64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension x86_64
-	zip -rq $NJS18X_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS18X_DIST_X86_64}"
-}
+function publish_wrapper {
+  node_version=$1
+  arch=$2
+  ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+  if [ ! -f $ZIP ]; then
+    echo "Package not found: ${ZIP}"
+    exit 1
+  fi
 
-function publish-nodejs18x-arm64 {
-    if [ ! -f $NJS18X_DIST_ARM64 ]; then
-      echo "Package not found: ${NJS18X_DIST_ARM64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_ARM[@]}"; do
-      publish_layer $NJS18X_DIST_ARM64 $region nodejs18.x arm64
-    done
-}
-
-function publish-nodejs18x-x86 {
-    if [ ! -f $NJS18X_DIST_X86_64 ]; then
-      echo "Package not found: ${NJS18X_DIST_X86_64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_X86[@]}"; do
-      publish_layer $NJS18X_DIST_X86_64 $region nodejs18.x x86_64
-    done
-}
-
-function build-nodejs20x-arm64 {
-	echo "Building new relic layer for nodejs20.x (arm64)"
-	rm -rf $BUILD_DIR $NJS20X_DIST_ARM64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension arm64
-	zip -rq $NJS20X_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS20X_DIST_ARM64}"
-}
-
-function build-nodejs20x-x86 {
-	echo "Building new relic layer for nodejs20.x (x86_64)"
-	rm -rf $BUILD_DIR $NJS20X_DIST_X86_64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension x86_64
-	zip -rq $NJS20X_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS20X_DIST_X86_64}"
-}
-
-function publish-nodejs20x-arm64 {
-    if [ ! -f $NJS20X_DIST_ARM64 ]; then
-      echo "Package not found: ${NJS20X_DIST_ARM64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_ARM[@]}"; do
-      publish_layer $NJS20X_DIST_ARM64 $region nodejs20.x arm64
-    done
-}
-
-function publish-nodejs20x-x86 {
-    if [ ! -f $NJS20X_DIST_X86_64 ]; then
-      echo "Package not found: ${NJS20X_DIST_X86_64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_X86[@]}"; do
-      publish_layer $NJS20X_DIST_X86_64 $region nodejs20.x x86_64
-    done
-}
-
-function build-nodejs22x-arm64 {
-	echo "Building new relic layer for nodejs22.x (arm64)"
-	rm -rf $BUILD_DIR $NJS22X_DIST_ARM64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension arm64
-	zip -rq $NJS22X_DIST_ARM64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS22X_DIST_ARM64}"
-}
-
-function build-nodejs22x-x86 {
-	echo "Building new relic layer for nodejs22.x (x86_64)"
-	rm -rf $BUILD_DIR $NJS22X_DIST_X86_64
-	mkdir -p $DIST_DIR
-	npm install --prefix $BUILD_DIR newrelic@latest
-	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-	download_extension x86_64
-	zip -rq $NJS22X_DIST_X86_64 $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	rm -rf $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
-	echo "Build complete: ${NJS22X_DIST_X86_64}"
-}
-
-function publish-nodejs22x-arm64 {
-    if [ ! -f $NJS22X_DIST_ARM64 ]; then
-      echo "Package not found: ${NJS22X_DIST_ARM64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_ARM[@]}"; do
-      publish_layer $NJS22X_DIST_ARM64 $region nodejs22.x arm64
-    done
-}
-
-function publish-nodejs22x-x86 {
-    if [ ! -f $NJS22X_DIST_X86_64 ]; then
-      echo "Package not found: ${NJS22X_DIST_X86_64}"
-      exit 1
-    fi
-
-    for region in "${REGIONS_X86[@]}"; do
-      publish_layer $NJS22X_DIST_X86_64 $region nodejs22.x x86_64
-    done
+  for region in "${REGIONS_ARM[@]}"; do
+    publish_layer $ZIP $region nodejs${node_version}.x ${arch} 
+  done
 }
 
 case "$1" in
-"build-nodejs18x")
-	build-nodejs18x-arm64
-	build-nodejs18x-x86
+"build_wrapper")
+  build_wrapper $2 $3
+  ;;
+"publish_wrapper")
+  publish_wrapper $2 $3
+  ;;
+"build-18")
+  build_wrapper 18 arm64 
+  build_wrapper 18 x86_64 
 	;;
-"publish-nodejs18x")
-	publish-nodejs18x-arm64
-	publish-nodejs18x-x86
+"publish-18")
+  publish_wrapper 18 arm64
+  publish_wrapper 18 x86_64 
 	;;
-"build-nodejs20x")
-	build-nodejs20x-arm64
-	build-nodejs20x-x86
+"build-20")
+  build_wrapper 20 arm64 
+  build_wrapper 20 x86_64 
 	;;
-"publish-nodejs20x")
-	publish-nodejs20x-arm64
-	publish-nodejs20x-x86
+"publish-20")
+  publish_wrapper 20 arm64
+  publish_wrapper 20 x86_64 
 	;;
-"build-nodejs22x")
-	build-nodejs22x-arm64
-	build-nodejs22x-x86
+"build-22")
+  build_wrapper 22 arm64 
+  build_wrapper 22 x86_64 
 	;;
-"publish-nodejs22x")
-	publish-nodejs22x-arm64
-	publish-nodejs22x-x86
+"publish-22")
+  publish_wrapper 22 arm64
+  publish_wrapper 22 x86_64 
 	;;
-"build-publish-nodejs18x-ecr-image")
-	build-nodejs18x-arm64
-	publish_docker_ecr $NJS18X_DIST_ARM64 nodejs18.x arm64
-	build-nodejs18x-x86
-	publish_docker_ecr $NJS18X_DIST_X86_64 nodejs18.x x86_64
+"build-publish-18-ecr-image")
+  build_wrapper 18 arm64 
+	publish_docker_ecr $DIST_DIR/nodejs18x.arm64.zip nodejs18.x arm64
+  build_wrapper 18 x86_64 
+	publish_docker_ecr $DIST_DIR/nodejs18x.x86_64.zip nodejs18.x x86_64
 	;;
-"build-publish-nodejs20x-ecr-image")
-	build-nodejs20x-arm64
-	publish_docker_ecr $NJS20X_DIST_ARM64 nodejs20.x arm64
-	build-nodejs20x-x86
-	publish_docker_ecr $NJS20X_DIST_X86_64 nodejs20.x x86_64
+"build-publish-20-ecr-image")
+  build_wrapper 20 arm64 
+	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
+  build_wrapper 20 x86_64 
+	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
 	;;
-"build-publish-nodejs22x-ecr-image")
-	build-nodejs22x-arm64
-	publish_docker_ecr $NJS22X_DIST_ARM64 nodejs22.x arm64
-	build-nodejs22x-x86
-	publish_docker_ecr $NJS22X_DIST_X86_64 nodejs22.x x86_64
+"build-publish-22-ecr-image")
+  build_wrapper 22 arm64 
+	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
+  build_wrapper 22 x86_64 
+	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
 	;;
-"nodejs18x")
-	$0 build-nodejs18x
-	$0 publish-nodejs18x
-	;;
-"nodejs20x")
-	$0 build-nodejs20x
-	$0 publish-nodejs20x
-	;;
-"nodejs22x")
-	$0 build-nodejs22x
-	$0 publish-nodejs22x
-	;;
+"nodejs18")
+  $0 build-18
+  $0 publish-18
+  ;;
+"nodejs20")
+  $0 build-20
+  $0 publish-20
+  ;;
+"nodejs22")
+  $0 build-22
+  $0 publish-22
+  ;;
 *)
 	usage
 	;;

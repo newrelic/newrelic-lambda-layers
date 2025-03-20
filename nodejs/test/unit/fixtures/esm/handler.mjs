@@ -1,5 +1,6 @@
+const test = Symbol.for('test.symbol')
 // eslint-disable-next-line no-unused-vars
-export async function handler(event, context) {
+const handler = async function handler(event, context) {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
@@ -9,3 +10,7 @@ export async function handler(event, context) {
     }, 100)
   })
 }
+
+handler[test] = 'value'
+
+export { handler }
