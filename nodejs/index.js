@@ -14,6 +14,12 @@ const newrelic = require('newrelic')
 const fs = require('node:fs')
 const path = require('node:path')
 
+function getModulePath(handler) {
+  const lastSlashIndex = handler.lastIndexOf('/') + 1
+  const firstDotAfterSlash = handler.indexOf('.', lastSlashIndex)
+  return handler.slice(0, firstDotAfterSlash)
+}
+
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
@@ -32,8 +38,9 @@ function getHandlerPath() {
     )
   }
 
-  const handlerToWrap = parts[parts.length - 1]
-  const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
+  let prefixIndex = handler.lastIndexOf('/') !== -1 ? handler.lastIndexOf('/') + 1 : 0
+  const handlerToWrap = handler.slice(prefixIndex).split('.').slice(1).join('.')
+  const moduleToImport = getModulePath(handler)
   return { moduleToImport, handlerToWrap }
 }
 
