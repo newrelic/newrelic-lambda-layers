@@ -7,3 +7,9 @@ export function handler(event) {
     body: JSON.stringify(event)
   }
 }
+export function nestedHandler(event) {
+  return {
+    statusCode: 200,
+    body: JSON.stringify(event)
+  }
+}

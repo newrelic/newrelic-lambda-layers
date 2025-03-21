@@ -125,6 +125,7 @@ export function callbackWithContextDoneHandler(event, context, callback) {
   })
 }
 
+
 export function callbackWithPromiseHandler(event, context, callback) {
   callback(null, {
     body: stringify('Hello Callback!'),
@@ -167,4 +168,40 @@ export const BadAnswerInPromiseHandler = async() => {
 
 export const BadAnswerInCallbackHandler = (event, context, callback) => {
   callback(null, {})
+}
+export const nested = {
+  contextDoneHandler: function contextDoneHandler(event, context) {
+    context.done(null, {
+      body: JSON.stringify('foo'),
+      statusCode: 200,
+    })
+  },
+
+  contextSucceedHandler: function contextSucceedHandler(event, context) {
+    context.succeed({
+      body: JSON.stringify('foo'),
+      statusCode: 200,
+    })
+  },
+
+  callbackHandler: function callbackHandler(event, context, callback) {
+    callback(null, {
+      body: JSON.stringify('foo'),
+      statusCode: 200,
+    })
+  },
+
+  promiseHandler: function promiseHandler() {
+    return Promise.resolve({
+      body: JSON.stringify('foo'),
+      statusCode: 200,
+    })
+  },
+
+  asyncFunctionHandler: async function asyncFunctionHandler() {
+    return {
+      body: JSON.stringify('foo'),
+      statusCode: 200,
+    }
+  },
 }

@@ -35,6 +35,26 @@ const handlerAndPath = [
     handlerFile: 'badImport',
     method: 'handler'
   },
+  {
+    handlerFile: 'nestedHandler',
+    handlerMethod: 'nested.contextDoneHandler'
+  },
+  {
+    handlerFile: 'nestedHandler',
+    handlerMethod: 'nested.contextSucceedHandler'
+  },
+  {
+    handlerFile: 'nestedHandler',
+    handlerMethod: 'nested.callbackHandler'
+  },
+  {
+    handlerFile: 'nestedHandler',
+    handlerMethod: 'nested.promiseHandler'
+  },
+  {
+    handlerFile: 'nestedHandler',
+    handlerMethod: 'nested.asyncFunctionHandler'
+  }
 ]
 
 tap.test('CJS Edge Cases', (t) => {
