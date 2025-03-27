@@ -11,7 +11,11 @@ process.env.NEW_RELIC_TRUSTED_ACCOUNT_KEY =
 if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED !== 'undefined') {
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
 }
-
+function getNestedHandler(object, nestedProperty) {
+  return nestedProperty.split('.').reduce((nested, key) => {
+    return nested && nested[key]
+  }, object)
+}
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
@@ -30,9 +34,12 @@ function getHandlerPath() {
     )
   }
 
-  const handlerToWrap = parts[parts.length - 1]
-  const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
-  return { moduleToImport, handlerToWrap }
+  const lastSlashIndex = handler.lastIndexOf('/') + 1
+  const firstDotAfterSlash = handler.indexOf('.', lastSlashIndex)
+  const moduleToImport = handler.slice(0, firstDotAfterSlash)
+  const handlerToWrap = handler.slice(firstDotAfterSlash + 1)
+
+  return {moduleToImport, handlerToWrap}
 }
 
 function handleRequireImportError(e, moduleToImport) {
@@ -95,7 +102,8 @@ const userHandler  = await getHandler()
 const handler = newrelic.setLambdaHandler(userHandler)
 
 async function getHandler() {
-  const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
+  const userModule = await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport)
+  const userHandler = getNestedHandler(userModule, handlerToWrap)
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
