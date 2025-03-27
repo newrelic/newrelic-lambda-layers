@@ -205,6 +205,34 @@ function s3_prefix() {
     echo $name
 }
 
+function agent_name_str() {
+    local runtime=$1
+    local agent_name
+   
+    case $runtime in
+        "provided")
+            agent_name="provided"
+            ;;
+        "nodejs18.x"|"nodejs20.x"|"nodejs22.x")
+            agent_name="Node"
+            ;;
+        "ruby3.2"|"ruby3.3")
+            agent_name="Ruby"
+            ;;
+        "java8.al2"|"java11"|"java17"|"java21")
+            agent_name="Java"
+            ;;
+        "python3.8"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
+            agent_name="Python"
+            ;;
+        *)
+            agent_name="none"
+            ;;
+    esac
+
+    echo $agent_name
+}
+
 function hash_file() {
     if command -v md5sum &> /dev/null ; then
         md5sum $1 | awk '{ print $1 }'
@@ -218,7 +246,8 @@ function publish_layer {
     region=$2
     runtime_name=$3
     arch=$4
-
+    newrelic_agent_version=${5:-"none"}
+    agent_name=$( agent_name_str $runtime_name )
     layer_name=$( layer_name_str $runtime_name $arch )
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
@@ -243,11 +272,28 @@ function publish_layer {
    else arch_flag=""
    fi
 
+    base_description="New Relic Layer for ${runtime_name} (${arch})"
+
+    if [[ $newrelic_agent_version != "none" ]]; then
+        extension_info=" with New Relic Extension v${EXTENSION_VERSION}"
+        
+        if [[ $agent_name != "provided" ]]; then
+            agent_info=" and ${agent_name} agent v${newrelic_agent_version}"
+        else
+            base_description="New Relic Layer for OS only runtime (${arch})"
+            agent_info=""
+        fi
+
+        description="${base_description}${extension_info}${agent_info}"
+    else
+        description="${base_description}."
+    fi
+
     echo "Publishing ${runtime_name} layer to ${region}"
     layer_version=$(aws lambda publish-layer-version \
       --layer-name ${layer_name} \
       --content "S3Bucket=${bucket_name},S3Key=${s3_key}" \
-      --description "New Relic Layer for ${runtime_name} (${arch})" \
+      --description "${description}"\
       --license-info "Apache-2.0" $arch_flag \
       --compatible-runtimes ${compat_list[*]} \
       --region "$region" \
