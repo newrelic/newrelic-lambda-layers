@@ -9,3 +9,11 @@ exports.handler = (event) => {
     body: JSON.stringify(event)
   }
 }
+
+exports.nestedHandler = (event) => {
+  return {
+    statusCode: 200,
+    body: JSON.stringify(event)
+  }
+}
+
