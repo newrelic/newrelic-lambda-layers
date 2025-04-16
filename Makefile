@@ -168,3 +168,22 @@ publish-ruby33-local: build-ruby33
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-ruby33
+
+build-ruby34:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-ruby34 \
+		-f ./dockerfiles/Dockerfile.ruby34 \
+		.
+
+publish-ruby34-ci: build-ruby34
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-ruby34
+
+publish-ruby34-local: build-ruby34
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-ruby34

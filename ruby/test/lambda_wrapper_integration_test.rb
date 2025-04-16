@@ -25,7 +25,7 @@ class LambdaWrapperIntegrationTest < Minitest::Test
     @serverless_pid = nil
     @serverless_thread = Thread.new { @serverless_pid = Process.spawn(SERVERLESS_CMD) }
     puts 'Giving the serverless process time to start...'
-    sleep 5
+    sleep 10
   end
 
   def teardown

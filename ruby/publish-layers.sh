@@ -26,15 +26,17 @@ EXTENSION_CLONE_PATH=''
 # Distribution paths for ARM64
 RB32_DIST_ARM64=$DIST_DIR/ruby32.arm64.zip
 RB33_DIST_ARM64=$DIST_DIR/ruby33.arm64.zip
+RB34_DIST_ARM64=$DIST_DIR/ruby34.arm64.zip
 
 # Distribution paths for X86_64
 RB32_DIST_X86_64=$DIST_DIR/ruby32.x86_64.zip
-RB33_DIST_X86_64=$DIST_DIR/ruby33.x86_64.zip
+RB33_DIST_X86_64=$DIST_DIR/ruby33.x86_64.zip 
+RB34_DIST_X86_64=$DIST_DIR/ruby34.x86_64.zip
 
 source ../libBuild.sh
 
 function usage {
-  echo "./publish-layers.sh [ruby3.2|ruby3.3]"
+  echo "./publish-layers.sh [ruby3.2|ruby3.3|ruby3.4]"
 }
 
 function build-ruby32-arm64 {
@@ -45,12 +47,21 @@ function build-ruby33-arm64 {
   build_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
 }
 
+function build-ruby34-arm64 {
+  build_ruby_for_arch 3.4 'arm64' $RB34_DIST_ARM64
+}
+
+
 function build-ruby32-x86 {
   build_ruby_for_arch 3.2 'x86_64' $RB32_DIST_X86_64
 }
 
 function build-ruby33-x86 {
   build_ruby_for_arch 3.3 'x86_64' $RB33_DIST_X86_64
+}
+
+function build-ruby34-x86 {
+  build_ruby_for_arch 3.4 'x86_64' $RB34_DIST_X86_64
 }
 
 function publish-ruby32-arm64 {
@@ -61,12 +72,20 @@ function publish-ruby33-arm64 {
   publish_ruby_for_arch 3.3 'arm64' $RB33_DIST_ARM64
 }
 
+function publish-ruby34-arm64 {
+  publish_ruby_for_arch 3.4 'arm64' $RB34_DIST_ARM64
+}
+
 function publish-ruby32-x86 {
   publish_ruby_for_arch 3.2 'x86_64' $RB32_DIST_X86_64
 }
 
 function publish-ruby33-x86 {
   publish_ruby_for_arch 3.3 'x86_64' $RB33_DIST_X86_64
+}
+
+function publish-ruby34-x86 {
+  publish_ruby_for_arch 3.4 'x86_64' $RB34_DIST_X86_64
 }
 
 function build_ruby_for_arch {
@@ -153,6 +172,14 @@ function publish_ruby_for_arch {
 
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
+  "ruby3.4")
+    build-ruby34-arm64
+    publish-ruby34-arm64
+    publish_docker_ecr $RB34_DIST_ARM64 ruby3.4 arm64
+    build-ruby34-x86
+    publish-ruby34-x86
+    publish_docker_ecr $RB34_DIST_X86_64 ruby3.4 x86_64
+    ;;
   "ruby3.3")
     build-ruby33-arm64
     publish-ruby33-arm64
