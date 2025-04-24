@@ -70,18 +70,17 @@ function publish_python_layer {
         echo "Package not found: ${ZIP}"
         exit 1
     fi
-    if [arch == "arm64"]; then
-        for region in "${REGIONS_ARM[@]}"; do
-            echo "Publishing layer for python${python_version} (${arch}) to region ${region}"
-            publish_layer ${ZIP} $region python${python_version} ${arch} $NEWRELIC_AGENT_VERSION
-        done
+
+    if [[ "${arch}" == "arm64" ]]; then
+        REGIONS=("${REGIONS_ARM[@]}");
     else
-        for region in "${REGIONS_X86[@]}"; do
-            echo "Publishing layer for python${python_version} (${arch}) to region ${region}"
-            publish_layer ${ZIP} $region python${python_version} ${arch} $NEWRELIC_AGENT_VERSION
-        done
+        REGIONS=("${REGIONS_X86[@]}");
     fi
-    
+
+    for region in "${REGIONS[@]}"; do
+        echo "Publishing layer for python${python_version} (${arch}) to region ${region}"
+        publish_layer ${ZIP} $region python${python_version} ${arch} $NEWRELIC_AGENT_VERSION
+    done
 }
 
 
