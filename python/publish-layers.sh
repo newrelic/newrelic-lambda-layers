@@ -5,6 +5,7 @@ set -Eeuo pipefail
 BUILD_DIR=python
 DIST_DIR=dist
 NEWRELIC_AGENT_VERSION=""
+VERSION_REGEX="v?([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+_python"
 PY38_DIST_ARM64=$DIST_DIR/python38.arm64.zip
 PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 PY310_DIST_ARM64=$DIST_DIR/python310.arm64.zip
@@ -34,8 +35,20 @@ function build_python_layer {
     rm -rf $BUILD_DIR $ZIP
     mkdir -p $DIST_DIR
 
-    pip install --no-cache-dir -qU newrelic -t $BUILD_DIR/lib/python${python_version}/site-packages
-    NEWRELIC_AGENT_VERSION=$(PYTHONPATH="$BUILD_DIR/lib/python${python_version}/site-packages" pip show newrelic | grep Version | awk '{print $2}')
+    # Determine agent version from git tag
+    if [[ -z "${GITHUB_REF_NAME}" ]]; then
+        echo "Unable to determine agent version, GITHUB_REF_NAME environment variable not set." >&2
+        exit 1;
+    elif [[ "${GITHUB_REF_NAME}" =~ ${VERSION_REGEX} ]]; then
+        # Extract the version number from the GITHUB_REF_NAME using regex
+        NEWRELIC_AGENT_VERSION="${BASH_REMATCH[1]}"
+        echo "Detected NEWRELIC_AGENT_VERSION: ${NEWRELIC_AGENT_VERSION}"
+    else
+        echo "Unable to determine agent version, GITHUB_REF_NAME environment variable did not match regex. GITHUB_REF_NAME: ${GITHUB_REF_NAME}" >&2
+        exit 1;
+    fi
+
+    pip install --no-cache-dir -qU "newrelic==${NEWRELIC_AGENT_VERSION}" -t $BUILD_DIR/lib/python${python_version}/site-packages
     cp newrelic_lambda_wrapper.py "$BUILD_DIR/lib/python${python_version}/site-packages/newrelic_lambda_wrapper.py"
     cp -r newrelic_lambda "$BUILD_DIR/lib/python${python_version}/site-packages/newrelic_lambda"
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
