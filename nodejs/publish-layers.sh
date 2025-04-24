@@ -28,6 +28,9 @@ function build_wrapper {
   rm -rf $BUILD_DIR $ZIP
   mkdir -p $DIST_DIR
   npm install --prefix $BUILD_DIR newrelic@latest
+  NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
+  touch $DIST_DIR/nr-env
+  echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
   cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
 	mkdir -p $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper
@@ -44,13 +47,14 @@ function publish_wrapper {
   node_version=$1
   arch=$2
   ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+  source $DIST_DIR/nr-env
   if [ ! -f $ZIP ]; then
     echo "Package not found: ${ZIP}"
     exit 1
   fi
 
   for region in "${REGIONS_ARM[@]}"; do
-    publish_layer $ZIP $region nodejs${node_version}.x ${arch} 
+    publish_layer $ZIP $region nodejs${node_version}.x ${arch} $NEWRELIC_AGENT_VERSION
   done
 }
 
