@@ -63,7 +63,7 @@ class LambdaWrapperUnitTest < Minitest::Test
 
   def test_handler_string_parse_raises_if_the_handler_string_is_not_formatted_correctly
     assert_raises(RuntimeError, /expected to be in/) do
-      wrapper_parse('dotless', '/dev/null')
+      wrapper_parse('dotless', '/dev/null') # rubocop:disable Style/FileNull
     end
   end
 
