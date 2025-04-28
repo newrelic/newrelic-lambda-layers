@@ -41,6 +41,7 @@ jobs:
           node-version: 20.x
       - name: Install Node.js Dependencies
         run: npm install
+             npm install serverless -g
         working-directory: ruby/test/support
       - name: Install Ruby Depedencies
         run: bundle
