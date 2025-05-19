@@ -2,7 +2,7 @@ service: integration-tests
 frameworkVersion: '3'
 
 custom:
-  NODE_RUNTIME: ${env:NODE_RUNTIME, 'nodejs18.x'}
+  NODE_RUNTIME: ${env:NODE_RUNTIME}
 
 plugins:
   - serverless-offline
