@@ -8,7 +8,7 @@ DIST_DIR=dist
 source ../libBuild.sh
 
 function usage {
-  	echo "./publish-layers.sh [build-18|build-20|build-22|publish-18|publish-20|publish-22]"
+  	echo "./publish-layers.sh [build-20|build-22|publish-20|publish-22]"
 }
 
 function make_package_json {
@@ -65,14 +65,6 @@ case "$1" in
 "publish_wrapper")
   publish_wrapper $2 $3
   ;;
-"build-18")
-  build_wrapper 18 arm64 
-  build_wrapper 18 x86_64 
-	;;
-"publish-18")
-  publish_wrapper 18 arm64
-  publish_wrapper 18 x86_64 
-	;;
 "build-20")
   build_wrapper 20 arm64 
   build_wrapper 20 x86_64 
