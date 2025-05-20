@@ -33,9 +33,9 @@ if ServerlessModeProtocol is not None:
         }
 
         encoded = serverless_payload_encode(payload)
-        payload = json_encode((1, "NR_LAMBDA_MONITORING", encoded))
 
         if os.path.exists(NAMED_PIPE_PATH):
+            payload = json_encode((1, "NR_LAMBDA_MONITORING", encoded))
             try:
                 with open(NAMED_PIPE_PATH, "w") as named_pipe:
                     named_pipe.write(payload)
@@ -44,6 +44,24 @@ if ServerlessModeProtocol is not None:
                     "Failed to write to named pipe %s: %s" % (NAMED_PIPE_PATH, e)
                 )
         else:
+            # We will arbitrarily limit the size of the payload to 255MB.  This
+            # is more than enough buffer to be able to send the data to CloudWatch,
+            # even with the addition of metadata and other information.
+            #
+            # Note: Cloudwatch Logs and Cloudwatch Agent have different limits.
+            # Lambda functions automatically send logs and metrics to CloudWatch
+            # Logs, so the 256KB limit applies.  Cloudwatch Agent, however, has a
+            # 1MB limit on the size of a single log event since April 2025.
+            if os.getenv("NEW_RELIC_TO_CLOUDWATCH_MODE", False):
+                while len(encoded) > (255 * 1024):
+                    payload = json_encode((1, "NR_LAMBDA_MONITORING", encoded[:(255 * 1024)]))
+                    print(payload)
+                    encoded = encoded[(255 * 1024):]
+        
+            # Either Cloudwatch logging is not enabled, or the payload is small 
+            # enough to be sent in a single log event to Cloudwatch.  In either 
+            # case, we can send the entire payload in a single log event.   
+            payload = json_encode((1, "NR_LAMBDA_MONITORING", encoded))
             print(payload)
 
             return payload
