@@ -44,7 +44,7 @@ if ServerlessModeProtocol is not None:
                     "Failed to write to named pipe %s: %s" % (NAMED_PIPE_PATH, e)
                 )
         else:
-            # We will arbitrarily limit the size of the payload to 255MB.  This
+            # We will arbitrarily limit the size of the payload to 255KB.  This
             # is more than enough buffer to be able to send the data to CloudWatch,
             # even with the addition of metadata and other information.
             #
