@@ -29,4 +29,3 @@ def put_log_to_cloudwatch(payload):
         logStreamName=log_stream_name,
         logEvents=[log_event]
     )
-    
