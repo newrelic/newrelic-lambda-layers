@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def put_payload_cloudwatch(payload):
     try:
         # Dynamically importing
-        cloudwatch_logging = __import__('cloudwatch_logging')
+        cloudwatch_logging = __import__('newrelic_lambda.cloudwatch_logging', fromlist=['put_log_to_cloudwatch'])
         cloudwatch_logging.put_log_to_cloudwatch(payload)
     except Exception as e:
         logger.error(f"Failed to send payload to CloudWatch: {e}")
