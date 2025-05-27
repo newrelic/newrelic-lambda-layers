@@ -29,4 +29,4 @@ def put_log_to_cloudwatch(payload):
         logEvents=[log_event]
     )
     if log_level == "debug":
-        print(f"Log event sent to CloudWatch: {len(payload)} bytes, log group: {log_group_name}, log stream: {log_stream_name}")
+        print(f"Log event successfully sent to CloudWatch: {len(payload)} bytes, log group: {log_group_name}, log stream: {log_stream_name}")
