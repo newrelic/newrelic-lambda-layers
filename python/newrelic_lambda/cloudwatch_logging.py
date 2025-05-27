@@ -14,7 +14,7 @@ def put_log_to_cloudwatch(payload):
             logs_client.create_log_stream(logGroupName=log_group_name, logStreamName=log_stream_name)
         except Exception as e:
             if log_level == "debug":
-                print(f"Failed to create log stream {log_stream_name} in log group {log_group_name}: {e}")
+                print(f"Attempt create log stream {log_stream_name} in log group {log_group_name}: {e}")
 
     ensure_log_stream_exists(log_group_name, log_stream_name)
 
@@ -28,3 +28,5 @@ def put_log_to_cloudwatch(payload):
         logStreamName=log_stream_name,
         logEvents=[log_event]
     )
+    if log_level == "debug":
+        print(f"Log event sent to CloudWatch: len{payload} bytes, log group: {log_group_name}, log stream: {log_stream_name}")
