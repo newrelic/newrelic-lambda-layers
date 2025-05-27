@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 def put_payload_cloudwatch(payload):
     try:
-        # Dynamically importing
         cloudwatch_logging = __import__('newrelic_lambda.cloudwatch_logging', fromlist=['put_log_to_cloudwatch'])
         cloudwatch_logging.put_log_to_cloudwatch(payload)
     except Exception as e:
-        logger.error(f"Failed to send payload to CloudWatch: {e}")
+        print(f"Failed to send payload to CloudWatch: {e}, resorting to print payload.")
+        print(payload)
 
 if ServerlessModeProtocol is not None:
     # New Relic Agent >=5.16
@@ -51,7 +51,7 @@ if ServerlessModeProtocol is not None:
                     "Failed to write to named pipe %s: %s" % (NAMED_PIPE_PATH, e)
                 )
         else:
-            if os.getenv("NR_LAMBDA_CLOUDWATCH_LOGGING", "false").lower() == "true":
+            if os.getenv("NEW_RELIC_MAX_PAYLOAD", "false").lower() == "true":
                 put_payload_cloudwatch(payload)
             else:
                 print(payload)
