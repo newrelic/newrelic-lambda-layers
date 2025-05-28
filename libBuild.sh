@@ -220,7 +220,7 @@ function agent_name_str() {
             agent_name="provided"
             ;;
         "dotnet")
-            agent_name="dotnet"
+            agent_name="Dotnet"
             ;;
         "nodejs18.x"|"nodejs20.x"|"nodejs22.x")
             agent_name="Node"
