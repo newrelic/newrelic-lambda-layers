@@ -186,8 +186,20 @@ def LambdaHandlerWrapper(wrapped, application=None, name=None, group=None):
             headers = None
             query_string = None
             background_task = True
+        
 
-        transaction_name = name or getattr(context, "function_name", None)
+        request_id = getattr(context, "aws_request_id", None)
+        aws_arn = getattr(context, "invoked_function_arn", None)
+        function_version = getattr(context, "function_version", None)
+        event_source = extract_event_source_arn(event)
+        event_type = detect_event_type(event)
+
+        apm_lambda_mode = os.environ.get("NEW_RELIC_APM_LAMBDA_MODE", "false").lower()
+        if apm_lambda_mode == "true":
+            trigger = event_type["name"].upper() if event_type else "generic"
+            transaction_name = trigger + " " + getattr(context, "function_name", None)
+        else:
+            transaction_name = name or getattr(context, "function_name", None)
 
         transaction = newrelic.agent.WebTransaction(
             target_application,
@@ -200,12 +212,6 @@ def LambdaHandlerWrapper(wrapped, application=None, name=None, group=None):
         )
 
         transaction.background_task = background_task
-
-        request_id = getattr(context, "aws_request_id", None)
-        aws_arn = getattr(context, "invoked_function_arn", None)
-        function_version = getattr(context, "function_version", None)
-        event_source = extract_event_source_arn(event)
-        event_type = detect_event_type(event)
 
         if request_id:
             set_agent_attr(transaction, "aws.requestId", request_id)
