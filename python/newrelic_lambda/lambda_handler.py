@@ -196,8 +196,8 @@ def LambdaHandlerWrapper(wrapped, application=None, name=None, group=None):
 
         apm_lambda_mode = os.environ.get("NEW_RELIC_APM_LAMBDA_MODE", "false").lower()
         if apm_lambda_mode == "true":
-            trigger = event_type["name"].upper() if event_type else "generic"
-            transaction_name = trigger + " " + getattr(context, "function_name", None)
+            trigger = event_type["name"].upper() + " " if event_type else ""
+            transaction_name = trigger + getattr(context, "function_name", None)
         else:
             transaction_name = name or getattr(context, "function_name", None)
 
