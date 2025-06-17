@@ -23,7 +23,7 @@ PY313_DIST_X86_64=$DIST_DIR/python313.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.8|python3.9|python3.10|python3.11|python3.12]"
+    echo "./publish-layers.sh [python3.9|python3.10|python3.11|python3.12|python3.13]"
 }
 
 function build_python_layer {
@@ -84,14 +84,6 @@ function publish_python_layer {
 
 
 case "$1" in
-    "python3.8")
-        build_python_layer 3.8 arm64
-        publish_python_layer 3.8 arm64
-        publish_docker_ecr $PY38_DIST_ARM64 python3.8 arm64
-        build_python_layer 3.8 x86_64
-        publish_python_layer 3.8 x86_64
-        publish_docker_ecr $PY38_DIST_X86_64 python3.8 x86_64
-        ;;
     "python3.9")
         build_python_layer 3.9 arm64
         publish_python_layer 3.9 arm64

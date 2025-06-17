@@ -101,12 +101,6 @@ function layer_name_str() {
     "java21")
       rt_part="Java21"
       ;;
-    "python3.7")
-      rt_part="Python37"
-      ;;
-    "python3.8")
-      rt_part="Python38"
-      ;;
     "python3.9")
       rt_part="Python39"
       ;;
@@ -167,12 +161,6 @@ function s3_prefix() {
     "java11")
       name="java-11"
       ;;
-    "python3.7")
-      name="nr-python3.7"
-      ;;
-    "python3.8")
-      name="nr-python3.8"
-      ;;
     "python3.9")
       name="nr-python3.9"
       ;;
@@ -231,7 +219,7 @@ function agent_name_str() {
         "java8.al2"|"java11"|"java17"|"java21")
             agent_name="Java"
             ;;
-        "python3.8"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
+        "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
             agent_name="Python"
             ;;
         *)
