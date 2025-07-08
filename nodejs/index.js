@@ -14,13 +14,6 @@ const newrelic = require('newrelic')
 const fs = require('node:fs')
 const path = require('node:path')
 
-function getNestedHandler(object, nestedProperty) {
-  return nestedProperty.split('.').reduce((nested, key) => {
-    return nested && nested[key]
-  }, object)
-}
-
-
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
@@ -39,12 +32,9 @@ function getHandlerPath() {
     )
   }
 
-  const lastSlashIndex = handler.lastIndexOf('/') + 1
-  const firstDotAfterSlash = handler.indexOf('.', lastSlashIndex)
-  const moduleToImport = handler.slice(0, firstDotAfterSlash)
-  const handlerToWrap = handler.slice(firstDotAfterSlash + 1)
-
-  return {moduleToImport, handlerToWrap}
+  const handlerToWrap = parts[parts.length - 1]
+  const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
+  return { moduleToImport, handlerToWrap }
 }
 
 function handleRequireImportError(e, moduleToImport) {
@@ -127,17 +117,14 @@ if (process.env.NEW_RELIC_USE_ESM === 'true') {
 }
 
 async function getHandler() {
-  const userModule = await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport)
-  const userHandler = getNestedHandler(userModule, handlerToWrap)
-
+  const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
 function getHandlerSync() {
-  const userModule = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)
-  const userHandler = getNestedHandler(userModule, handlerToWrap)
+  const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler

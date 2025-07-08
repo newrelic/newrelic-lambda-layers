@@ -16,11 +16,10 @@ tap.test('Layer Handler - ESM Function', (t) => {
 
     const newrelic = helper.getAgentApi()
     await td.replaceEsm('newrelic', {}, newrelic)
-    const { handler } = await import('../../esm.mjs')
+    const { handler } =  await import('../../esm.mjs')
     t.context.helper = helper
     t.context.handler = handler
     t.context.originalEnv = originalEnv
-    t.context.newrelic = newrelic
   })
 
   t.afterEach((t) => {
@@ -43,27 +42,6 @@ tap.test('Layer Handler - ESM Function', (t) => {
     // t.equal(handler[Symbol.for('test.symbol')], 'value', 'should have symbol on wrapped handler')
     const res = await handler({ key: 'this is a test'}, { functionName: 'testFn'})
     t.same(res, { statusCode: 200, body: 'response body this is a test' }, 'response should be correct')
-    await promise
-  })
-
-  t.test('should wrap nested asyncFunctionHandler in transaction', async(t) => {
-    process.env.NEW_RELIC_LAMBDA_HANDLER = 'test/unit/fixtures/esm/handler.nested.asyncFunctionHandler'
-
-    const newrelic = t.context.newrelic
-    await td.replaceEsm('newrelic', {}, newrelic)
-    const { handler } = await import('../../esm.mjs')
-    t.context.handler = handler
-
-    const promise = new Promise((resolve) => {
-      t.context.helper.agent.on('transactionFinished', (transaction) => {
-        t.equal(transaction.name, 'OtherTransaction/Function/testFn', 'transaction should be properly named')
-        resolve()
-      })
-    })
-
-    t.equal(typeof handler, 'function', 'handler should be a function')
-    const res = await handler({ key: 'this is a test'}, { functionName: 'testFn'})
-    t.same(res, { statusCode: 200, body: JSON.stringify('foo') }, 'response should be correct')
     await promise
   })
 })

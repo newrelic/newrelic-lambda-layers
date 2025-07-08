@@ -134,36 +134,6 @@ tap.test('CJS Handler Integration Tests', (t) => {
       path: '/dev/callback-inside-promise-handler',
       status: 200,
     },
-    {
-      description: 'when nested handler uses context.done',
-      expected: 'foo',
-      path: '/dev/nested/context-done-handler',
-      status: 200,
-    },
-    {
-      description: 'when nested handler uses context.succeed',
-      expected: 'foo',
-      path: '/dev/nested/context-succeed-handler',
-      status: 200,
-    },
-    {
-      description: 'when nested handler uses a callback',
-      expected: 'foo',
-      path: '/dev/nested/callback-handler',
-      status: 200,
-    },
-    {
-      description: 'when nested handler returns a promise',
-      expected: 'foo',
-      path: '/dev/nested/promise-handler',
-      status: 200,
-    },
-    {
-      description: 'when nested handler uses an async function',
-      expected: 'foo',
-      path: '/dev/nested/async-function-handler',
-      status: 200,
-    },
   ].forEach(({ description, expected, path, status }) => {
     t.test(description, async(t) => {
       const url = new URL(path, BASE_URL)

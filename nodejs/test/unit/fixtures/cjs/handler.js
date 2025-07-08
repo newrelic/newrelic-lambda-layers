@@ -14,14 +14,4 @@ const handler = async function handler(event, context) {
 }
 handler[test] = 'value'
 
-const nested = {
-  asyncFunctionHandler: async function asyncFunctionHandler() {
-    return {
-      body: JSON.stringify('foo'),
-      statusCode: 200,
-    }
-  }
-}
-
 module.exports.handler = handler
-module.exports.nested = nested
