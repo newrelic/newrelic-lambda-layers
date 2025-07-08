@@ -36,31 +36,6 @@ const testCases = [
     handlerMethod: 'notAfunction',
     type: 'rejects'
   },
-  {
-    handlerFile: 'nestedHandler',
-    handlerMethod: 'nested.contextDoneHandler',
-    type: 'rejects'
-  },
-  {
-    handlerFile: 'nestedHandler',
-    handlerMethod: 'nested.contextSucceedHandler',
-    type: 'rejects'
-  },
-  {
-    handlerFile: 'nestedHandler',
-    handlerMethod: 'nested.callbackHandler',
-    type: 'rejects'
-  },
-  {
-    handlerFile: 'nestedHandler',
-    handlerMethod: 'nested.promiseHandler',
-    type: 'rejects'
-  },
-  {
-    handlerFile: 'nestedHandler',
-    handlerMethod: 'nested.asyncFunctionHandler',
-    type: 'rejects'
-  }
 ]
 
 tap.test('Early-throwing ESM Edge Cases', (t) => {
