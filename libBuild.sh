@@ -60,7 +60,7 @@ EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
-EXTENSION_VERSION=2.3.19
+EXTENSION_VERSION=2.3.22
 
 function list_all_regions {
     aws ec2 describe-regions \
@@ -100,12 +100,6 @@ function layer_name_str() {
       ;;
     "java21")
       rt_part="Java21"
-      ;;
-    "python3.7")
-      rt_part="Python37"
-      ;;
-    "python3.8")
-      rt_part="Python38"
       ;;
     "python3.9")
       rt_part="Python39"
@@ -164,12 +158,6 @@ function s3_prefix() {
     "java11")
       name="java-11"
       ;;
-    "python3.7")
-      name="nr-python3.7"
-      ;;
-    "python3.8")
-      name="nr-python3.8"
-      ;;
     "python3.9")
       name="nr-python3.9"
       ;;
@@ -213,6 +201,9 @@ function agent_name_str() {
         "provided")
             agent_name="provided"
             ;;
+        "dotnet")
+            agent_name="Dotnet"
+            ;;
         "nodejs20.x"|"nodejs22.x")
             agent_name="Node"
             ;;
@@ -222,7 +213,7 @@ function agent_name_str() {
         "java8.al2"|"java11"|"java17"|"java21")
             agent_name="Java"
             ;;
-        "python3.8"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
+        "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
             agent_name="Python"
             ;;
         *)

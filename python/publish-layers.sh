@@ -23,7 +23,7 @@ PY313_DIST_X86_64=$DIST_DIR/python313.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.8|python3.9|python3.10|python3.11|python3.12]"
+    echo "./publish-layers.sh [python3.9|python3.10|python3.11|python3.12|python3.13]"
 }
 
 function build_python_layer {
@@ -48,9 +48,8 @@ function build_python_layer {
         exit 1;
     fi
 
-    pip install --no-cache-dir -qU "newrelic==${NEWRELIC_AGENT_VERSION}" -t $BUILD_DIR/lib/python${python_version}/site-packages
+    pip install --no-cache-dir -qU "newrelic==${NEWRELIC_AGENT_VERSION}" newrelic-lambda -t $BUILD_DIR/lib/python${python_version}/site-packages
     cp newrelic_lambda_wrapper.py "$BUILD_DIR/lib/python${python_version}/site-packages/newrelic_lambda_wrapper.py"
-    cp -r newrelic_lambda "$BUILD_DIR/lib/python${python_version}/site-packages/newrelic_lambda"
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     
     download_extension $arch
@@ -85,14 +84,6 @@ function publish_python_layer {
 
 
 case "$1" in
-    "python3.8")
-        build_python_layer 3.8 arm64
-        publish_python_layer 3.8 arm64
-        publish_docker_ecr $PY38_DIST_ARM64 python3.8 arm64
-        build_python_layer 3.8 x86_64
-        publish_python_layer 3.8 x86_64
-        publish_docker_ecr $PY38_DIST_X86_64 python3.8 x86_64
-        ;;
     "python3.9")
         build_python_layer 3.9 arm64
         publish_python_layer 3.9 arm64

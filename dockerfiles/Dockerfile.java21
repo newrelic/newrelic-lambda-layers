@@ -13,7 +13,7 @@ COPY --chown=newrelic-lambda-layers java java/
 WORKDIR java
 RUN ./publish-layers.sh build-java21
 
-FROM python:3.8
+FROM python:3.12
 
 RUN useradd -m newrelic-lambda-layers
 USER newrelic-lambda-layers
