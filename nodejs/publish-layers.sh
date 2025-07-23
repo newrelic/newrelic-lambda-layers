@@ -8,7 +8,7 @@ DIST_DIR=dist
 source ../libBuild.sh
 
 function usage {
-  	echo "./publish-layers.sh [build-18|build-20|build-22|publish-18|publish-20|publish-22]"
+  	echo "./publish-layers.sh [build-20|build-22|publish-20|publish-22]"
 }
 
 function make_package_json {
@@ -65,14 +65,6 @@ case "$1" in
 "publish_wrapper")
   publish_wrapper $2 $3
   ;;
-"build-18")
-  build_wrapper 18 arm64 
-  build_wrapper 18 x86_64 
-	;;
-"publish-18")
-  publish_wrapper 18 arm64
-  publish_wrapper 18 x86_64 
-	;;
 "build-20")
   build_wrapper 20 arm64 
   build_wrapper 20 x86_64 
@@ -89,12 +81,6 @@ case "$1" in
   publish_wrapper 22 arm64
   publish_wrapper 22 x86_64 
 	;;
-"build-publish-18-ecr-image")
-  build_wrapper 18 arm64 
-	publish_docker_ecr $DIST_DIR/nodejs18x.arm64.zip nodejs18.x arm64
-  build_wrapper 18 x86_64 
-	publish_docker_ecr $DIST_DIR/nodejs18x.x86_64.zip nodejs18.x x86_64
-	;;
 "build-publish-20-ecr-image")
   build_wrapper 20 arm64 
 	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
@@ -107,10 +93,6 @@ case "$1" in
   build_wrapper 22 x86_64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
 	;;
-"nodejs18")
-  $0 build-18
-  $0 publish-18
-  ;;
 "nodejs20")
   $0 build-20
   $0 publish-20
