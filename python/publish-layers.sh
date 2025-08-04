@@ -48,8 +48,9 @@ function build_python_layer {
         exit 1;
     fi
 
-    pip install --no-cache-dir -qU "newrelic==${NEWRELIC_AGENT_VERSION}" newrelic-lambda -t $BUILD_DIR/lib/python${python_version}/site-packages
-    cp newrelic_lambda_wrapper.py "$BUILD_DIR/lib/python${python_version}/site-packages/newrelic_lambda_wrapper.py"
+    # Modifying path as per https://docs.aws.amazon.com/lambda/latest/dg/packaging-layers.html
+    pip install --no-cache-dir -qU "newrelic==${NEWRELIC_AGENT_VERSION}" newrelic-lambda -t $BUILD_DIR
+    cp newrelic_lambda_wrapper.py "$BUILD_DIR/newrelic_lambda_wrapper.py"
     find $BUILD_DIR -name '__pycache__' -exec rm -rf {} +
     
     download_extension $arch
