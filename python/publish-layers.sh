@@ -71,9 +71,9 @@ function publish_python_layer {
     fi
 
     if [[ "${arch}" == "arm64" ]]; then
-        REGIONS=("${REGIONS_ARM[@]}");
+        REGIONS=("${REGIONS[@]}");
     else
-        REGIONS=("${REGIONS_X86[@]}");
+        REGIONS=("${REGIONS[@]}");
     fi
 
     for region in "${REGIONS[@]}"; do
