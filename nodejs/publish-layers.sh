@@ -53,7 +53,7 @@ function publish_wrapper {
     exit 1
   fi
 
-  for region in "${REGIONS_ARM[@]}"; do
+  for region in "${REGIONS[@]}"; do
     publish_layer $ZIP $region nodejs${node_version}.x ${arch} $NEWRELIC_AGENT_VERSION
   done
 }

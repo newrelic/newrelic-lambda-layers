@@ -36,7 +36,7 @@ function publish-dotnet-x86-64 {
         exit 1
     fi
 
-    for region in "${REGIONS_X86[@]}"; do
+    for region in "${REGIONS[@]}"; do
       publish_layer $DOTNET_DIST_X86_64 $region dotnet x86_64 $NEWRELIC_AGENT_VERSION
     done
 
@@ -61,7 +61,7 @@ function publish-dotnet-arm64 {
         exit 1
     fi
 
-    for region in "${REGIONS_ARM[@]}"; do
+    for region in "${REGIONS[@]}"; do
       publish_layer $DOTNET_DIST_ARM64 $region dotnet arm64 $NEWRELIC_AGENT_VERSION
     done
 

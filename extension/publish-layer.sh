@@ -31,7 +31,7 @@ function publish-layer-x86 {
         exit 1
     fi
 
-    for region in "${REGIONS_X86[@]}"; do
+    for region in "${REGIONS[@]}"; do
       publish_layer $EXTENSION_DIST_ZIP_X86_64 $region provided x86_64 provided
     done
 }
@@ -42,7 +42,7 @@ function publish-layer-arm64 {
         exit 1
     fi
 
-    for region in "${REGIONS_ARM[@]}"; do
+    for region in "${REGIONS[@]}"; do
       publish_layer $EXTENSION_DIST_ZIP_ARM64 $region provided arm64 provided
     done
 }

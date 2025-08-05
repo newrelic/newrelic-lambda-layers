@@ -163,7 +163,7 @@ function publish_ruby_for_arch {
   local arch=$2
   local dist_file=$3
 
-  for region in "${REGIONS_X86[@]}"; do
+  for region in "${REGIONS[@]}"; do
     echo "Publishing $dist_file for region=$region, ruby=$ruby_version, arch=$arch"
     publish_layer $dist_file $region "ruby${ruby_version}" $arch
   done
