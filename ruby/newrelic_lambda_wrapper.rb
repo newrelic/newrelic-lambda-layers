@@ -117,8 +117,8 @@ end
 
 # warm the memoization cache so that the very first customer method invocation
 # isn't made to wait
-NewRelicLambdaWrapper.require_ruby_agent
 NewRelicLambdaWrapper.method_name_and_namespace
+NewRelicLambdaWrapper.require_ruby_agent
 
 def handler(event:, context:)
   method_name, namespace = NewRelicLambdaWrapper.method_name_and_namespace
