@@ -27,16 +27,27 @@ function build_wrapper {
   ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
   rm -rf $BUILD_DIR $ZIP
   mkdir -p $DIST_DIR
-  npm install --prefix $BUILD_DIR newrelic@latest
-  NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
+  
+  # Install latest newrelic agent
+  echo "Installing latest newrelic agent..."
+  npm install newrelic@latest
+  
+  npm run compile
+  cp node_modules/newrelic/package.json nodejs/node_modules/newrelic/package.json
+  
+  NEWRELIC_AGENT_VERSION=$(npm list newrelic | grep newrelic@ | awk -F '@' '{print $2}')
   touch $DIST_DIR/nr-env
   echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
+  
+  npm run install-externals
+  
 	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
-  cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+  cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper/index.js
+  
 	mkdir -p $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper
   cp esm.mjs $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/index.js
   make_package_json
-  cp fake-package.json $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/package.json
+  cp fake-package.json $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/package.json 
   download_extension $arch
 	zip -rq $ZIP $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
 	rm -rf fake-package.json $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
