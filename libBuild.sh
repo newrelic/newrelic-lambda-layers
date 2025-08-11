@@ -3,9 +3,9 @@
 set -Eeuo pipefail
 
 REGIONS=(
-  sa-east-1
-  me-central-1
-  me-south-1
+  # sa-east-1
+  # me-central-1
+  # me-south-1
   eu-central-2
   eu-north-1
   eu-south-2
@@ -14,17 +14,17 @@ REGIONS=(
   eu-west-2
   eu-west-1
   eu-central-1
-  ca-central-1
-  ap-northeast-1
-  ap-southeast-2
-  ap-southeast-1
-  ap-northeast-2
-  ap-northeast-3
-  ap-south-1
-  ap-south-2
-  ap-southeast-4
-  ap-southeast-3
-  af-south-1
+  # ca-central-1
+  # ap-northeast-1
+  # ap-southeast-2
+  # ap-southeast-1
+  # ap-northeast-2
+  # ap-northeast-3
+  # ap-south-1
+  # ap-south-2
+  # ap-southeast-4
+  # ap-southeast-3
+  # af-south-1
   us-east-1
 	us-east-2
 	us-west-1
@@ -90,6 +90,9 @@ function layer_name_str() {
       ;;
     "python3.13")
       rt_part="Python313"
+      ;;
+    "nodejs.x")
+      rt_part="NodeJSX"
       ;;
     "nodejs20.x")
       rt_part="NodeJS20X"
@@ -179,7 +182,7 @@ function agent_name_str() {
         "dotnet")
             agent_name="Dotnet"
             ;;
-        "nodejs20.x"|"nodejs22.x")
+        "nodejs20.x"|"nodejs22.x"|"nodejs.x")
             agent_name="Node"
             ;;
         "ruby3.2"|"ruby3.3"|"ruby3.4")
@@ -224,6 +227,10 @@ function publish_layer {
     compat_list=( $runtime_name )
     if [[ $runtime_name == "provided" ]]
     then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1")
+    fi
+
+    if [[ $runtime_name == "nodejs.x" ]]
+    then compat_list=("nodejs16.x" "nodejs18.x" "nodejs20.x" "nodejs22.x")
     fi
 
     if [[ $runtime_name == "dotnet" ]]
