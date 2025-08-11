@@ -59,7 +59,7 @@ module.exports = {
       /^@opentelemetry\//,
       require.resolve('./otel-stubs.js')
     ),
-   new webpack.IgnorePlugin({
+    new webpack.IgnorePlugin({
       checkResource(resource) {
         const base = resource.replace(/^.*[\\/]/, '')
         return (
