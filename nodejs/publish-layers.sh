@@ -35,7 +35,7 @@ function build_wrapper {
   npm run compile
   cp node_modules/newrelic/package.json nodejs/node_modules/newrelic/package.json
   
-  NEWRELIC_AGENT_VERSION=$(npm list newrelic | grep newrelic@ | awk -F '@' '{print $2}')
+  NEWRELIC_AGENT_VERSION=$(cat node_modules/newrelic/package.json | jq -r .version)
   touch $DIST_DIR/nr-env
   echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
   
