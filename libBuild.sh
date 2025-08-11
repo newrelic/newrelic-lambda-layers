@@ -262,6 +262,11 @@ function publish_layer {
         description="${base_description}."
     fi
 
+    if [[ $runtime_name == "nodejs.x" ]]
+    then
+        description="New Relic Layer for nodejs16.x, nodejs18.x, nodejs20.x, nodejs22.x (${arch}) with New Relic Extension v${EXTENSION_VERSION} and Node agent v${newrelic_agent_version}."
+    fi
+
     echo "Publishing ${runtime_name} layer to ${region}"
     layer_version=$(aws lambda publish-layer-version \
       --layer-name ${layer_name} \
