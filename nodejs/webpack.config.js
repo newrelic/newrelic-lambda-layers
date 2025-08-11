@@ -11,15 +11,9 @@ module.exports = {
   externals: [
     // Only externalize things that shouldn't be bundled
     'import-in-the-middle',
-    'aws-sdk',
-    '@aws-sdk',
     'split', // Optional dependency used by newrelic tracetractor tool
     'bufferutil',
     'utf-8-validate',
-    '@newrelic/security-agent',
-    'dtrace-provider',
-    '@newrelic/native-metrics',
-    'awslambda',
   ],
 
   output: {
@@ -50,19 +44,6 @@ module.exports = {
         test: /\.json$/,
         type: 'json'
       },
-      // Handle non-JS files by providing empty content
-      {
-        test: /\.(md|proto|txt)$/i,
-        type: 'asset/source',
-        generator: {
-          emit: false
-        }
-      },
-      // Handle LICENSE file specifically
-      {
-        test: /LICENSE$/,
-        use: 'raw-loader'
-      }
     ],
   },
   optimization: {
@@ -78,13 +59,14 @@ module.exports = {
       /^@opentelemetry\//,
       require.resolve('./otel-stubs.js')
     ),
-
-    new webpack.IgnorePlugin({
-      resourceRegExp: /\.(md|proto|txt|html|css|scss|less)$/
-    }),
-    new webpack.IgnorePlugin({
-      resourceRegExp: /^(LICENSE|THIRD_PARTY_NOTICES\.md|README\.md|NEWS\.md)$/i
-    }),
-  
+   new webpack.IgnorePlugin({
+      checkResource(resource) {
+        const base = resource.replace(/^.*[\\/]/, '')
+        return (
+          /\.(md|proto|txt|html|css|scss|less)$/i.test(base) ||
+          /^(LICENSE|THIRD_PARTY_NOTICES\.md|README\.md|NEWS\.md)$/i.test(base)
+        )
+      }
+    })
   ],
 }
