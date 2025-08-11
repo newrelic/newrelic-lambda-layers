@@ -65,6 +65,14 @@ case "$1" in
 "publish_wrapper")
   publish_wrapper $2 $3
   ;;
+"build-nodejs")
+  build_wrapper "" arm64 
+  build_wrapper "" x86_64 
+	;;
+"publish-nodejs")
+  publish_wrapper "" arm64
+  publish_wrapper "" x86_64 
+	;;
 "build-20")
   build_wrapper 20 arm64 
   build_wrapper 20 x86_64 
@@ -93,6 +101,10 @@ case "$1" in
   build_wrapper 22 x86_64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
 	;;
+"nodejs")
+  $0 build-nodejs
+  $0 publish-nodejs
+  ;;
 "nodejs20")
   $0 build-20
   $0 publish-20
