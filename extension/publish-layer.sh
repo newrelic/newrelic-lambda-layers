@@ -32,7 +32,13 @@ function publish-layer-x86 {
     fi
 
     for region in "${REGIONS[@]}"; do
-      publish_layer $EXTENSION_DIST_ZIP_X86_64 $region provided x86_64 provided
+
+        local arn=$(publish_layer $EXTENSION_DIST_ZIP_X86_64 $region provided x86_64 provided)
+
+        if [[ "$region" == "us-west-1" ]]; then
+            echo "x86_arn=$arn" >> "$GITHUB_OUTPUT"
+        fi
+
     done
 }
 
@@ -43,7 +49,11 @@ function publish-layer-arm64 {
     fi
 
     for region in "${REGIONS[@]}"; do
-      publish_layer $EXTENSION_DIST_ZIP_ARM64 $region provided arm64 provided
+        local arn=$(publish_layer $EXTENSION_DIST_ZIP_ARM64 $region provided arm64 provided)
+
+        if [[ "$region" == "us-west-1" ]]; then
+            echo "arm_arn=$arn" >> "$GITHUB_OUTPUT"
+        fi
     done
 }
 
