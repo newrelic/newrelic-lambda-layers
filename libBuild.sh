@@ -295,7 +295,7 @@ function publish_layer {
     if [[ $slim == "slim" ]]; then
         echo "Publishing ${runtime_name} slim layer to ${region}"
         layer_name="${layer_name}-slim"
-        base_description="New Relic Slim Layer without opentelemetry for ${runtime_name} (${arch})"
+        base_description="New Relic slim Layer without opentelemetry for ${runtime_name} (${arch})"
         description="${base_description}${extension_info}${agent_info}"
     fi
     publish_public_layer $layer_name $bucket_name $s3_key "$description" "$arch_flag" "$region" "$runtime_name" "${compat_list[@]}"
