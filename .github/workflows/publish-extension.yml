@@ -3,7 +3,7 @@ name: Publish Extension Layer and Invoke Lambda
 on:
   push:
     tags:
-      - v**_extension
+      - 'v**_extension'
 
 jobs:
   publish-extension:
