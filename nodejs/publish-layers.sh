@@ -23,11 +23,19 @@ EOM
 function build_wrapper {
   node_version=$1
   arch=$2
+  slim=${3:-""}
   echo "Building new relic layer for nodejs${node_version}.x (${arch})"
   ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+  if [ "$slim" == "slim" ]; then
+    ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.slim.zip
+  fi
   rm -rf $BUILD_DIR $ZIP
   mkdir -p $DIST_DIR
-  npm install --prefix $BUILD_DIR newrelic@latest
+  npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@latest
+  if [ "$slim" == "slim" ]; then
+    echo "Slim build, removing opentelemetry dependencies"
+    rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
+  fi
   NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
   touch $DIST_DIR/nr-env
   echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
@@ -46,7 +54,12 @@ function build_wrapper {
 function publish_wrapper {
   node_version=$1
   arch=$2
+  slim=${3:-""}
   ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+  if [ "$slim" == "slim" ]; then
+    echo "Publishing slim build for nodejs${node_version}.x (${arch})"
+    ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.slim.zip
+  fi
   source $DIST_DIR/nr-env
   if [ ! -f $ZIP ]; then
     echo "Package not found: ${ZIP}"
@@ -54,13 +67,13 @@ function publish_wrapper {
   fi
 
   for region in "${REGIONS[@]}"; do
-    publish_layer $ZIP $region nodejs${node_version}.x ${arch} $NEWRELIC_AGENT_VERSION
+    publish_layer $ZIP $region nodejs${node_version}.x ${arch} $NEWRELIC_AGENT_VERSION $slim
   done
 }
 
 case "$1" in
 "build_wrapper")
-  build_wrapper $2 $3
+  build_wrapper $2 $3 $4
   ;;
 "publish_wrapper")
   publish_wrapper $2 $3
@@ -68,18 +81,26 @@ case "$1" in
 "build-20")
   build_wrapper 20 arm64 
   build_wrapper 20 x86_64 
+  build_wrapper 20 arm64 slim
+  build_wrapper 20 x86_64 slim
 	;;
 "publish-20")
   publish_wrapper 20 arm64
   publish_wrapper 20 x86_64 
+  publish_wrapper 20 arm64 slim
+  publish_wrapper 20 x86_64 slim
 	;;
 "build-22")
   build_wrapper 22 arm64 
   build_wrapper 22 x86_64 
+  build_wrapper 22 arm64 slim
+  build_wrapper 22 x86_64 slim
 	;;
 "publish-22")
   publish_wrapper 22 arm64
   publish_wrapper 22 x86_64 
+  publish_wrapper 22 arm64 slim
+  publish_wrapper 22 x86_64 slim
 	;;
 "build-publish-20-ecr-image")
   build_wrapper 20 arm64 

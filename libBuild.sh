@@ -207,12 +207,48 @@ function hash_file() {
     fi
 }
 
+function publish_public_layer {
+  layer_name=$1
+  bucket_name=$2
+  s3_key=$3
+  description=$4
+  arch_flag=$5
+  region=$6
+  runtime_name=$7
+  compat_list=("${@:8}")
+
+
+  layer_version=$(aws lambda publish-layer-version \
+    --layer-name ${layer_name} \
+    --content "S3Bucket=${bucket_name},S3Key=${s3_key}" \
+    --description "${description}"\
+    --license-info "Apache-2.0" $arch_flag \
+    --compatible-runtimes ${compat_list[*]} \
+    --region "$region" \
+    --output text \
+    --query Version)
+  echo "Published ${runtime_name} layer version ${layer_version} to ${region}"
+
+  echo "Setting public permissions for ${runtime_name} layer version ${layer_version} in ${region}"
+  aws lambda add-layer-version-permission \
+    --layer-name ${layer_name} \
+    --version-number "$layer_version" \
+    --statement-id public \
+    --action lambda:GetLayerVersion \
+    --principal "*" \
+    --region "$region"
+  echo "Public permissions set for ${runtime_name} layer version ${layer_version} in region ${region}"
+
+}
+
+
 function publish_layer {
     layer_archive=$1
     region=$2
     runtime_name=$3
     arch=$4
     newrelic_agent_version=${5:-"none"}
+    slim=${6:-""}
     agent_name=$( agent_name_str $runtime_name )
     layer_name=$( layer_name_str $runtime_name $arch )
 
@@ -256,26 +292,13 @@ function publish_layer {
     fi
 
     echo "Publishing ${runtime_name} layer to ${region}"
-    layer_version=$(aws lambda publish-layer-version \
-      --layer-name ${layer_name} \
-      --content "S3Bucket=${bucket_name},S3Key=${s3_key}" \
-      --description "${description}"\
-      --license-info "Apache-2.0" $arch_flag \
-      --compatible-runtimes ${compat_list[*]} \
-      --region "$region" \
-      --output text \
-      --query Version)
-    echo "Published ${runtime_name} layer version ${layer_version} to ${region}"
-
-    echo "Setting public permissions for ${runtime_name} layer version ${layer_version} in ${region}"
-    aws lambda add-layer-version-permission \
-      --layer-name ${layer_name} \
-      --version-number "$layer_version" \
-      --statement-id public \
-      --action lambda:GetLayerVersion \
-      --principal "*" \
-      --region "$region"
-    echo "Public permissions set for ${runtime_name} layer version ${layer_version} in region ${region}"
+    if [[ $slim == "slim" ]]; then
+        echo "Publishing ${runtime_name} slim layer to ${region}"
+        layer_name="${layer_name}-slim"
+        base_description="New Relic Slim Layer without opentelemetry for ${runtime_name} (${arch})"
+        description="${base_description}${extension_info}${agent_info}"
+    fi
+    publish_public_layer $layer_name $bucket_name $s3_key "$description" "$arch_flag" "$region" "$runtime_name" "${compat_list[@]}"
 
 }
 
