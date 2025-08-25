@@ -307,6 +307,7 @@ function publish_docker_ecr {
     layer_archive=$1
     runtime_name=$2
     arch=$3
+    slim=${4:-""}
 
     if [[ ${arch} =~ 'arm64' ]];
     then 
@@ -329,6 +330,10 @@ function publish_docker_ecr {
     version_flag=""
     arch_flag=${arch}
     fi
+    slim_flag=""
+    if [ "$slim" == "slim" ]; then
+        slim_flag="-slim"
+    fi
 
     # Remove 'dist/' prefix
     if [[ $layer_archive == dist/* ]]; then
@@ -349,22 +354,22 @@ function publish_docker_ecr {
     echo "Running : aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}"
     aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${repository}
 
-    echo "docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    echo "docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest \
     -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
     ."
 
-    docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest \
+    docker buildx build --platform ${platform} -t layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest \
     -f Dockerfile.ecrImage \
     --build-arg layer_zip=${layer_archive} \
     --build-arg file_without_dist=${file_without_dist} \
     .
 
-    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
-    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
-    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}"
-    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}:${version_flag}${arch_flag}
+    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}"
+    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}
+    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}"
+    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}
 
     # delete dockerfile
     rm -rf Dockerfile.ecrImage
