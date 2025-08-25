@@ -105,14 +105,22 @@ case "$1" in
 "build-publish-20-ecr-image")
   build_wrapper 20 arm64 
 	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
+  build_wrapper 20 arm64 slim
+	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
   build_wrapper 20 x86_64 
 	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
+  build_wrapper 20 x86_64 slim
+	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
 	;;
 "build-publish-22-ecr-image")
   build_wrapper 22 arm64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
+  build_wrapper 22 arm64 slim
+	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64
   build_wrapper 22 x86_64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
+  build_wrapper 22 x86_64 slim
+	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.slim.zip nodejs22.x x86_64 slim
 	;;
 "nodejs20")
   $0 build-20
