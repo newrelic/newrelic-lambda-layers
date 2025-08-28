@@ -153,6 +153,17 @@ function build_ruby_for_arch {
     cd $here
   fi
 
+  # The ruby agent version is part of the directory name, e.g., "newrelic_rpm-X.Y.Z"
+  local agent_dir=$(find $base_dir/gems -type d -name "newrelic_rpm-*" | head -n 1)
+  if [ -n "$agent_dir" ]; then
+    local agent_version=$(basename "$agent_dir" | cut -d'-' -f2-)
+    echo "$agent_version" > version.txt
+    cp version.txt $RUBY_DIR/version.txt
+    echo "Succesfully wrote New Relic Ruby Agent version: $agent_version to path $RUBY_DIR/version.txt"
+  else
+    echo "Could not find newrelic_rpm gem directory."
+  fi
+
   zip -rq $dist_file $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
   rm -rf $RUBY_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
   echo "Build complete: ${dist_file}"
