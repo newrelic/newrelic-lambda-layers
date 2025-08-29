@@ -17,6 +17,7 @@ set -Eeuo pipefail
 RUBY_DIR=ruby
 DIST_DIR=dist
 WRAPPER_FILE=newrelic_lambda_wrapper.rb
+NEWRELIC_AGENT_VERSION=""
 # Set this to a path to a clone of newrelic-lambda-extension to build
 # an extension from scratch instead of downloading one. Set the path to ''
 # to simply download a prebuilt one.
@@ -156,10 +157,10 @@ function build_ruby_for_arch {
   # The ruby agent version is part of the directory name, e.g., "newrelic_rpm-X.Y.Z"
   local agent_dir=$(find $base_dir/gems -type d -name "newrelic_rpm-*" | head -n 1)
   if [ -n "$agent_dir" ]; then
-    local agent_version=$(basename "$agent_dir" | cut -d'-' -f2-)
-    echo "$agent_version" > version.txt
+    NEWRELIC_AGENT_VERSION=$(basename "$agent_dir" | cut -d'-' -f2-)
+    echo "$NEWRELIC_AGENT_VERSION" > version.txt
     cp version.txt $RUBY_DIR/version.txt
-    echo "Succesfully wrote New Relic Ruby Agent version: $agent_version to path $RUBY_DIR/version.txt"
+    echo "Succesfully wrote New Relic Ruby Agent version: $NEWRELIC_AGENT_VERSION to path $RUBY_DIR/version.txt"
   else
     echo "Could not find newrelic_rpm gem directory."
   fi
@@ -176,7 +177,7 @@ function publish_ruby_for_arch {
 
   for region in "${REGIONS[@]}"; do
     echo "Publishing $dist_file for region=$region, ruby=$ruby_version, arch=$arch"
-    publish_layer $dist_file $region "ruby${ruby_version}" $arch
+    publish_layer $dist_file $region "ruby${ruby_version}" $arch $NEWRELIC_AGENT_VERSION
   done
   echo 'Publishing complete'
 }
