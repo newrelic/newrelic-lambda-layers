@@ -275,10 +275,9 @@ function publish_layer {
    fi
 
     base_description="New Relic Layer for ${runtime_name} (${arch})"
-
+    extension_info=" with New Relic Extension v${EXTENSION_VERSION}"
+    
     if [[ $newrelic_agent_version != "none" ]]; then
-        extension_info=" with New Relic Extension v${EXTENSION_VERSION}"
-        
         if [[ $agent_name != "provided" ]]; then
             agent_info=" and ${agent_name} agent v${newrelic_agent_version}"
         else
@@ -288,7 +287,11 @@ function publish_layer {
 
         description="${base_description}${extension_info}${agent_info}"
     else
-        description="${base_description}."
+        if [[ $agent_name == "Java" ]]; then
+            description="${base_description}${extension_info}"
+        else
+            description="${base_description}."
+        fi
     fi
 
     echo "Publishing ${runtime_name} layer to ${region}"
