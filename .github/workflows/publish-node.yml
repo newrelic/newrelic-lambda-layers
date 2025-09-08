@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16]
+        node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}.x
@@ -23,9 +23,9 @@ jobs:
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
-      # - name: Run Node ${{ matrix.node-version }} unit tests
-      #   if: steps.node-check-tag.outputs.match == 'true'
-      #   run: cd nodejs && npm ci && npm run test
+      - name: Run Node ${{ matrix.node-version }} unit tests
+        if: steps.node-check-tag.outputs.match == 'true'
+        run: cd nodejs && npm ci && npm run test
       - name: Publish layer
         if: steps.node-check-tag.outputs.match == 'true'
         env:
