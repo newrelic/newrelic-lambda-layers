@@ -31,8 +31,7 @@ function build_wrapper {
   fi
   rm -rf $BUILD_DIR $ZIP
   mkdir -p $DIST_DIR
-  npm install --prefix $BUILD_DIR newrelic@11.23.2
-  # npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@latest
+  npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@latest
   if [ "$slim" == "slim" ]; then
     echo "Slim build, removing opentelemetry dependencies"
     rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
@@ -79,76 +78,58 @@ case "$1" in
 "publish_wrapper")
   publish_wrapper $2 $3
   ;;
-"build-16")
-  build_wrapper 16 arm64
-  build_wrapper 16 x86_64
-  ;;
-"publish-16")
-  publish_wrapper 16 arm64
-  publish_wrapper 16 x86_64
-  ;;
-# "build-20")
-#   build_wrapper 20 arm64 
-#   build_wrapper 20 x86_64 
-#   build_wrapper 20 arm64 slim
-#   build_wrapper 20 x86_64 slim
-# 	;;
-# "publish-20")
-#   publish_wrapper 20 arm64
-#   publish_wrapper 20 x86_64 
-#   publish_wrapper 20 arm64 slim
-#   publish_wrapper 20 x86_64 slim
-# 	;;
-# "build-22")
-#   build_wrapper 22 arm64 
-#   build_wrapper 22 x86_64 
-#   build_wrapper 22 arm64 slim
-#   build_wrapper 22 x86_64 slim
-# 	;;
-# "publish-22")
-#   publish_wrapper 22 arm64
-#   publish_wrapper 22 x86_64 
-#   publish_wrapper 22 arm64 slim
-#   publish_wrapper 22 x86_64 slim
-# 	;;
-"build-publish-16-ecr-image")
-  build_wrapper 16 arm64 
-	publish_docker_ecr $DIST_DIR/nodejs16x.arm64.zip nodejs16.x arm64
-  build_wrapper 16 x86_64
-	publish_docker_ecr $DIST_DIR/nodejs16x.x86_64.zip nodejs16.x x86_64
+"build-20")
+  build_wrapper 20 arm64 
+  build_wrapper 20 x86_64 
+  build_wrapper 20 arm64 slim
+  build_wrapper 20 x86_64 slim
 	;;
-# "build-publish-20-ecr-image")
-#   build_wrapper 20 arm64 
-# 	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
-#   build_wrapper 20 arm64 slim
-# 	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
-#   build_wrapper 20 x86_64 
-# 	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
-#   build_wrapper 20 x86_64 slim
-# 	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
-# 	;;
-# "build-publish-22-ecr-image")
-#   build_wrapper 22 arm64 
-# 	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
-#   build_wrapper 22 arm64 slim
-# 	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64
-#   build_wrapper 22 x86_64 
-# 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
-#   build_wrapper 22 x86_64 slim
-# 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.slim.zip nodejs22.x x86_64 slim
-# 	;;
-"nodejs16")
-  $0 build-16
-  $0 publish-16
+"publish-20")
+  publish_wrapper 20 arm64
+  publish_wrapper 20 x86_64 
+  publish_wrapper 20 arm64 slim
+  publish_wrapper 20 x86_64 slim
+	;;
+"build-22")
+  build_wrapper 22 arm64 
+  build_wrapper 22 x86_64 
+  build_wrapper 22 arm64 slim
+  build_wrapper 22 x86_64 slim
+	;;
+"publish-22")
+  publish_wrapper 22 arm64
+  publish_wrapper 22 x86_64 
+  publish_wrapper 22 arm64 slim
+  publish_wrapper 22 x86_64 slim
+	;;
+"build-publish-20-ecr-image")
+  build_wrapper 20 arm64 
+	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
+  build_wrapper 20 arm64 slim
+	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
+  build_wrapper 20 x86_64 
+	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
+  build_wrapper 20 x86_64 slim
+	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
+	;;
+"build-publish-22-ecr-image")
+  build_wrapper 22 arm64 
+	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
+  build_wrapper 22 arm64 slim
+	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64
+  build_wrapper 22 x86_64 
+	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
+  build_wrapper 22 x86_64 slim
+	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.slim.zip nodejs22.x x86_64 slim
+	;;
+"nodejs20")
+  $0 build-20
+  $0 publish-20
   ;;
-# "nodejs20")
-#   $0 build-20
-#   $0 publish-20
-#   ;;
-# "nodejs22")
-#   $0 build-22
-#   $0 publish-22
-#   ;;
+"nodejs22")
+  $0 build-22
+  $0 publish-22
+  ;;
 *)
 	usage
 	;;
