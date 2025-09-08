@@ -91,6 +91,9 @@ function layer_name_str() {
     "python3.13")
       rt_part="Python313"
       ;;
+    "nodejs16.x")
+      rt_part="NodeJS16X"
+      ;;
     "nodejs20.x")
       rt_part="NodeJS20X"
       ;;
