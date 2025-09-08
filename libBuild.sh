@@ -185,7 +185,7 @@ function agent_name_str() {
         "dotnet")
             agent_name="Dotnet"
             ;;
-        "nodejs20.x"|"nodejs22.x")
+        "nodejs16.x"|"nodejs20.x"|"nodejs22.x")
             agent_name="Node"
             ;;
         "ruby3.2"|"ruby3.3"|"ruby3.4")
