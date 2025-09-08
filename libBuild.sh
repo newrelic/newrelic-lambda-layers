@@ -151,6 +151,9 @@ function s3_prefix() {
     "python3.13")
       name="nr-python3.13"
       ;;
+    "nodejs16.x")
+      name="nr-nodejs16.x"
+      ;;
     "nodejs20.x")
       name="nr-nodejs20.x"
       ;;
