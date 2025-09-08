@@ -74,6 +74,19 @@ publish-java21-local: build-java21
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-java21
 
+build-nodejs16:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-nodejs16 \
+		-f ./dockerfiles/Dockerfile.nodejs16 \
+		.
+
+publish-nodejs16-ci: build-nodejs16
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-nodejs16
+
 build-nodejs20:
 	docker build \
 		--no-cache \
