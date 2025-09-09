@@ -31,7 +31,7 @@ function build_wrapper {
   fi
   rm -rf $BUILD_DIR $ZIP
   mkdir -p $DIST_DIR
-  npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@latest
+  npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@13.2.1
   if [ "$slim" == "slim" ]; then
     echo "Slim build, removing opentelemetry dependencies"
     rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
