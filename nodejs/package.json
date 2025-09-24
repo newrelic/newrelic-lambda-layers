@@ -1,6 +1,6 @@
 {
   "name": "newrelic-lambda-layers",
-  "version": "11.5.0",
+  "version": "13.0.0",
   "description": "New Relic Installer for serverless APM layers.",
   "main": "",
   "files": [
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/newrelic/newrelic-lambda-layers#readme",
   "dependencies": {
-    "newrelic": "^12.9.0"
+    "newrelic": "^13.0.0"
   },
   "keywords": [
     "lambda",
