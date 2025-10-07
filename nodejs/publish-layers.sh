@@ -116,7 +116,7 @@ case "$1" in
   build_wrapper 22 arm64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
   build_wrapper 22 arm64 slim
-	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64
+	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64 slim
   build_wrapper 22 x86_64 
 	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
   build_wrapper 22 x86_64 slim
