@@ -6,24 +6,24 @@ BUILD_DIR=python
 DIST_DIR=dist
 NEWRELIC_AGENT_VERSION=""
 VERSION_REGEX="v?([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+_python"
-PY38_DIST_ARM64=$DIST_DIR/python38.arm64.zip
 PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
 PY310_DIST_ARM64=$DIST_DIR/python310.arm64.zip
 PY311_DIST_ARM64=$DIST_DIR/python311.arm64.zip
 PY312_DIST_ARM64=$DIST_DIR/python312.arm64.zip
 PY313_DIST_ARM64=$DIST_DIR/python313.arm64.zip
+PY314_DIST_ARM64=$DIST_DIR/python314.arm64.zip
 
-PY38_DIST_X86_64=$DIST_DIR/python38.x86_64.zip
 PY39_DIST_X86_64=$DIST_DIR/python39.x86_64.zip
 PY310_DIST_X86_64=$DIST_DIR/python310.x86_64.zip
 PY311_DIST_X86_64=$DIST_DIR/python311.x86_64.zip
 PY312_DIST_X86_64=$DIST_DIR/python312.x86_64.zip
 PY313_DIST_X86_64=$DIST_DIR/python313.x86_64.zip
+PY314_DIST_X86_64=$DIST_DIR/python314.x86_64.zip
 
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.9|python3.10|python3.11|python3.12|python3.13]"
+    echo "./publish-layers.sh [python3.9|python3.10|python3.11|python3.12|python3.13|python3.14]"
 }
 
 function build_python_layer {
@@ -123,6 +123,14 @@ case "$1" in
         build_python_layer 3.13 x86_64
         publish_python_layer 3.13 x86_64
         publish_docker_ecr $PY313_DIST_X86_64 python3.13 x86_64
+        ;;
+    "python3.14")
+        build_python_layer 3.14 arm64
+        publish_python_layer 3.14 arm64
+        publish_docker_ecr $PY314_DIST_ARM64 python3.14 arm64
+        build_python_layer 3.14 x86_64
+        publish_python_layer 3.14 x86_64
+        publish_docker_ecr $PY314_DIST_X86_64 python3.14 x86_64
         ;;
     *)
         usage
