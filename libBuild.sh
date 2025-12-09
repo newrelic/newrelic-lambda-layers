@@ -91,6 +91,9 @@ function layer_name_str() {
     "python3.13")
       rt_part="Python313"
       ;;
+    "python3.14")
+      rt_part="Python314"
+      ;;
     "nodejs20.x")
       rt_part="NodeJS20X"
       ;;
@@ -148,6 +151,9 @@ function s3_prefix() {
     "python3.13")
       name="nr-python3.13"
       ;;
+    "python3.14")
+      name="nr-python3.14"
+      ;;
     "nodejs20.x")
       name="nr-nodejs20.x"
       ;;
@@ -188,7 +194,7 @@ function agent_name_str() {
         "java8.al2"|"java11"|"java17"|"java21")
             agent_name="Java"
             ;;
-        "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13")
+        "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
             agent_name="Python"
             ;;
         *)
