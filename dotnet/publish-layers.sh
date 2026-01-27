@@ -19,7 +19,7 @@ function usage {
 }
 
 function build-dotnet-x86-64 {
-    echo "Building New Relic layer for .NET 6, 7 and 8 (x86_64)"
+    echo "Building New Relic layer for .NET 6, 7, 8 and 10 (x86_64)"
     rm -rf $BUILD_DIR $DOTNET_DIST_X86_64
     mkdir -p $DIST_DIR
     get_agent amd64
@@ -44,7 +44,7 @@ function publish-dotnet-x86-64 {
 }
 
 function build-dotnet-arm64 {
-    echo "Building New Relic layer for .NET 6, 7 and 8 (ARM64)"
+    echo "Building New Relic layer for .NET 6, 7, 8 and 10 (ARM64)"
     rm -rf $BUILD_DIR $DOTNET_DIST_ARM64
     mkdir -p $DIST_DIR
     get_agent arm64
