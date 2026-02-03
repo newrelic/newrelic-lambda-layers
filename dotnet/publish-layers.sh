@@ -10,7 +10,8 @@ DOTNET_DIST_X86_64=$DIST_DIR/dotnet.x86_64.zip
 
 AGENT_DIST_ZIP=agent.zip
 NEWRELIC_AGENT_VERSION=""
-VERSION_REGEX="v?([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+_dotnet"
+VERSION_REGEX='^v([0-9]+\.[0-9]+\.[0-9]+)$'
+GITHUB_REF_URL="https://api.github.com/repos/newrelic/newrelic-dotnet-agent/releases/latest"
 
 source ../libBuild.sh
 
@@ -72,18 +73,27 @@ function publish-dotnet-arm64 {
 function get_agent {
     arch=$1
 
-    # Determine agent version from git tag
-    if [[ -z "${GITHUB_REF_NAME}" ]]; then
-        echo "Unable to determine agent version, GITHUB_REF_NAME environment variable not set." >&2
-        exit 1;
-    elif [[ "${GITHUB_REF_NAME}" =~ ${VERSION_REGEX} ]]; then
-        # Extract the version number from the GITHUB_REF_NAME using regex
+    if command -v jq >/dev/null 2>&1; then
+        latest_tag=$(curl -s ${GITHUB_REF_URL} | jq -r '.tag_name')
+    else
+        latest_tag=$(curl -s ${GITHUB_REF_URL} | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    fi
+    
+    if [[ -z "${latest_tag}" || "${latest_tag}" == "null" ]]; then
+        echo "Unable to fetch latest tag from GitHub API." >&2
+        exit 1
+    fi
+    
+    echo "Latest tag found: ${latest_tag}"
+    
+    # Extract version number from tag (assuming tag format like "v1.2.3")
+    if [[ "${latest_tag}" =~ ${VERSION_REGEX} ]]; then
         NEWRELIC_AGENT_VERSION="${BASH_REMATCH[1]}"
         echo "$NEWRELIC_AGENT_VERSION" > version.txt
         echo "Detected NEWRELIC_DOTNET_AGENT_VERSION: ${NEWRELIC_AGENT_VERSION}"
     else
-        echo "Unable to determine Dotnet agent version, GITHUB_REF_NAME environment variable did not match regex. GITHUB_REF_NAME: ${GITHUB_REF_NAME}" >&2
-        exit 1;
+        echo "Unable to parse version from tag: ${latest_tag}" >&2
+        exit 1
     fi
     
     url="https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_${NEWRELIC_AGENT_VERSION}_${arch}.tar.gz"
