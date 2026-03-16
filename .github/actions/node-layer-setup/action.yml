@@ -1,0 +1,35 @@
+name: Node Layer Setup
+description: Common setup steps for Node.js Lambda layer publishing
+
+inputs:
+  node-version:
+    description: Node.js version to use
+    required: true
+
+outputs:
+  tag-match:
+    description: Whether the git tag matches the expected pattern
+    value: ${{ steps.check-tag.outputs.match }}
+
+runs:
+  using: composite
+  steps:
+    - name: Use Node.js ${{ inputs.node-version }}.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    - name: Check Tag
+      id: check-tag
+      shell: bash
+      run: |
+        if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_nodejs$ ]]; then
+            echo "match=true" >> $GITHUB_OUTPUT
+        fi
+    - name: Run Node unit tests
+      if: steps.check-tag.outputs.match == 'true'
+      shell: bash
+      run: cd nodejs && npm ci && npm run test
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64, amd64

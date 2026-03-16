@@ -385,9 +385,9 @@ function publish_docker_ecr {
       echo "File does not start with 'dist/': $file_without_dist"
     fi
 
-    # public ecr repository name 
-    # maintainer can use this("q6k3q1g1") repo name for testing 
-    repository="x6n7b2o2""
+    # public ecr repository name
+    # maintainer can use this("q6k3q1g1") repo name for testing
+    repository="x6n7b2o2"
 
     # copy dockerfile
     cp ../Dockerfile.ecrImage .
