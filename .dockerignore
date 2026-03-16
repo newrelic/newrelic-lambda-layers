@@ -1,0 +1,12 @@
+.git
+.github
+*.md
+LICENSE
+dockerfiles
+java
+ruby
+dotnet
+__pycache__
+node_modules
+dist
+*.zip
