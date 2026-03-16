@@ -36,6 +36,8 @@ function build_wrapper {
     echo "Slim build, removing opentelemetry dependencies"
     rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
   fi
+  # Profiilng is not supported in lambda functions, we will remove the dep as it is 11mb
+  rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@datadog/pprof
   NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
   touch $DIST_DIR/nr-env
   echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
