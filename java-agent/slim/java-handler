@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -ef -o pipefail
+
+export JAVA_TOOL_OPTIONS="-javaagent:/opt/newrelic/newrelic.jar ${JAVA_TOOL_OPTIONS}"
+
+########################################
+
+ARGS=("$@")
+EXTRA_ARGS=()
+
+## Log forwarding disabled by default ????
+## Local decorating set to true ???
+
+if [ -z "${NEW_RELIC_SPAN_EVENTS_COLLECT_SPAN_EVENTS}" ]; then
+  export NEW_RELIC_SPAN_EVENTS_COLLECT_SPAN_EVENTS=true
+  echo "Setting NEW_RELIC_SPAN_EVENTS_COLLECT_SPAN_EVENTS to be true"
+fi
+
+if [ -z "${NEW_RELIC_SLOW_SQL_ENABLED}" ]; then
+  export NEW_RELIC_SLOW_SQL_ENABLED=true
+  echo "Setting NEW_RELIC_SLOW_SQL_ENABLED to be true"
+fi
+
+if [ -z "${NEW_RELIC_TRANSACTION_TRACER_COLLECT_TRACES}" ]; then
+  export NEW_RELIC_TRANSACTION_TRACER_COLLECT_TRACES=true
+  echo "Setting NEW_RELIC_TRANSACTION_TRACER_COLLECT_TRACES to be true"
+fi
+
+if [ -z "${NEW_RELIC_LOG_FILE_NAME}" ]; then
+  export NEW_RELIC_LOG_FILE_NAME=stdout
+  echo "Setting NEW_RELIC_LOG_FILE_NAME to be stdout"
+fi
+
+if [ -z "${NEW_RELIC_APP_NAME}" ]; then
+  export NEW_RELIC_APP_NAME=lambda-function
+  echo "Setting NEW_RELIC_APP_NAME to be lambda-function"
+fi
+
+if [ -z "${NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_ENABLED}" ]; then
+  export NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_ENABLED=true
+  echo "Always setting NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_ENABLED to be true"
+fi 
+
+if [ -z "${NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_EVENTS_ENABLED}" ]; then
+  export NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_EVENTS_ENABLED=true
+  echo "Always setting NEW_RELIC_CLASS_TRANSFORMER_COM_NEWRELIC_INSTRUMENTATION_AWS_LAMBDA_JAVA_CORE_EVENTS_ENABLED to be true"
+fi 
+
+export NEW_RELIC_ENABLE_AUTO_APP_NAMING=false
+echo "Always setting NEW_RELIC_ENABLE_AUTO_APP_NAMING to be false"
+
+export NEW_RELIC_LITE_MODE=true
+echo "Always setting NEW_RELIC_LITE_MODE to be true"
+
+export NEW_RELIC_SERVERLESS_MODE_ENABLED=true
+echo "Always setting NEW_RELIC_SERVERLESS_MODE_ENABLED to be true"
+
+ARGS=("${ARGS[0]}" "${EXTRA_ARGS[@]}" "${ARGS[@]:1}")
+
+exec "${ARGS[@]}"
