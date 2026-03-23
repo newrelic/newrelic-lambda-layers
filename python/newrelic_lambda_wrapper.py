@@ -65,7 +65,7 @@ def get_handler():
     except ImportError as e:
             raise ImportError("Failed to import module '%s': %s" % (module_path, e))
     except Exception as e:
-        raise type(e)(f"Error while importing '{module_path}': {type(e).__name__} {str(e)}").with_traceback(e.__traceback__)
+        raise ImportError(f"Error while importing '{module_path}': ({type(e).__name__}) {str(e)}") from e
     
 
     try:
