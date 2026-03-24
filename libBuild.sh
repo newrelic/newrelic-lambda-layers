@@ -4,8 +4,8 @@ set -Eeuo pipefail
 
 REGIONS=(
   sa-east-1
-  me-central-1
-  me-south-1
+  # me-central-1
+  # me-south-1
   eu-central-2
   eu-north-1
   eu-south-2
