@@ -40,7 +40,7 @@ if [ -z "${NEW_RELIC_APP_NAME}" ]; then
 fi
 
 if [ -z "${NEW_RELIC_SERVERLESS_MODE_ENABLED}" ]; then
-  export NEW_RELIC_SERVERLESS_MODE_ENABLED=lambda-function
+  export NEW_RELIC_SERVERLESS_MODE_ENABLED=true
   echo "Setting NEW_RELIC_SERVERLESS_MODE_ENABLED to be true"
 fi
 
