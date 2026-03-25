@@ -62,10 +62,6 @@ function download_extension {
 function layer_name_str() {
     rt_part="LambdaExtension"
     arch_part=""
-    distribution_type=""
-    if [[ -n "$3" ]]; then
-      distribution_type="-$3-"
-    fi
     
 
     case $1 in
@@ -85,7 +81,7 @@ function layer_name_str() {
       rt_part="Java25"
       ;;
     "java")
-      rt_part="java"
+      rt_part="AgentJava"
       ;;
     "python3.9")
       rt_part="Python39"
@@ -137,7 +133,7 @@ function layer_name_str() {
       ;;
     esac
 
-    echo "NewRelic${distribution_type}${rt_part}${arch_part}"
+    echo "NewRelic${rt_part}${arch_part}"
 }
 
 function s3_prefix() {
@@ -149,6 +145,9 @@ function s3_prefix() {
       ;;
     "java11")
       name="java-11"
+      ;;
+    "java")
+      name="nr-java-agent"
       ;;
     "python3.9")
       name="nr-python3.9"
@@ -272,9 +271,8 @@ function publish_layer {
     arch=$4
     newrelic_agent_version=${5:-"none"}
     slim=${6:-""}
-    distribution_type=${7:-""}
     agent_name=$( agent_name_str $runtime_name )
-    layer_name=$( layer_name_str $runtime_name $arch $distribution_type )
+    layer_name=$( layer_name_str $runtime_name $arch )
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
@@ -290,7 +288,7 @@ function publish_layer {
     then compat_list=("dotnet6" "dotnet8" "dotnet10")
     fi
 
-    if [[ $runtime_name == "java" ]] && [[ $distribution_type == "agent" ]]
+    if [[ $runtime_name == "java" ]]
     then compat_list=("java17" "java21" "java25")
     fi
 
@@ -339,7 +337,6 @@ function publish_docker_ecr {
     runtime_name=$2
     arch=$3
     slim=${4:-""}
-    distribution_type=${7:-""}
 
     if [[ ${arch} =~ 'arm64' ]];
     then 
@@ -358,18 +355,20 @@ function publish_docker_ecr {
     language_flag="lambdaextension"
     fi
     
-    if [[ ${runtime_name} =~ 'dotnet' ]] || [[ ${runtime_name} =~ 'java' ]]; then
+    if [[ ${runtime_name} =~ 'dotnet' ]]; then
     version_flag=""
     arch_flag=${arch}
     fi
+
+    if [[ ${runtime_name} == 'java' ]]; then
+    version_flag=""
+    arch_flag=${arch}
+    language_flag="java-agent"
+    fi  
+
     slim_flag=""
     if [ "$slim" == "slim" ]; then
         slim_flag="-slim"
-    fi
-
-    distribution_flag=""
-    if [[ -n "$3" ]]; then
-      distribution_flag="-$distribution_type"
     fi
 
     # Remove 'dist/' prefix
@@ -403,10 +402,10 @@ function publish_docker_ecr {
     --build-arg file_without_dist=${file_without_dist} \
     .
 
-    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${distribution_flag}${slim_flag}:${version_flag}${arch_flag}"
-    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${distribution_flag}${slim_flag}:${version_flag}${arch_flag}
-    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${distribution_flag}${slim_flag}:${version_flag}${arch_flag}"
-    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${distribution_flag}${slim_flag}:${version_flag}${arch_flag}
+    echo "docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}"
+    docker tag layer-nr-image-${language_flag}-${version_flag}${arch_flag}${slim}:latest public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}
+    echo "docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}"
+    docker push public.ecr.aws/${repository}/newrelic-lambda-layers-${language_flag}${slim_flag}:${version_flag}${arch_flag}
 
     # delete dockerfile
     rm -rf Dockerfile.ecrImage

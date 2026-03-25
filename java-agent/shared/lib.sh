@@ -63,8 +63,8 @@ function publish-java-agent {
 
     for region in "${REGIONS[@]}"; do
         echo "Publishing for $runtime and $region"
-        publish_layer $distribution_file $region java $arch $NEWRELIC_AGENT_VERSION $slim agent
+        publish_layer $distribution_file $region java $arch $NEWRELIC_AGENT_VERSION $slim
     done
 
-    publish_docker_ecr $distribution_file java $arch agent
+    publish_docker_ecr $distribution_file java $arch $slim
 }
