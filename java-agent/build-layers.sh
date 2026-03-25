@@ -2,31 +2,37 @@
 
 set -Eeuo pipefail
 
+AGENT_PATH=$1
 export AGENT_JAR=newrelic.jar
-export JAVA_HANDLER=java-handler
 
 export AGENT_DIR=newrelic
 export DIST_DIR=dist
 
-export JAVA_AGENT_DIST_ARM64=$DIST_DIR/java-agent-lite.arm64.zip
-export JAVA_AGENT_DIST_X86_64=$DIST_DIR/java-agent-lite.x86_64.zip
+export JAVA_AGENT_DIST_X86_64=$DIST_DIR/java-agent.x86_64.zip
+export JAVA_AGENT_DIST_ARM64=$DIST_DIR/java-agent.arm64.zip
+
+export JAVA_AGENT_SLIM_DIST_X86_64=$DIST_DIR/java-agent-slim.x86_64.zip
+export JAVA_AGENT_SLIM_DIST_ARM64=$DIST_DIR/java-agent-slim.arm64.zip
+
+export NEWRELIC_AGENT_VERSION=9.1.0
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-source ../../libBuild.sh
-source $parent_path/versions.sh
+source ../libBuild.sh
 
 function build-java-agent {
     distribution_file=$1
     arch=$2
     agent_path=$3
+    java_handler_path=$4
     echo "Building New Relic layer for the Java Agent ($arch)"
     rm -rf $AGENT_DIR $distribution_file
     mkdir -p $DIST_DIR
     get_agent $agent_path
     download_extension $arch
-    zip -rq $distribution_file $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE $JAVA_HANDLER $AGENT_DIR
-    rm -rf $AGENT_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+    cp $java_handler_path ./java-handler
+    zip -rq $distribution_file $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./java-handler $AGENT_DIR
+    rm -rf $AGENT_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./java-handler
     echo "Build complete: ${distribution_file}"
 }
 
@@ -48,23 +54,7 @@ function get_agent {
     rm -f $AGENT_JAR
 }
 
-
-function publish-java-agent {
-    distribution_file=$1
-    slim=$2
-    if [[ $slim != "slim" ]]; then
-        slim="-"
-    fi
-    arch=$3
-    if [ ! -f $distribution_file ]; then
-        echo "Package not found: ${distribution_file}"
-        exit 1
-    fi
-
-    for region in "${REGIONS[@]}"; do
-        echo "Publishing for $runtime and $region"
-        publish_layer $distribution_file $region java $arch $NEWRELIC_AGENT_VERSION $slim
-    done
-
-    publish_docker_ecr $distribution_file java $arch $slim
-}
+build-java-agent $JAVA_AGENT_DIST_X86_64 x86_64 $AGENT_PATH ./java-handler-full
+build-java-agent $JAVA_AGENT_DIST_ARM64 arm64 $AGENT_PATH ./java-handler-full
+build-java-agent $JAVA_AGENT_SLIM_DIST_X86_64 x86_64 $AGENT_PATH ./java-handler-slim
+build-java-agent $JAVA_AGENT_SLIM_DIST_ARM64 arm64 $AGENT_PATH ./java-handler-slim

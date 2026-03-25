@@ -1,2 +1,0 @@
-export NEWRELIC_AGENT_VERSION=9.1.0
-export SUPPORTED_JAVA_VERSIONS=("java17" "java21" "java25")
