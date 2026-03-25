@@ -53,7 +53,7 @@ function publish-java-agent {
     distribution_file=$1
     slim=$2
     if [[ $slim != "slim" ]]; then
-        slim=""
+        slim="-"
     fi
     arch=$3
     if [ ! -f $distribution_file ]; then
@@ -61,12 +61,10 @@ function publish-java-agent {
         exit 1
     fi
 
-    for runtime in "${SUPPORTED_JAVA_VERSIONS[@]}"; do
-        for region in "${REGIONS[@]}"; do
-            echo "Publishing for $runtime and $region"
-            publish_layer $distribution_file $region $runtime $arch $NEWRELIC_AGENT_VERSION $slim agent
-        done
-
-        publish_docker_ecr $distribution_file $runtime $arch agent
+    for region in "${REGIONS[@]}"; do
+        echo "Publishing for $runtime and $region"
+        publish_layer $distribution_file $region java $arch $NEWRELIC_AGENT_VERSION $slim agent
     done
+
+    publish_docker_ecr $distribution_file java $arch agent
 }

@@ -84,6 +84,9 @@ function layer_name_str() {
     "java25")
       rt_part="Java25"
       ;;
+    "java")
+      rt_part="java"
+      ;;
     "python3.9")
       rt_part="Python39"
       ;;
@@ -205,7 +208,7 @@ function agent_name_str() {
         "ruby3.2"|"ruby3.3"|"ruby3.4")
             agent_name="Ruby"
             ;;
-        "java8.al2"|"java11"|"java17"|"java21")
+        "java8.al2"|"java11"|"java17"|"java21"|"java25"|"java")
             agent_name="Java"
             ;;
         "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
@@ -287,6 +290,10 @@ function publish_layer {
     then compat_list=("dotnet6" "dotnet8" "dotnet10")
     fi
 
+    if [[ $runtime_name == "java" ]] && [[ $distribution_type == "agent" ]]
+    then compat_list=("java17" "java21" "java25")
+    fi
+
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
     aws --region "$region" s3 cp $layer_archive "s3://${bucket_name}/${s3_key}"
 
@@ -351,7 +358,7 @@ function publish_docker_ecr {
     language_flag="lambdaextension"
     fi
     
-    if [[ ${runtime_name} =~ 'dotnet' ]]; then
+    if [[ ${runtime_name} =~ 'dotnet' ]] || [[ ${runtime_name} =~ 'java' ]]; then
     version_flag=""
     arch_flag=${arch}
     fi
