@@ -7,6 +7,7 @@ export AGENT_JAR=newrelic.jar
 
 export AGENT_DIR=newrelic
 export DIST_DIR=dist
+export EXEC_WRAPPER=newrelic-java-handler
 
 export JAVA_AGENT_DIST_X86_64=$DIST_DIR/java-agent.x86_64.zip
 export JAVA_AGENT_DIST_ARM64=$DIST_DIR/java-agent.arm64.zip
@@ -30,9 +31,9 @@ function build-java-agent {
     mkdir -p $DIST_DIR
     get_agent $agent_path
     download_extension $arch
-    cp $java_handler_path ./java-handler
-    zip -rq $distribution_file $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./java-handler $AGENT_DIR
-    rm -rf $AGENT_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./java-handler
+    cp $java_handler_path ./$EXEC_WRAPPER
+    zip -rq $distribution_file $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./$EXEC_WRAPPER $AGENT_DIR
+    rm -rf $AGENT_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./$EXEC_WRAPPER
     echo "Build complete: ${distribution_file}"
 }
 
