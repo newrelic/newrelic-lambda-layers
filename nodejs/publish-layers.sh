@@ -20,6 +20,55 @@ cat <<EOM >fake-package.json
 EOM
 }
 
+function build_universal_wrapper {
+  arch=$1
+  slim=${2:-""}
+  echo "Building universal new relic layer for nodejs (${arch})"
+  ZIP=$DIST_DIR/nodejs.${arch}.zip
+  if [ "$slim" == "slim" ]; then
+    ZIP=$DIST_DIR/nodejs.${arch}.slim.zip
+  fi
+  rm -rf $BUILD_DIR $ZIP
+  mkdir -p $DIST_DIR
+  npm install --install-strategy=nested --prefix $BUILD_DIR newrelic@latest
+  if [ "$slim" == "slim" ]; then
+    echo "Slim build, removing opentelemetry dependencies"
+    rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
+  fi
+  NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
+  touch $DIST_DIR/nr-env
+  echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
+	mkdir -p $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+  cp index.js $BUILD_DIR/node_modules/newrelic-lambda-wrapper
+	mkdir -p $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper
+  cp esm.mjs $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/index.js
+  make_package_json
+  cp fake-package.json $BUILD_DIR/node_modules/newrelic-esm-lambda-wrapper/package.json
+  download_extension $arch
+	zip -rq $ZIP $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	rm -rf fake-package.json $BUILD_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE
+	echo "Build complete: ${ZIP}"
+}
+
+function publish_universal_wrapper {
+  arch=$1
+  slim=${2:-""}
+  ZIP=$DIST_DIR/nodejs.${arch}.zip
+  if [ "$slim" == "slim" ]; then
+    echo "Publishing universal slim build for nodejs (${arch})"
+    ZIP=$DIST_DIR/nodejs.${arch}.slim.zip
+  fi
+  source $DIST_DIR/nr-env
+  if [ ! -f $ZIP ]; then
+    echo "Package not found: ${ZIP}"
+    exit 1
+  fi
+
+  for region in "${REGIONS[@]}"; do
+    publish_layer $ZIP $region nodejs ${arch} $NEWRELIC_AGENT_VERSION $slim
+  done
+}
+
 function build_wrapper {
   node_version=$1
   arch=$2
@@ -36,6 +85,8 @@ function build_wrapper {
     echo "Slim build, removing opentelemetry dependencies"
     rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@opentelemetry
   fi
+  # Profiilng is not supported in lambda functions, we will remove the dep as it is 11mb
+  rm -rf $BUILD_DIR/node_modules/newrelic/node_modules/@datadog/pprof
   NEWRELIC_AGENT_VERSION=$(npm list newrelic --prefix $BUILD_DIR | grep newrelic@ | awk -F '@' '{print $2}')
   touch $DIST_DIR/nr-env
   echo "NEWRELIC_AGENT_VERSION=$NEWRELIC_AGENT_VERSION" > $DIST_DIR/nr-env
@@ -72,6 +123,32 @@ function publish_wrapper {
 }
 
 case "$1" in
+"build-universal")
+  build_universal_wrapper arm64
+  build_universal_wrapper x86_64
+  build_universal_wrapper arm64 slim
+  build_universal_wrapper x86_64 slim
+	;;
+"publish-universal")
+  publish_universal_wrapper arm64
+  publish_universal_wrapper x86_64
+  publish_universal_wrapper arm64 slim
+  publish_universal_wrapper x86_64 slim
+	;;
+"build-publish-universal-ecr-image")
+  build_universal_wrapper arm64
+	publish_docker_ecr $DIST_DIR/nodejs.arm64.zip nodejs arm64
+  build_universal_wrapper arm64 slim
+	publish_docker_ecr $DIST_DIR/nodejs.arm64.slim.zip nodejs arm64 slim
+  build_universal_wrapper x86_64
+	publish_docker_ecr $DIST_DIR/nodejs.x86_64.zip nodejs x86_64
+  build_universal_wrapper x86_64 slim
+	publish_docker_ecr $DIST_DIR/nodejs.x86_64.slim.zip nodejs x86_64 slim
+	;;
+"nodejs")
+  $0 build-universal
+  $0 publish-universal
+  ;;
 "build_wrapper")
   build_wrapper $2 $3 $4
   ;;

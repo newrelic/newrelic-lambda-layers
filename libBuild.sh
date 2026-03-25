@@ -4,8 +4,8 @@ set -Eeuo pipefail
 
 REGIONS=(
   sa-east-1
-  me-central-1
-  me-south-1
+  # me-central-1
+  # me-south-1
   eu-central-2
   eu-north-1
   eu-south-2
@@ -26,16 +26,16 @@ REGIONS=(
   ap-southeast-3
   af-south-1
   us-east-1
-	us-east-2
-	us-west-1
-	us-west-2
+  us-east-2
+  us-west-1
+  us-west-2
 )
 
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
 
-EXTENSION_VERSION=2.4.5
+EXTENSION_VERSION=2.4.6
 
 function list_all_regions {
     aws ec2 describe-regions \
@@ -101,6 +101,9 @@ function layer_name_str() {
     "python3.14")
       rt_part="Python314"
       ;;
+    "python")
+      rt_part="Python"
+      ;;
     "nodejs20.x")
       rt_part="NodeJS20X"
       ;;
@@ -109,6 +112,9 @@ function layer_name_str() {
       ;;
     "nodejs24.x")
       rt_part="NodeJS24X"
+      ;;
+    "nodejs")
+      rt_part="NodeJS"
       ;;
     "ruby3.2")
       rt_part="Ruby32"
@@ -167,6 +173,9 @@ function s3_prefix() {
     "python3.14")
       name="nr-python3.14"
       ;;
+    "python")
+      name="nr-python"
+      ;;
     "nodejs20.x")
       name="nr-nodejs20.x"
       ;;
@@ -175,6 +184,9 @@ function s3_prefix() {
       ;;
     "nodejs24.x")
       name="nr-nodejs24.x"
+      ;;
+    "nodejs")
+      name="nr-nodejs"
       ;;
     "ruby3.3")
       name="nr-ruby3.3"
@@ -201,7 +213,7 @@ function agent_name_str() {
         "dotnet")
             agent_name="Dotnet"
             ;;
-        "nodejs20.x"|"nodejs22.x"|"nodejs24.x")
+        "nodejs"|"nodejs20.x"|"nodejs22.x"|"nodejs24.x")
             agent_name="Node"
             ;;
         "ruby3.2"|"ruby3.3"|"ruby3.4")
@@ -210,7 +222,7 @@ function agent_name_str() {
         "java8.al2"|"java11"|"java17"|"java21"|"java25"|"java")
             agent_name="Java"
             ;;
-        "python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
+        "python"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
             agent_name="Python"
             ;;
         *)
@@ -291,6 +303,14 @@ function publish_layer {
     if [[ $runtime_name == "java" ]]
     then compat_list=("java17" "java21" "java25")
     fi
+    
+    if [[ $runtime_name == "python" ]]
+    then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14")
+    fi
+
+    if [[ $runtime_name == "nodejs" ]]
+    then compat_list=("nodejs20.x" "nodejs22.x" "nodejs24.x")
+    fi
 
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
     aws --region "$region" s3 cp $layer_archive "s3://${bucket_name}/${s3_key}"
@@ -354,7 +374,7 @@ function publish_docker_ecr {
     version_flag=$EXTENSION_VERSION
     language_flag="lambdaextension"
     fi
-    
+
     if [[ ${runtime_name} =~ 'dotnet' ]]; then
     version_flag=""
     arch_flag=${arch}
@@ -365,6 +385,10 @@ function publish_docker_ecr {
     arch_flag=${arch}
     language_flag="java-agent"
     fi  
+    if [[ $runtime_name == "python" || $runtime_name == "nodejs" ]]; then
+    version_flag=""
+    arch_flag=${arch}
+    fi
 
     slim_flag=""
     if [ "$slim" == "slim" ]; then
@@ -380,8 +404,8 @@ function publish_docker_ecr {
       echo "File does not start with 'dist/': $file_without_dist"
     fi
 
-    # public ecr repository name 
-    # maintainer can use this("q6k3q1g1") repo name for testing 
+    # public ecr repository name
+    # maintainer can use this("q6k3q1g1") repo name for testing
     repository="x6n7b2o2"
 
     # copy dockerfile

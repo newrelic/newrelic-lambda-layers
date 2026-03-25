@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8 AS builder
+FROM node:22 as builder
 
 RUN apt-get update \
     && apt-get install -y curl unzip zip
@@ -8,10 +8,10 @@ USER newrelic-lambda-layers
 WORKDIR /home/newrelic-lambda-layers
 
 COPY --chown=newrelic-lambda-layers libBuild.sh .
-COPY --chown=newrelic-lambda-layers java java/
+COPY --chown=newrelic-lambda-layers nodejs nodejs/
 
-WORKDIR java
-RUN ./publish-layers.sh build-java8al2
+WORKDIR nodejs
+RUN ./publish-layers.sh build-universal
 
 FROM python:3.12
 
@@ -22,8 +22,8 @@ RUN pip3 install -U awscli --user
 ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
 
 COPY libBuild.sh .
-COPY java java/
-COPY --from=builder /home/newrelic-lambda-layers/java/dist java/dist
+COPY nodejs nodejs/
+COPY --from=builder /home/newrelic-lambda-layers/nodejs/dist nodejs/dist
 
-WORKDIR java
-CMD ./publish-layers.sh publish-java8al2
+WORKDIR nodejs
+CMD ./publish-layers.sh publish-universal

@@ -131,6 +131,44 @@ publish-nodejs24-local: build-nodejs24
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-nodejs24
 
+build-python-universal:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-python \
+		-f ./dockerfiles/Dockerfile.python \
+		.
+
+publish-python-universal-ci: build-python-universal
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-python
+
+publish-python-universal-local: build-python-universal
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-python
+
+build-nodejs-universal:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-nodejs \
+		-f ./dockerfiles/Dockerfile.nodejs \
+		.
+
+publish-nodejs-universal-ci: build-nodejs-universal
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-nodejs
+
+publish-nodejs-universal-local: build-nodejs-universal
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-nodejs
+
 build-ruby32:
 	docker build \
 		--no-cache \
