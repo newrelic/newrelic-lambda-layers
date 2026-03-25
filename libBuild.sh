@@ -81,6 +81,9 @@ function layer_name_str() {
     "java21")
       rt_part="Java21"
       ;;
+    "java25")
+      rt_part="Java25"
+      ;;
     "python3.9")
       rt_part="Python39"
       ;;
