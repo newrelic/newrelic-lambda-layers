@@ -72,10 +72,8 @@ function setup_agent {
       log_debug "Setting NEW_RELIC_LOG_FILE_PATH to be /tmp/logs/"
     fi
 
-    if [ -z "${NEW_RELIC_SERVERLESS_MODE_ENABLED}" ]; then
-      export NEW_RELIC_SERVERLESS_MODE_ENABLED=true
-      log_debug "Setting NEW_RELIC_SERVERLESS_MODE_ENABLED to be true"
-    fi
+    export NEW_RELIC_SERVERLESS_MODE_ENABLED=true
+    log_debug "Setting NEW_RELIC_SERVERLESS_MODE_ENABLED to be true"
 
     export NEW_RELIC_ENABLE_AUTO_APP_NAMING=false
     log_debug "Always setting NEW_RELIC_ENABLE_AUTO_APP_NAMING to be false"
