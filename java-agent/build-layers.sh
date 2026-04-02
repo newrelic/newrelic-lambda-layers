@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -Eeuo pipefail
 
-AGENT_PATH=$1
+AGENT_PATH=${1:-""}
 export AGENT_JAR=newrelic.jar
 
 export AGENT_DIR=newrelic
@@ -24,8 +24,8 @@ source versions.sh
 function build-java-agent {
     distribution_file=$1
     arch=$2
-    agent_path=$3
-    java_handler_path=$4
+    java_handler_path=$3
+    agent_path=${4:-""}
     echo "Building New Relic layer for the Java Agent ($arch)"
     rm -rf $AGENT_DIR $distribution_file
     mkdir -p $DIST_DIR
@@ -38,7 +38,7 @@ function build-java-agent {
 }
 
 function get_agent {
-    agent_path=$1
+    agent_path=${1:-""}
     rm -rf $AGENT_JAR
 
     if [[ -n "$agent_path" ]]; then
@@ -55,7 +55,7 @@ function get_agent {
     rm -f $AGENT_JAR
 }
 
-build-java-agent $JAVA_AGENT_DIST_X86_64 x86_64 $AGENT_PATH ./java-handler-full
-build-java-agent $JAVA_AGENT_DIST_ARM64 arm64 $AGENT_PATH ./java-handler-full
-build-java-agent $JAVA_AGENT_SLIM_DIST_X86_64 x86_64 $AGENT_PATH ./java-handler-slim
-build-java-agent $JAVA_AGENT_SLIM_DIST_ARM64 arm64 $AGENT_PATH ./java-handler-slim
+build-java-agent $JAVA_AGENT_DIST_X86_64 x86_64 ./java-handler-full $AGENT_PATH
+build-java-agent $JAVA_AGENT_DIST_ARM64 arm64 ./java-handler-full $AGENT_PATH
+build-java-agent $JAVA_AGENT_SLIM_DIST_X86_64 x86_64 ./java-handler-slim $AGENT_PATH
+build-java-agent $JAVA_AGENT_SLIM_DIST_ARM64 arm64 ./java-handler-slim $AGENT_PATH
