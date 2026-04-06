@@ -6,7 +6,7 @@ source /opt/lib-handler.sh
 ARGS=("$@")
 EXTRA_ARGS=()
 
-setup_agent $ARGS $EXTRA_ARGS
+setup_agent
 
 export NEW_RELIC_LITE_MODE=true
 log_debug "Always setting NEW_RELIC_LITE_MODE to be true"

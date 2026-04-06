@@ -16,8 +16,6 @@ export JAVA_AGENT_DIST_ARM64=$DIST_DIR/java-agent.arm64.zip
 export JAVA_AGENT_SLIM_DIST_X86_64=$DIST_DIR/java-agent-slim.x86_64.zip
 export JAVA_AGENT_SLIM_DIST_ARM64=$DIST_DIR/java-agent-slim.arm64.zip
 
-parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-
 source ../libBuild.sh
 source versions.sh
 
@@ -27,13 +25,13 @@ function build-java-agent {
     java_handler_path=$3
     agent_path=${4:-""}
     echo "Building New Relic layer for the Java Agent ($arch)"
-    rm -rf $AGENT_DIR $distribution_file
+    rm -rf $AGENT_DIR "$distribution_file"
     mkdir -p $DIST_DIR
-    get_agent $agent_path
-    download_extension $arch
-    cp $java_handler_path ./$EXEC_WRAPPER
-    zip -rq $distribution_file $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./$EXEC_WRAPPER $AGENT_DIR $LIB_HANDLER
-    rm -rf $AGENT_DIR $EXTENSION_DIST_DIR $EXTENSION_DIST_PREVIEW_FILE ./$EXEC_WRAPPER
+    get_agent "$agent_path"
+    download_extension "$arch"
+    cp "$java_handler_path" ./$EXEC_WRAPPER
+    zip -rq "$distribution_file" "$EXTENSION_DIST_DIR" "$EXTENSION_DIST_PREVIEW_FILE" ./$EXEC_WRAPPER $AGENT_DIR $LIB_HANDLER
+    rm -rf $AGENT_DIR "$EXTENSION_DIST_DIR" "$EXTENSION_DIST_PREVIEW_FILE" ./$EXEC_WRAPPER
     echo "Build complete: ${distribution_file}"
 }
 
@@ -55,7 +53,7 @@ function get_agent {
     rm -f $AGENT_JAR
 }
 
-build-java-agent $JAVA_AGENT_DIST_X86_64 x86_64 ./java-handler-full $AGENT_PATH
-build-java-agent $JAVA_AGENT_DIST_ARM64 arm64 ./java-handler-full $AGENT_PATH
-build-java-agent $JAVA_AGENT_SLIM_DIST_X86_64 x86_64 ./java-handler-slim $AGENT_PATH
-build-java-agent $JAVA_AGENT_SLIM_DIST_ARM64 arm64 ./java-handler-slim $AGENT_PATH
+build-java-agent $JAVA_AGENT_DIST_X86_64 x86_64 ./java-handler-full "$AGENT_PATH"
+build-java-agent $JAVA_AGENT_DIST_ARM64 arm64 ./java-handler-full "$AGENT_PATH"
+build-java-agent $JAVA_AGENT_SLIM_DIST_X86_64 x86_64 ./java-handler-slim "$AGENT_PATH"
+build-java-agent $JAVA_AGENT_SLIM_DIST_ARM64 arm64 ./java-handler-slim "$AGENT_PATH"

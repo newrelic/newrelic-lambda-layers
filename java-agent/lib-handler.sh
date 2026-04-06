@@ -26,17 +26,17 @@ function setup_agent {
 
     if [[ "$_java" ]]; then
     version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
-    log "Verifying JVM version is compatable. Only JVMs versions 17 and up are supported."
+    log "Verifying JVM version is compatible. Only JVMs versions 17 and up are supported."
     log "Java version $version detected"
     if [[ "$version" > "17" ]] || [[ "$version" == "17" ]]; then
         export JAVA_TOOL_OPTIONS="-javaagent:/opt/newrelic/newrelic.jar ${JAVA_TOOL_OPTIONS}"
-        log "Attatched New Relic Java Agent"
+        log "Attached New Relic Java Agent"
     else         
         log version is less than 17, will not attatch the New Relic Java Agent
     fi
     else
         export JAVA_TOOL_OPTIONS="-javaagent:/opt/newrelic/newrelic.jar ${JAVA_TOOL_OPTIONS}"
-        log "Attatched New Relic Java Agent"
+        log "Attached New Relic Java Agent"
     fi
 
     ########################################

@@ -7,7 +7,7 @@ source /opt/lib-handler.sh
 ARGS=("$@")
 EXTRA_ARGS=()
 
-setup_agent $ARGS $EXTRA_ARGS
+setup_agent
 
 ARGS=("${ARGS[0]}" "${EXTRA_ARGS[@]}" "${ARGS[@]:1}")
 
