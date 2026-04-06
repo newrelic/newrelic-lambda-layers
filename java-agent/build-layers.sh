@@ -9,6 +9,7 @@ export AGENT_DIR=newrelic
 export DIST_DIR=dist
 export EXEC_WRAPPER=newrelic-java-handler
 export LIB_HANDLER=lib-handler.sh
+export AGENT_VERSION_FILE=java-agent-version.txt
 
 export JAVA_AGENT_DIST_X86_64=$DIST_DIR/java-agent.x86_64.zip
 export JAVA_AGENT_DIST_ARM64=$DIST_DIR/java-agent.arm64.zip
@@ -50,6 +51,7 @@ function get_agent {
 
     mkdir -p $AGENT_DIR
     mv $AGENT_JAR $AGENT_DIR/$AGENT_JAR
+    echo "$NEWRELIC_AGENT_VERSION" > $AGENT_DIR/$AGENT_VERSION_FILE
     rm -f $AGENT_JAR
 }
 
