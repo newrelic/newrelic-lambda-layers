@@ -1,0 +1,30 @@
+name: Publish Java Agent Layers
+
+on:
+  push:
+    tags:
+      - v**_java-agent
+
+jobs:
+  publish-java-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Tag
+        id: java-agent-check-tag
+        run: |
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java-agent ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
+      - name: Publish Java Agent Layer
+        if: steps.java-agent-check-tag.outputs.match == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd java-agent
+          ./publish-layers.sh

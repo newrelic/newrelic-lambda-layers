@@ -64,6 +64,7 @@ function download_extension {
 function layer_name_str() {
     rt_part="LambdaExtension"
     arch_part=""
+    
 
     case $1 in
     "java8.al2")
@@ -77,6 +78,12 @@ function layer_name_str() {
       ;;
     "java21")
       rt_part="Java21"
+      ;;
+    "java25")
+      rt_part="Java25"
+      ;;
+    "java")
+      rt_part="AgentJava"
       ;;
     "python3.9")
       rt_part="Python39"
@@ -147,6 +154,9 @@ function s3_prefix() {
     "java11")
       name="java-11"
       ;;
+    "java")
+      name="nr-java-agent"
+      ;;
     "python3.9")
       name="nr-python3.9"
       ;;
@@ -211,7 +221,7 @@ function agent_name_str() {
         "ruby3.2"|"ruby3.3"|"ruby3.4")
             agent_name="Ruby"
             ;;
-        "java8.al2"|"java11"|"java17"|"java21")
+        "java8.al2"|"java11"|"java17"|"java21"|"java25"|"java")
             agent_name="Java"
             ;;
         "python"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
@@ -292,6 +302,10 @@ function publish_layer {
     then compat_list=("dotnet6" "dotnet8" "dotnet10")
     fi
 
+    if [[ $runtime_name == "java" ]]
+    then compat_list=("java17" "java21" "java25")
+    fi
+    
     if [[ $runtime_name == "python" ]]
     then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14")
     fi
@@ -368,6 +382,11 @@ function publish_docker_ecr {
     arch_flag=${arch}
     fi
 
+    if [[ ${runtime_name} == 'java' ]]; then
+    version_flag=""
+    arch_flag=${arch}
+    language_flag="java-agent"
+    fi  
     if [[ $runtime_name == "python" || $runtime_name == "nodejs" ]]; then
     version_flag=""
     arch_flag=${arch}
