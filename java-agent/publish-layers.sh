@@ -21,7 +21,7 @@ function publish-java-agent {
         publish_layer "$distribution_file" "$region" java "$arch" "$NEWRELIC_AGENT_VERSION" "$slim"
     done
 
-    # publish_docker_ecr "$distribution_file" java "$arch" "$slim"
+    publish_docker_ecr "$distribution_file" java "$arch" "$slim"
 }
 
 publish-java-agent "$JAVA_AGENT_DIST_X86_64" x86_64 "-"
