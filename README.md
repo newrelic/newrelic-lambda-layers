@@ -37,8 +37,16 @@ cd ..
 ```
 
 ```
+# Legacy Open Tracing Solution
 cd java
 ./publish-layers.sh java21
+cd ..
+```
+
+```
+# New Java-Agent Solution
+cd java-agent
+./publish-layers.sh
 cd ..
 ```
 
@@ -82,9 +90,10 @@ These steps will help you configure the layers correctly:
     * CommonJS: `newrelic-lambda-wrapper.handler`
     * ESM: `/opt/nodejs/node_modules/newrelic-esm-lambda-wrapper/index.handler` - You must specify the full path to the wrapper in the layer because the AWS Lambda Runtime doesn't support importing from a layer.
   * Ruby: `newrelic_lambda_wrapper.handler`
-  * Java:
+  * Java (Legacy Open Tracing):
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
     * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`
+  * Java (New Java-Agent solution): This step is not required.
   * .NET: This step is not required.
 4. Add these environment variables to your Lambda console:
   * NEW_RELIC_ACCOUNT_ID: Your New Relic account ID
@@ -94,6 +103,7 @@ These steps will help you configure the layers correctly:
   * CORECLR_PROFILER (.NET only): {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
   * CORECLR_NEWRELIC_HOME (.NET only): /opt/lib/newrelic-dotnet-agent
   * CORECLR_PROFILER_PATH (.NET only): /opt/lib/newrelic-dotnet-agent/libNewRelicProfiler.so
+  * AWS_LAMBDA_EXEC_WRAPPER (New Java-Agent Solution only): /opt/newrelic-java-handler
 
 Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda) for instructions on completing your configuration by linking your AWS Account and Cloudwatch Log Streams to New Relic.
 
