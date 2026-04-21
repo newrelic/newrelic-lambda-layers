@@ -84,6 +84,15 @@ These steps will help you configure the layers correctly:
 1. Find the New Relic AWS Lambda Layer ARN that matches your runtime and region.
 2. Copy the ARN of the most recent AWS Lambda Layer version and attach it to your function.
   * Using Cloudformation, this refers to adding your layer arn to the Layers property of a [AWS::Lambda::Function resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html).
+  * Customers using Java will find Old Convention Java layers and New Convention Java-Agent layers which represent **2 seperate solutions for Java lambda monitoring**.
+    * **The legacy Java Layer** is based on Open Tracing which is recommended for customers using our serverless monitoring prior to April 10, 2026 and for customers on Java 11 and/or 8. All arns contain the substring `NewRelicJava`. An example arn of such a layer is: 
+        ```
+        arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava17:21
+        ```
+    * **The New Java-Agent Layer** is based on the APM Java agent and is recommended for new Java applications. There is a full layer and a slim layer which reduces visibility but improves cold start performance. **This is not a drop in replacement for the legacy Open Tracing solution**. All arns contain the substring `NewRelicAgentJava`. An example arn of such a layer is: 
+            ```
+            arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJava:4
+            ```
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: `newrelic_lambda_wrapper.handler`
   * Node: 
