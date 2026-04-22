@@ -37,8 +37,16 @@ cd ..
 ```
 
 ```
+# Legacy Open Tracing Solution
 cd java
 ./publish-layers.sh java21
+cd ..
+```
+
+```
+# New Java-Agent Solution
+cd java-agent
+./publish-layers.sh
 cd ..
 ```
 
@@ -76,15 +84,25 @@ These steps will help you configure the layers correctly:
 1. Find the New Relic AWS Lambda Layer ARN that matches your runtime and region.
 2. Copy the ARN of the most recent AWS Lambda Layer version and attach it to your function.
   * Using Cloudformation, this refers to adding your layer arn to the Layers property of a [AWS::Lambda::Function resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html).
+  * Customers using Java will find Old Convention Java layers and New Convention Java-Agent layers which represent **2 seperate solutions for Java lambda monitoring**.
+    * **The legacy Java Layer** is based on Open Tracing which is recommended for customers using our serverless monitoring prior to April 10, 2026 and for customers on Java 11 and/or 8. All arns contain the substring `NewRelicJava`. An example arn of such a layer is: 
+        ```
+        arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava17:21
+        ```
+    * **The New Java-Agent Layer** is based on the APM Java agent and is recommended for new Java applications. There is a full layer and a slim layer which reduces visibility but improves cold start performance. **This is not a drop in replacement for the legacy Open Tracing solution**. All arns contain the substring `NewRelicAgentJava`. An example arn of such a layer is: 
+            ```
+            arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJava:4
+            ```
 3. Update your functions handler to point to the newly attached layer in the console for your function:
   * Python: `newrelic_lambda_wrapper.handler`
   * Node: 
     * CommonJS: `newrelic-lambda-wrapper.handler`
     * ESM: `/opt/nodejs/node_modules/newrelic-esm-lambda-wrapper/index.handler` - You must specify the full path to the wrapper in the layer because the AWS Lambda Runtime doesn't support importing from a layer.
   * Ruby: `newrelic_lambda_wrapper.handler`
-  * Java:
+  * Java (Legacy Open Tracing):
     * RequestHandler implementation: `com.newrelic.java.HandlerWrapper::handleRequest`
     * RequestStreamHandlerWrapper implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`
+  * Java (New Java-Agent solution): This step is not required.
   * .NET: This step is not required.
 4. Add these environment variables to your Lambda console:
   * NEW_RELIC_ACCOUNT_ID: Your New Relic account ID
@@ -94,6 +112,7 @@ These steps will help you configure the layers correctly:
   * CORECLR_PROFILER (.NET only): {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
   * CORECLR_NEWRELIC_HOME (.NET only): /opt/lib/newrelic-dotnet-agent
   * CORECLR_PROFILER_PATH (.NET only): /opt/lib/newrelic-dotnet-agent/libNewRelicProfiler.so
+  * AWS_LAMBDA_EXEC_WRAPPER (New Java-Agent Solution only): /opt/newrelic-java-handler
 
 Refer to the [New Relic AWS Lambda Monitoring Documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda) for instructions on completing your configuration by linking your AWS Account and Cloudwatch Log Streams to New Relic.
 
