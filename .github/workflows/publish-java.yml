@@ -14,6 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
+
       - name: Set up Java version
         run: |
           declare -A map_java_version
@@ -25,27 +26,76 @@ jobs:
           )
           java_numeric_version=${map_java_version[${{ matrix.java-version }}]}
           echo "JAVA_NUMERIC_VERSION=$java_numeric_version" >> $GITHUB_ENV
+
       - name: Use Java ${{ env.JAVA_NUMERIC_VERSION }}
         uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
           java-version: ${{ env.JAVA_NUMERIC_VERSION }}
+
       - name: Check Tag
         id: java-check-tag
         run: |
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
+
+      # ── 1. Build (java21 only) ────────────────────────────────────────────
+      # Docker build + extract zips to dist/java21/ — reused by release step.
+      - name: Build layer artifacts
+        if: steps.java-check-tag.outputs.match == 'true' && matrix.java-version == 'java21'
+        run: make extract-java21-artifacts
+
+      # ── 2. Publish staging (java21 only) ─────────────────────────────────
+      - name: Publish staging layers
+        if: steps.java-check-tag.outputs.match == 'true' && matrix.java-version == 'java21'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd java
+          DIST_DIR=../dist/java21 \
+            ./publish-layers.sh publish-staging-java21
+
+      # ── 3. Validate (java21 only) ─────────────────────────────────────────
+      - name: Validate staging layers
+        if: steps.java-check-tag.outputs.match == 'true' && matrix.java-version == 'java21'
+        id: validate
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime    java21 \
+            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}"
+
+      # ── 4. Release publish ───────────────────────────────────────────────
+      # java21: reuse Docker image (already built). Others: build+publish via make.
       - name: Publish ${{ matrix.java-version }} layer
         if: steps.java-check-tag.outputs.match == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make publish-${{ matrix.java-version }}-ci
+        run: |
+          if [[ "${{ matrix.java-version }}" == "java21" ]]; then
+            docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY newrelic-lambda-layers-java21
+          else
+            make publish-${{ matrix.java-version }}-ci
+          fi
+
+      # ── 5. ECR image ─────────────────────────────────────────────────────
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
+
       - name: Publish ECR image for ${{ matrix.java-version }}
         if: steps.java-check-tag.outputs.match == 'true'
         env:
@@ -54,3 +104,28 @@ jobs:
         run: |
           cd java
           ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image
+
+      # ── 6. Slack notification (java21 only) ──────────────────────────────
+      - name: Notify Slack
+        if: always() && steps.java-check-tag.outputs.match == 'true' && matrix.java-version == 'java21' && steps.staging.outputs.arn_x86 != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ steps.validate.outcome == 'success' && ':white_check_mark:' || ':x:' }} *java21* layer validation ${{ steps.validate.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }
+
+      # ── 7. Cleanup staging (java21 only, always) ─────────────────────────
+      - name: Cleanup staging layers
+        if: always() && matrix.java-version == 'java21' && steps.staging.outputs.arn_x86 != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
+          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+        run: |
+          cd java
+          ./publish-layers.sh cleanup-staging-java21

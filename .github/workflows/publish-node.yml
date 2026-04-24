@@ -11,19 +11,75 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22, 24]
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup
         id: setup
         uses: ./.github/actions/node-layer-setup
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Publish layer
+
+      # ── 1. Build ─────────────────────────────────────────────────────────
+      # Build the Docker image and extract the layer zips to dist/nodejs<N>/.
+      # The same Docker image is reused for the release publish step (docker
+      # run without rebuild), so the --no-cache build cost is paid only once.
+      - name: Build layer artifacts
+        if: steps.setup.outputs.tag-match == 'true'
+        run: make extract-nodejs${{ matrix.node-version }}-artifacts
+
+      # ── 2. Staging publish ───────────────────────────────────────────────
+      # Publish to us-east-1 only with a -staging/-slim-staging suffix.
+      # Layers land in the staging account (466768951184); no public perms.
+      - name: Publish staging layers
+        if: steps.setup.outputs.tag-match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd nodejs
+          DIST_DIR=../dist/nodejs${{ matrix.node-version }} \
+            ./publish-layers.sh publish-staging-${{ matrix.node-version }}
+
+      # ── 3. Validate ──────────────────────────────────────────────────────
+      # Call the orchestrator with staging ARNs and poll S3 until the result
+      # summary appears. Fails the job if any test function fails.
+      - name: Validate staging layers
+        if: steps.setup.outputs.tag-match == 'true'
+        id: validate
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime        nodejs${{ matrix.node-version }} \
+            --arn-x86        "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64      "${{ steps.staging.outputs.arn_arm64 }}" \
+            --arn-x86-slim   "${{ steps.staging.outputs.arn_x86_slim }}" \
+            --arn-arm64-slim "${{ steps.staging.outputs.arn_arm64_slim }}"
+
+      # ── 4. Release publish ───────────────────────────────────────────────
+      # Only runs if validation passed. Reuses the already-built Docker image
+      # and publishes to all production regions with public permissions.
+      - name: Publish release layers
         if: steps.setup.outputs.tag-match == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make publish-nodejs${{ matrix.node-version }}-ci
+        run: |
+          docker run \
+            -e AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY \
+            newrelic-lambda-layers-nodejs${{ matrix.node-version }}
+
+      # ── 5. ECR image ─────────────────────────────────────────────────────
       - name: Publish ECR image for nodejs${{ matrix.node-version }}
         if: steps.setup.outputs.tag-match == 'true'
         env:
@@ -32,14 +88,44 @@ jobs:
         run: |
           cd nodejs
           ./publish-layers.sh build-publish-${{ matrix.node-version }}-ecr-image
+
+      # ── 6. Cleanup staging ───────────────────────────────────────────────
+      # Always runs (even if validate or release failed) so staging layers
+      # are never left stranded in the staging account.
+      - name: Cleanup staging layers
+        if: always() && steps.staging.outputs.arn_x86 != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
+          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+          ARN_X86_SLIM: ${{ steps.staging.outputs.arn_x86_slim }}
+          ARN_ARM64_SLIM: ${{ steps.staging.outputs.arn_arm64_slim }}
+        run: |
+          cd nodejs
+          ./publish-layers.sh cleanup-staging-${{ matrix.node-version }}
+
+      # ── 7. Slack notification ────────────────────────────────────────────
+      - name: Notify Slack
+        if: always() && steps.setup.outputs.tag-match == 'true' && steps.staging.outputs.arn_x86 != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ steps.validate.outcome == 'success' && ':white_check_mark:' || ':x:' }} *nodejs${{ matrix.node-version }}* layer validation ${{ steps.validate.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }
+
       - name: Upload Unit Test Coverage
         if: steps.setup.outputs.tag-match == 'true'
         uses: codecov/codecov-action@v5.3.1
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./nodejs/coverage/unit/lcov.info
-         fail_ci_if_error: true
-         flags: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./nodejs/coverage/unit/lcov.info
+          fail_ci_if_error: true
+          flags: unit-tests
 
   publish-node-universal:
     runs-on: ubuntu-latest
@@ -68,7 +154,7 @@ jobs:
         if: steps.setup.outputs.tag-match == 'true'
         uses: codecov/codecov-action@v5.3.1
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./nodejs/coverage/unit/lcov.info
-         fail_ci_if_error: true
-         flags: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./nodejs/coverage/unit/lcov.info
+          fail_ci_if_error: true
+          flags: unit-tests

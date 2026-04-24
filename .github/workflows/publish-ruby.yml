@@ -13,32 +13,62 @@ jobs:
         ruby-version: [3.2, 3.3, 3.4]
     steps:
       - uses: actions/checkout@v4.2.2
+
       - name: Use Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1.226.0
         with:
           ruby-version: ${{ matrix.ruby-version }}
+
       - name: Check Tag
         id: ruby-check-tag
         run: |
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_ruby$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
+
       - name: Clean the workspace
         run: ./bin/clean
         working-directory: ruby
+
       - name: Install Ruby Dependencies
         run: bundle
         working-directory: ruby
-      - name: Obtain Ruby version without the dot
-        id: ruby-version-without-dot
-        run: >-
-          echo "::set-output name=VERSION::$(
-            echo ${{ matrix.ruby-version }} | sed 's/\.//'
-          )"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
+
+      # ── 1+2. Build + Publish staging (ruby3.4 only) ───────────────────────
+      - name: Publish staging layers
+        if: steps.ruby-check-tag.outputs.match == 'true' && matrix.ruby-version == '3.4'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd ruby
+          ./publish-layers.sh publish-staging-ruby${{ matrix.ruby-version }}
+
+      # ── 3. Validate (ruby3.4 only) ────────────────────────────────────────
+      - name: Validate staging layers
+        if: steps.ruby-check-tag.outputs.match == 'true' && matrix.ruby-version == '3.4'
+        id: validate
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime    ruby34 \
+            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}"
+
+      # ── 4. Release publish ────────────────────────────────────────────────
       - name: Build and Publish layer
         if: steps.ruby-check-tag.outputs.match == 'true'
         env:
@@ -46,3 +76,28 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: ./publish-layers.sh ruby${{ matrix.ruby-version }}
         working-directory: ruby
+
+      # ── 5. Slack notification (ruby3.4 only) ─────────────────────────────
+      - name: Notify Slack
+        if: always() && steps.ruby-check-tag.outputs.match == 'true' && matrix.ruby-version == '3.4' && steps.staging.outputs.arn_x86 != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ steps.validate.outcome == 'success' && ':white_check_mark:' || ':x:' }} *ruby3.4* layer validation ${{ steps.validate.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }
+
+      # ── 6. Cleanup staging (ruby3.4 only, always) ────────────────────────
+      - name: Cleanup staging layers
+        if: always() && matrix.ruby-version == '3.4' && steps.staging.outputs.arn_x86 != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
+          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+        run: |
+          cd ruby
+          ./publish-layers.sh cleanup-staging-ruby${{ matrix.ruby-version }}

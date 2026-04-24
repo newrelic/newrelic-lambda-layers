@@ -13,9 +13,42 @@ jobs:
         python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13', '3.14' ]
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup
         id: setup
         uses: ./.github/actions/python-layer-setup
+
+      # ── 1+2. Build + Publish staging (python3.14 only) ───────────────────
+      # Builds inline (native pip), publishes to us-east-1 with -staging suffix.
+      - name: Publish staging layers
+        if: steps.setup.outputs.tag-match == 'true' && matrix.python-version == '3.14'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd python
+          ./publish-layers.sh publish-staging-python${{ matrix.python-version }}
+
+      # ── 3. Validate (python3.14 only) ────────────────────────────────────
+      - name: Validate staging layers
+        if: steps.setup.outputs.tag-match == 'true' && matrix.python-version == '3.14'
+        id: validate
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime        python314 \
+            --arn-x86        "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64      "${{ steps.staging.outputs.arn_arm64 }}"
+
+      # ── 4. Release publish ───────────────────────────────────────────────
       - name: Publish Python ${{ matrix.python-version }} layer
         if: steps.setup.outputs.tag-match == 'true'
         env:
@@ -24,6 +57,31 @@ jobs:
         run: |
           cd python
           ./publish-layers.sh python${{ matrix.python-version }}
+
+      # ── 5. Slack notification (python3.14 only) ──────────────────────────
+      - name: Notify Slack
+        if: always() && steps.setup.outputs.tag-match == 'true' && matrix.python-version == '3.14' && steps.staging.outputs.arn_x86 != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ steps.validate.outcome == 'success' && ':white_check_mark:' || ':x:' }} *python3.14* layer validation ${{ steps.validate.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }
+
+      # ── 6. Cleanup staging (python3.14 only, always) ─────────────────────
+      - name: Cleanup staging layers
+        if: always() && matrix.python-version == '3.14' && steps.staging.outputs.arn_x86 != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
+          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+        run: |
+          cd python
+          ./publish-layers.sh cleanup-staging-python${{ matrix.python-version }}
 
   publish-python-universal:
     runs-on: ubuntu-latest

@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 BUILD_DIR=python
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 NEWRELIC_AGENT_VERSION=""
 VERSION_REGEX="v?([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+_python"
 PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
@@ -204,6 +204,20 @@ case "$1" in
         build_python_layer 3.14 x86_64
         publish_python_layer 3.14 x86_64
         publish_docker_ecr $PY314_DIST_X86_64 python3.14 x86_64
+        ;;
+    "publish-staging-python3.14")
+        build_python_layer 3.14 arm64
+        build_python_layer 3.14 x86_64
+        arn_arm64=$(publish_staging_layer "$PY314_DIST_ARM64" python3.14 arm64 "$NEWRELIC_AGENT_VERSION")
+        echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+        arn_x86=$(publish_staging_layer "$PY314_DIST_X86_64" python3.14 x86_64 "$NEWRELIC_AGENT_VERSION")
+        echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+        ;;
+    "cleanup-staging-python3.14")
+        for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+            [[ -z "$arn" ]] && continue
+            delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+        done
         ;;
     *)
         usage

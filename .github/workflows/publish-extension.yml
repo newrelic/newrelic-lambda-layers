@@ -8,24 +8,74 @@ on:
 jobs:
   publish-extension:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.12 ]
     steps:
       - uses: actions/checkout@v4
+
       - name: Check Tag
         id: extension-check-tag
         run: |
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
+
       - name: Install publish dependencies
         if: steps.extension-check-tag.outputs.match == 'true'
         run: pip install -U awscli
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
+
+      # ── 1. Publish staging ───────────────────────────────────────────────
+      - name: Publish staging layers
+        if: steps.extension-check-tag.outputs.match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd extension
+          ./publish-layer.sh publish-staging
+
+      # ── 2. Validate go/al2 ───────────────────────────────────────────────
+      - name: Validate staging layers (go/al2)
+        if: steps.extension-check-tag.outputs.match == 'true'
+        id: validate_al2
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime    go \
+            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}" \
+            --os         al2
+
+      # ── 3. Validate go/al2023 ────────────────────────────────────────────
+      - name: Validate staging layers (go/al2023)
+        if: steps.extension-check-tag.outputs.match == 'true'
+        id: validate_al2023
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          .github/scripts/poll-validation.sh \
+            --runtime    go \
+            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
+            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}" \
+            --os         al2023
+
+      # ── 4. Release publish ───────────────────────────────────────────────
       - name: Publish extension layer
         if: steps.extension-check-tag.outputs.match == 'true'
         env:
@@ -34,3 +84,28 @@ jobs:
         run: |
           cd extension
           ./publish-layer.sh
+
+      # ── 5. Cleanup staging (always) ──────────────────────────────────────
+      - name: Cleanup staging layers
+        if: always() && steps.staging.outputs.arn_x86 != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
+          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+        run: |
+          cd extension
+          ./publish-layer.sh cleanup-staging
+
+      # ── 6. Slack notification ────────────────────────────────────────────
+      - name: Notify Slack
+        if: always() && steps.extension-check-tag.outputs.match == 'true' && steps.staging.outputs.arn_x86 != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ (steps.validate_al2.outcome == 'success' && steps.validate_al2023.outcome == 'success') && ':white_check_mark:' || ':x:' }} *extension (go/al2+al2023)* layer validation al2=${{ steps.validate_al2.outcome }} al2023=${{ steps.validate_al2023.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }

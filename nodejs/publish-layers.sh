@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 BUILD_DIR=nodejs
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 
 source ../libBuild.sh
 
@@ -122,6 +122,42 @@ function publish_wrapper {
   done
 }
 
+# Publish staging layers for a given node version (us-east-1, -staging suffix).
+# Writes arn_x86/arn_arm64/arn_x86_slim/arn_arm64_slim to $GITHUB_OUTPUT.
+function publish_staging_wrapper {
+  node_version=$1
+  source $DIST_DIR/nr-env
+
+  for arch in x86_64 arm64; do
+    ZIP=$DIST_DIR/nodejs${node_version}x.${arch}.zip
+    ZIP_SLIM=$DIST_DIR/nodejs${node_version}x.${arch}.slim.zip
+    if [ ! -f "$ZIP" ]; then echo "Package not found: ${ZIP}"; exit 1; fi
+    if [ ! -f "$ZIP_SLIM" ]; then echo "Package not found: ${ZIP_SLIM}"; exit 1; fi
+
+    arn=$(publish_staging_layer "$ZIP" nodejs${node_version}.x "$arch" "$NEWRELIC_AGENT_VERSION")
+    arn_slim=$(publish_staging_layer "$ZIP_SLIM" nodejs${node_version}.x "$arch" "$NEWRELIC_AGENT_VERSION" slim)
+
+    if [[ $arch == "x86_64" ]]; then
+      echo "arn_x86=${arn}"           >> "${GITHUB_OUTPUT:-/dev/stderr}"
+      echo "arn_x86_slim=${arn_slim}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    else
+      echo "arn_arm64=${arn}"           >> "${GITHUB_OUTPUT:-/dev/stderr}"
+      echo "arn_arm64_slim=${arn_slim}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    fi
+  done
+}
+
+# Delete the 4 staging layer versions published by publish_staging_wrapper.
+# Reads ARNs from env vars: ARN_X86, ARN_ARM64, ARN_X86_SLIM, ARN_ARM64_SLIM.
+function cleanup_staging_wrapper {
+  for arn in "${ARN_X86:-}" "${ARN_ARM64:-}" "${ARN_X86_SLIM:-}" "${ARN_ARM64_SLIM:-}"; do
+    [[ -z "$arn" ]] && continue
+    layer_name=$(echo "$arn" | cut -d: -f8)
+    version=$(echo "$arn"    | cut -d: -f9)
+    delete_staging_layer "$layer_name" "$version"
+  done
+}
+
 case "$1" in
 "build-universal")
   build_universal_wrapper arm64
@@ -232,6 +268,24 @@ case "$1" in
 "nodejs24")
   $0 build-24
   $0 publish-24
+  ;;
+"publish-staging-20")
+  publish_staging_wrapper 20
+  ;;
+"publish-staging-22")
+  publish_staging_wrapper 22
+  ;;
+"publish-staging-24")
+  publish_staging_wrapper 24
+  ;;
+"cleanup-staging-20")
+  cleanup_staging_wrapper
+  ;;
+"cleanup-staging-22")
+  cleanup_staging_wrapper
+  ;;
+"cleanup-staging-24")
+  cleanup_staging_wrapper
   ;;
 *)
 	usage

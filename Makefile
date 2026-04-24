@@ -74,6 +74,13 @@ publish-java21-local: build-java21
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-java21
 
+extract-java21-artifacts: build-java21
+	@docker rm -f java21-artifacts 2>/dev/null || true
+	mkdir -p dist/java21
+	docker create --name java21-artifacts newrelic-lambda-layers-java21
+	docker cp java21-artifacts:/home/newrelic-lambda-layers/java/dist/. dist/java21/
+	docker rm java21-artifacts
+
 build-nodejs20:
 	docker build \
 		--no-cache \
@@ -130,6 +137,28 @@ publish-nodejs24-local: build-nodejs24
 		-e AWS_PROFILE \
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-nodejs24
+
+# Extract built zips from the Docker image into dist/nodejs<N>/ for staging publish.
+extract-nodejs20-artifacts: build-nodejs20
+	@docker rm -f nodejs20-artifacts 2>/dev/null || true
+	mkdir -p dist/nodejs20
+	docker create --name nodejs20-artifacts newrelic-lambda-layers-nodejs20
+	docker cp nodejs20-artifacts:/home/newrelic-lambda-layers/nodejs/dist/. dist/nodejs20/
+	docker rm nodejs20-artifacts
+
+extract-nodejs22-artifacts: build-nodejs22
+	@docker rm -f nodejs22-artifacts 2>/dev/null || true
+	mkdir -p dist/nodejs22
+	docker create --name nodejs22-artifacts newrelic-lambda-layers-nodejs22
+	docker cp nodejs22-artifacts:/home/newrelic-lambda-layers/nodejs/dist/. dist/nodejs22/
+	docker rm nodejs22-artifacts
+
+extract-nodejs24-artifacts: build-nodejs24
+	@docker rm -f nodejs24-artifacts 2>/dev/null || true
+	mkdir -p dist/nodejs24
+	docker create --name nodejs24-artifacts newrelic-lambda-layers-nodejs24
+	docker cp nodejs24-artifacts:/home/newrelic-lambda-layers/nodejs/dist/. dist/nodejs24/
+	docker rm nodejs24-artifacts
 
 build-python-universal:
 	docker build \

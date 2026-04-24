@@ -47,10 +47,34 @@ function publish-layer-arm64 {
     done
 }
 
-build-layer-x86
-publish-layer-x86
-publish_docker_ecr $EXTENSION_DIST_ZIP_X86_64 extension x86_64
+function publish-staging {
+    build-layer-x86
+    build-layer-arm64
 
-build-layer-arm64
-publish-layer-arm64
-publish_docker_ecr $EXTENSION_DIST_ZIP_ARM64 extension arm64
+    arn_x86=$(publish_staging_layer "$EXTENSION_DIST_ZIP_X86_64" provided x86_64)
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+
+    arn_arm64=$(publish_staging_layer "$EXTENSION_DIST_ZIP_ARM64" provided arm64)
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+}
+
+function cleanup-staging {
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
+}
+
+case "${1:-publish}" in
+  "publish-staging")  publish-staging ;;
+  "cleanup-staging")  cleanup-staging ;;
+  *)
+    build-layer-x86
+    publish-layer-x86
+    publish_docker_ecr $EXTENSION_DIST_ZIP_X86_64 extension x86_64
+
+    build-layer-arm64
+    publish-layer-arm64
+    publish_docker_ecr $EXTENSION_DIST_ZIP_ARM64 extension arm64
+    ;;
+esac

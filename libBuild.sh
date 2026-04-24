@@ -337,6 +337,57 @@ function publish_layer {
 
 }
 
+# Staging region/bucket — overridable via environment for local testing.
+STAGING_REGION="${STAGING_REGION:-us-east-1}"
+
+# Publish a single layer zip to the staging account as <LayerName>-staging[-slim].
+# Prints the full layer ARN to stdout; all progress messages go to stderr.
+# Uses direct zip upload (no S3 hop) so no bucket policy changes are needed.
+function publish_staging_layer {
+    layer_archive=$1
+    runtime_name=$2
+    arch=$3
+    newrelic_agent_version=${4:-"none"}
+    slim=${5:-""}
+
+    layer_name=$( layer_name_str $runtime_name $arch )
+    staging_layer_name="${layer_name}-staging"
+    if [[ $slim == "slim" ]]; then
+        staging_layer_name="${layer_name}-slim-staging"
+    fi
+
+    compat_list=( $runtime_name )
+    if [[ $runtime_name == "provided" ]]; then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1"); fi
+    if [[ $runtime_name == "dotnet" ]];   then compat_list=("dotnet6" "dotnet8" "dotnet10"); fi
+    if [[ $runtime_name == "python" ]];   then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14"); fi
+    if [[ $runtime_name == "nodejs" ]];   then compat_list=("nodejs20.x" "nodejs22.x" "nodejs24.x"); fi
+
+    echo "Publishing staging layer ${staging_layer_name} (${arch}) to ${STAGING_REGION}" >&2
+    layer_version=$(aws lambda publish-layer-version \
+        --layer-name "${staging_layer_name}" \
+        --region "${STAGING_REGION}" \
+        --zip-file "fileb://${layer_archive}" \
+        --compatible-architectures "${arch}" \
+        --compatible-runtimes "${compat_list[@]}" \
+        --query 'Version' \
+        --output text)
+
+    echo "Staged ${staging_layer_name}:${layer_version}" >&2
+    account_id=$(aws sts get-caller-identity --query Account --output text)
+    echo "arn:aws:lambda:${STAGING_REGION}:${account_id}:layer:${staging_layer_name}:${layer_version}"
+}
+
+# Delete a staging layer version (best-effort; never fails the caller).
+function delete_staging_layer {
+    layer_name=$1
+    version=$2
+    echo "Deleting staging layer ${layer_name}:${version} in ${STAGING_REGION}"
+    aws lambda delete-layer-version \
+        --layer-name "${layer_name}" \
+        --version-number "${version}" \
+        --region "${STAGING_REGION}" 2>/dev/null || true
+}
+
 
 function publish_docker_ecr {
     layer_archive=$1

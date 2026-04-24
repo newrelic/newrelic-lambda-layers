@@ -5,7 +5,7 @@ set -Eeuo pipefail
 BUILD_DIR=build
 GRADLE_ARCHIVE=$BUILD_DIR/distributions/NewRelicJavaLayer.zip
 
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 JAVA8_DIST_ARM64=$DIST_DIR/java8.arm64.zip
 JAVA8_DIST_X86_64=$DIST_DIR/java8.x86_64.zip
 JAVA11_DIST_ARM64=$DIST_DIR/java11.arm64.zip
@@ -244,6 +244,20 @@ case "$1" in
 	$0 build-java21
 	$0 publish-java21
 	;;
+"publish-staging-java21")
+    build-java21-arm64
+    build-java21-x86
+    arn_arm64=$(publish_staging_layer "$JAVA21_DIST_ARM64" java21 arm64)
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$JAVA21_DIST_X86_64" java21 x86_64)
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+"cleanup-staging-java21")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
+    ;;
 *)
 	usage
 	;;
