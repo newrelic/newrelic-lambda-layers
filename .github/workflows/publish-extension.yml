@@ -6,28 +6,28 @@ on:
       - v**_extension
 
 jobs:
-  publish-extension:
+  # ── Job 1: Publish staging (extension) ───────────────────────────────────
+  stage-extension:
     runs-on: ubuntu-latest
+    outputs:
+      tag-match: ${{ steps.extension-check-tag.outputs.match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Check Tag
         id: extension-check-tag
         run: |
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
-
       - name: Install publish dependencies
         if: steps.extension-check-tag.outputs.match == 'true'
         run: pip install -U awscli
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
-
-      # ── 1. Publish staging ───────────────────────────────────────────────
       - name: Publish staging layers
         if: steps.extension-check-tag.outputs.match == 'true'
         id: staging
@@ -39,45 +39,64 @@ jobs:
           cd extension
           ./publish-layer.sh publish-staging
 
-      # ── 2. Validate go/al2 ───────────────────────────────────────────────
-      - name: Validate staging layers (go/al2)
-        if: steps.extension-check-tag.outputs.match == 'true'
-        id: validate_al2
+  # ── Job 2a: Validate go/al2 (calls reusable workflow) ────────────────────
+  validate-al2:
+    needs: stage-extension
+    if: needs.stage-extension.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   go
+      label:     go/al2
+      arn_x86:   ${{ needs.stage-extension.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-extension.outputs.arn_arm64 }}
+      os:        al2
+    secrets: inherit
+
+  # ── Job 2b: Validate go/al2023 (calls reusable workflow, runs in parallel) ─
+  validate-al2023:
+    needs: stage-extension
+    if: needs.stage-extension.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   go
+      label:     go/al2023
+      arn_x86:   ${{ needs.stage-extension.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-extension.outputs.arn_arm64 }}
+      os:        al2023
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always, after both validates) ─────────────────
+  cleanup-extension:
+    needs: [stage-extension, validate-al2, validate-al2023]
+    if: always() && needs.stage-extension.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
         env:
-          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
-          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
-          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:   ${{ needs.stage-extension.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-extension.outputs.arn_arm64 }}
         run: |
-          chmod +x .github/scripts/poll-validation.sh
-          .github/scripts/poll-validation.sh \
-            --runtime    go \
-            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
-            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}" \
-            --os         al2
+          cd extension
+          ./publish-layer.sh cleanup-staging
 
-      # ── 3. Validate go/al2023 ────────────────────────────────────────────
-      - name: Validate staging layers (go/al2023)
-        if: steps.extension-check-tag.outputs.match == 'true'
-        id: validate_al2023
-        env:
-          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
-          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
-          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-        run: |
-          chmod +x .github/scripts/poll-validation.sh
-          .github/scripts/poll-validation.sh \
-            --runtime    go \
-            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
-            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}" \
-            --os         al2023
-
-      # ── 4. Release publish ───────────────────────────────────────────────
+  # ── Job 4: Release extension — gated on BOTH validates passing ────────────
+  publish-extension:
+    needs: [stage-extension, validate-al2, validate-al2023]
+    if: needs.stage-extension.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install publish dependencies
+        run: pip install -U awscli
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
       - name: Publish extension layer
-        if: steps.extension-check-tag.outputs.match == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -85,27 +104,18 @@ jobs:
           cd extension
           ./publish-layer.sh
 
-      # ── 5. Cleanup staging (always) ──────────────────────────────────────
-      - name: Cleanup staging layers
-        if: always() && steps.staging.outputs.arn_x86 != ''
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-          STAGING_REGION: us-east-1
-          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
-          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
-        run: |
-          cd extension
-          ./publish-layer.sh cleanup-staging
-
-      # ── 6. Slack notification ────────────────────────────────────────────
+  # ── Job 5: Slack release summary — only after both validates passed ────────
+  notify-slack:
+    needs: [stage-extension, validate-al2, validate-al2023, publish-extension]
+    if: always() && needs.validate-al2.result == 'success' && needs.validate-al2023.result == 'success' && needs.stage-extension.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify Slack
-        if: always() && steps.extension-check-tag.outputs.match == 'true' && steps.staging.outputs.arn_x86 != ''
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ (steps.validate_al2.outcome == 'success' && steps.validate_al2023.outcome == 'success') && ':white_check_mark:' || ':x:' }} *extension (go/al2+al2023)* layer validation al2=${{ steps.validate_al2.outcome }} al2023=${{ steps.validate_al2023.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ needs.publish-extension.result == 'success' && ':white_check_mark:' || ':x:' }} *extension (go/al2+al2023)* layer release ${{ needs.publish-extension.result == 'success' && 'succeeded' || 'FAILED' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

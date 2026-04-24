@@ -6,25 +6,26 @@ on:
       - v**_dotnet
 
 jobs:
-  publish-dotnet:
+  # ── Job 1: Publish staging (dotnet10) ────────────────────────────────────
+  stage-dotnet:
     runs-on: ubuntu-latest
+    outputs:
+      tag-match: ${{ steps.dotnet-check-tag.outputs.match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Check Tag
         id: dotnet-check-tag
         run: |
           if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_dotnet ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
-
-      # ── 1. Publish staging ───────────────────────────────────────────────
-      - name: Publish staging layers
+      - name: Publish staging layers (dotnet10)
         if: steps.dotnet-check-tag.outputs.match == 'true'
         id: staging
         env:
@@ -35,55 +36,66 @@ jobs:
           cd dotnet
           ./publish-layers.sh publish-staging-dotnet
 
-      # ── 2. Validate ──────────────────────────────────────────────────────
-      - name: Validate staging layers
-        if: steps.dotnet-check-tag.outputs.match == 'true'
-        id: validate
-        env:
-          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
-          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
-          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-        run: |
-          chmod +x .github/scripts/poll-validation.sh
-          .github/scripts/poll-validation.sh \
-            --runtime    dotnet10 \
-            --arn-x86    "${{ steps.staging.outputs.arn_x86 }}" \
-            --arn-arm64  "${{ steps.staging.outputs.arn_arm64 }}"
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-dotnet:
+    needs: stage-dotnet
+    if: needs.stage-dotnet.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   dotnet10
+      arn_x86:   ${{ needs.stage-dotnet.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-dotnet.outputs.arn_arm64 }}
+    secrets: inherit
 
-      # ── 3. Release publish ───────────────────────────────────────────────
-      - name: Publish Dotnet Layer
-        if: steps.dotnet-check-tag.outputs.match == 'true'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AGENT_VERSION: ${{ steps.dotnet-check-tag.outputs.version }}
-        run: |
-          cd dotnet
-          ./publish-layers.sh
-
-      # ── 4. Cleanup staging (always) ──────────────────────────────────────
+  # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
+  cleanup-dotnet:
+    needs: [stage-dotnet, validate-dotnet]
+    if: always() && needs.stage-dotnet.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Cleanup staging layers
-        if: always() && steps.staging.outputs.arn_x86 != ''
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
           STAGING_REGION: us-east-1
-          ARN_X86: ${{ steps.staging.outputs.arn_x86 }}
-          ARN_ARM64: ${{ steps.staging.outputs.arn_arm64 }}
+          ARN_X86:   ${{ needs.stage-dotnet.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-dotnet.outputs.arn_arm64 }}
         run: |
           cd dotnet
           ./publish-layers.sh cleanup-staging-dotnet
 
-      # ── 5. Slack notification ────────────────────────────────────────────
+  # ── Job 4: Release dotnet layer — gated on validate passing ───────────────
+  publish-dotnet:
+    needs: [stage-dotnet, validate-dotnet]
+    if: needs.stage-dotnet.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
+      - name: Publish Dotnet Layer
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd dotnet
+          ./publish-layers.sh
+
+  # ── Job 5: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-dotnet, validate-dotnet, publish-dotnet]
+    if: always() && needs.validate-dotnet.result == 'success' && needs.stage-dotnet.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify Slack
-        if: always() && steps.dotnet-check-tag.outputs.match == 'true' && steps.staging.outputs.arn_x86 != ''
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ steps.validate.outcome == 'success' && ':white_check_mark:' || ':x:' }} *dotnet10* layer validation ${{ steps.validate.outcome }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ needs.publish-dotnet.result == 'success' && ':white_check_mark:' || ':x:' }} *dotnet10* layer release ${{ needs.publish-dotnet.result == 'success' && 'succeeded' || 'FAILED' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }
