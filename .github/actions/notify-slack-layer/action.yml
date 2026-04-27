@@ -1,0 +1,116 @@
+name: Notify Slack Layer Release
+description: Builds and sends a structured Slack notification for lambda layer releases
+
+inputs:
+  language_name:
+    description: Language display name, e.g. "Node.js"
+    required: true
+  versions_json:
+    description: |
+      JSON array: [{"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"success"}]
+      - key: unique identifier
+      - label: display label in Slack message
+      - job: GitHub Actions job name (used for per-matrix API lookup)
+      - fallback: result to use if API lookup finds no match
+    required: true
+  failure_summaries:
+    description: Newline-separated failure_summary strings from publish jobs
+    required: false
+    default: ""
+  slack_webhook:
+    description: Slack incoming webhook URL
+    required: true
+  gh_token:
+    required: true
+  repo:
+    required: true
+  run_id:
+    required: true
+  ref_name:
+    required: true
+  actor:
+    required: true
+  server_url:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build Slack payload
+      shell: bash
+      env:
+        LANGUAGE_NAME: ${{ inputs.language_name }}
+        VERSIONS_JSON: ${{ inputs.versions_json }}
+        FAILURE_SUMMARIES: ${{ inputs.failure_summaries }}
+        GH_TOKEN: ${{ inputs.gh_token }}
+        REPO: ${{ inputs.repo }}
+        RUN_ID: ${{ inputs.run_id }}
+        TAG: ${{ inputs.ref_name }}
+        ACTOR: ${{ inputs.actor }}
+        SERVER_URL: ${{ inputs.server_url }}
+      run: |
+        python3 << 'PYEOF'
+        import json, os, subprocess
+
+        versions = json.loads(os.environ["VERSIONS_JSON"])
+
+        r = subprocess.run(
+          ["gh", "api", "--paginate",
+           f"repos/{os.environ['REPO']}/actions/runs/{os.environ['RUN_ID']}/jobs",
+           "-q", ".jobs[]"],
+          capture_output=True, text=True
+        )
+        api_jobs = {}
+        for line in r.stdout.strip().splitlines():
+          try:
+            job = json.loads(line)
+            api_jobs[job["name"]] = job.get("conclusion") or "in_progress"
+          except Exception:
+            pass
+
+        results = {}
+        for v in versions:
+          results[v["key"]] = api_jobs.get(v["job"], v["fallback"])
+
+        total = len(versions)
+        failed_count = sum(1 for v in versions if results.get(v["key"]) != "success")
+        all_ok = failed_count == 0
+
+        lang = os.environ["LANGUAGE_NAME"]
+        icon = ":white_check_mark:" if all_ok else ":x:"
+        status = "Succeeded" if all_ok else f"Failed ({failed_count}/{total} versions failed)"
+        lines = [
+          f"{icon} *{lang} Layer Release {status}*",
+          f"Tag: `{os.environ['TAG']}`",
+          f"Triggered by: {os.environ['ACTOR']}",
+          "",
+          "*Layer Results:*",
+        ]
+        for v in versions:
+          r = results.get(v["key"], "unknown")
+          em = ":white_check_mark:" if r == "success" else ":x:"
+          reason = "Layer published successfully" if r == "success" else "Layer publish to AWS failed"
+          lines.append(f"{em} {v['label']} — {reason}")
+
+        skipped = []
+        for fs in os.environ.get("FAILURE_SUMMARIES", "").splitlines():
+          if "regions failed:" in fs:
+            for region in fs.split("regions failed:")[-1].strip().split():
+              if region not in skipped:
+                skipped.append(region)
+        if skipped:
+          lines += ["", ":warning: *Regions skipped (AWS infra errors):*"]
+          lines += [f"• {r}" for r in skipped]
+
+        run_url = f"{os.environ['SERVER_URL']}/{os.environ['REPO']}/actions/runs/{os.environ['RUN_ID']}"
+        lines += ["", f"<{run_url}|View Run>"]
+
+        with open("/tmp/slack-payload.json", "w") as f:
+          json.dump({"text": "\n".join(lines)}, f)
+        PYEOF
+    - name: Notify Slack
+      uses: slackapi/slack-github-action@v2.1.0
+      with:
+        webhook: ${{ inputs.slack_webhook }}
+        webhook-type: incoming-webhook
+        payload-file-path: /tmp/slack-payload.json

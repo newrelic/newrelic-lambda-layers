@@ -116,12 +116,21 @@ jobs:
     if: always() && needs.validate-ruby.result == 'success' && needs.stage-ruby.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Notify Slack
-        uses: slackapi/slack-github-action@v2.1.0
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
         with:
-          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": "${{ needs.publish-ruby.result == 'success' && ':white_check_mark:' || ':x:' }} *ruby* layers (3.2 / 3.3 / 3.4) release ${{ needs.publish-ruby.result == 'success' && 'succeeded' || 'FAILED' }}${{ needs.publish-ruby.outputs.failure_summary != '' && format(' — {0}', needs.publish-ruby.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
-            }
+          language_name: Ruby
+          versions_json: |-
+            [
+              {"key":"3.2","label":"Ruby 3.2","job":"publish-ruby (3.2)","fallback":"${{ needs.publish-ruby.result }}"},
+              {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}"},
+              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}"}
+            ]
+          failure_summaries: ${{ needs.publish-ruby.outputs.failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}
