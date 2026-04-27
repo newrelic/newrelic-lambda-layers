@@ -23,7 +23,7 @@ ARN_X86_SLIM=""
 ARN_ARM64_SLIM=""
 OS_TIER=""
 RUN_ID=""
-TIMEOUT=${VALIDATION_TIMEOUT_S:-600}
+TIMEOUT=${VALIDATION_TIMEOUT_S:-1800}
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -114,7 +114,7 @@ PYEOF
 
   remaining=$((end - SECONDS))
   echo "  Waiting... (${remaining}s remaining)"
-  sleep 15
+  sleep 300
 done
 
 echo "ERROR: Timeout after ${TIMEOUT}s — no result at s3://${RESULTS_BUCKET}/${KEY}"
