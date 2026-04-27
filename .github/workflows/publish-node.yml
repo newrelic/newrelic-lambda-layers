@@ -75,8 +75,11 @@ jobs:
     if: needs.stage-node.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node-version: [20, 22, 24]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -86,6 +89,7 @@ jobs:
       - name: Build layer artifacts
         run: make extract-nodejs${{ matrix.node-version }}-artifacts
       - name: Publish release layers
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -93,6 +97,10 @@ jobs:
           docker run \
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
+            -e GITHUB_OUTPUT \
+            -e GITHUB_STEP_SUMMARY \
+            -v "$GITHUB_OUTPUT:$GITHUB_OUTPUT" \
+            -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             newrelic-lambda-layers-nodejs${{ matrix.node-version }}
       - name: Publish ECR image for nodejs${{ matrix.node-version }}
         env:
@@ -114,6 +122,8 @@ jobs:
     needs: [stage-node, validate-node]
     if: needs.stage-node.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -121,6 +131,7 @@ jobs:
         with:
           node-version: 22
       - name: Publish universal layer
+        id: publish-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -153,5 +164,5 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ (needs.publish-node.result == 'success' && needs.publish-node-universal.result == 'success') && ':white_check_mark:' || ':x:' }} *nodejs* layers (20 / 22 / 24 / universal) release ${{ (needs.publish-node.result == 'success' && needs.publish-node-universal.result == 'success') && 'succeeded' || 'FAILED' }} — release: ${{ needs.publish-node.result }}, universal: ${{ needs.publish-node-universal.result }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ (needs.publish-node.result == 'success' && needs.publish-node-universal.result == 'success') && ':white_check_mark:' || ':x:' }} *nodejs* layers (20 / 22 / 24 / universal) release ${{ (needs.publish-node.result == 'success' && needs.publish-node-universal.result == 'success') && 'succeeded' || 'FAILED' }} — release: ${{ needs.publish-node.result }}, universal: ${{ needs.publish-node-universal.result }}${{ needs.publish-node.outputs.failure_summary != '' && format(' — {0}', needs.publish-node.outputs.failure_summary) || needs.publish-node-universal.outputs.failure_summary != '' && format(' — {0}', needs.publish-node-universal.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

@@ -81,8 +81,11 @@ jobs:
     if: needs.stage-ruby.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         ruby-version: [3.2, 3.3, 3.4]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Use Ruby ${{ matrix.ruby-version }}
@@ -100,6 +103,7 @@ jobs:
         with:
           platforms: arm64, amd64
       - name: Build and Publish layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -119,5 +123,5 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ needs.publish-ruby.result == 'success' && ':white_check_mark:' || ':x:' }} *ruby* layers (3.2 / 3.3 / 3.4) release ${{ needs.publish-ruby.result == 'success' && 'succeeded' || 'FAILED' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ needs.publish-ruby.result == 'success' && ':white_check_mark:' || ':x:' }} *ruby* layers (3.2 / 3.3 / 3.4) release ${{ needs.publish-ruby.result == 'success' && 'succeeded' || 'FAILED' }}${{ needs.publish-ruby.outputs.failure_summary != '' && format(' — {0}', needs.publish-ruby.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

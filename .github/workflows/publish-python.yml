@@ -64,13 +64,17 @@ jobs:
     if: needs.stage-python.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/python-layer-setup
       - name: Publish Python ${{ matrix.python-version }} layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -83,11 +87,14 @@ jobs:
     needs: [stage-python, validate-python]
     if: needs.stage-python.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/python-layer-setup
       - name: Publish universal Python layer
+        id: publish-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -108,5 +115,5 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ (needs.publish-python.result == 'success' && needs.publish-python-universal.result == 'success') && ':white_check_mark:' || ':x:' }} *python* layers (3.9–3.14 + universal) release ${{ (needs.publish-python.result == 'success' && needs.publish-python-universal.result == 'success') && 'succeeded' || 'FAILED' }} — release: ${{ needs.publish-python.result }}, universal: ${{ needs.publish-python-universal.result }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ (needs.publish-python.result == 'success' && needs.publish-python-universal.result == 'success') && ':white_check_mark:' || ':x:' }} *python* layers (3.9–3.14 + universal) release ${{ (needs.publish-python.result == 'success' && needs.publish-python-universal.result == 'success') && 'succeeded' || 'FAILED' }} — release: ${{ needs.publish-python.result }}, universal: ${{ needs.publish-python-universal.result }}${{ needs.publish-python.outputs.failure_summary != '' && format(' — {0}', needs.publish-python.outputs.failure_summary) || needs.publish-python-universal.outputs.failure_summary != '' && format(' — {0}', needs.publish-python-universal.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

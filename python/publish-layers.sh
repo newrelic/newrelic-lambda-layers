@@ -78,10 +78,7 @@ function publish_python_layer {
         REGIONS=("${REGIONS[@]}");
     fi
 
-    for region in "${REGIONS[@]}"; do
-        echo "Publishing layer for python${python_version} (${arch}) to region ${region}"
-        publish_layer ${ZIP} $region python${python_version} ${arch} $NEWRELIC_AGENT_VERSION
-    done
+    run_region_loop "$ZIP" "python${python_version}" "${arch}" "$NEWRELIC_AGENT_VERSION"
 }
 
 
@@ -127,10 +124,7 @@ function publish_universal_python_layer {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-        echo "Publishing universal Python layer (${arch}) to region ${region}"
-        publish_layer ${ZIP} $region python ${arch} $NEWRELIC_AGENT_VERSION
-    done
+    run_region_loop "$ZIP" python "${arch}" "$NEWRELIC_AGENT_VERSION"
 }
 
 

@@ -75,8 +75,11 @@ jobs:
     if: needs.stage-java.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         java-version: [java8al2, java11, java17, java21]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
       - name: Set up Java version
@@ -99,12 +102,18 @@ jobs:
         if: matrix.java-version == 'java21'
         run: make extract-java21-artifacts
       - name: Publish ${{ matrix.java-version }} layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           if [[ "${{ matrix.java-version }}" == "java21" ]]; then
-            docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY newrelic-lambda-layers-java21
+            docker run \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              -e GITHUB_OUTPUT -e GITHUB_STEP_SUMMARY \
+              -v "$GITHUB_OUTPUT:$GITHUB_OUTPUT" \
+              -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
+              newrelic-lambda-layers-java21
           else
             make publish-${{ matrix.java-version }}-ci
           fi
@@ -133,5 +142,5 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ needs.publish-java.result == 'success' && ':white_check_mark:' || ':x:' }} *java* layers (8al2 / 11 / 17 / 21) release ${{ needs.publish-java.result == 'success' && 'succeeded' || 'FAILED' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ needs.publish-java.result == 'success' && ':white_check_mark:' || ':x:' }} *java* layers (8al2 / 11 / 17 / 21) release ${{ needs.publish-java.result == 'success' && 'succeeded' || 'FAILED' }}${{ needs.publish-java.outputs.failure_summary != '' && format(' — {0}', needs.publish-java.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

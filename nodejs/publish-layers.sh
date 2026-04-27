@@ -64,9 +64,7 @@ function publish_universal_wrapper {
     exit 1
   fi
 
-  for region in "${REGIONS[@]}"; do
-    publish_layer $ZIP $region nodejs ${arch} $NEWRELIC_AGENT_VERSION $slim
-  done
+  run_region_loop "$ZIP" nodejs "${arch}" "$NEWRELIC_AGENT_VERSION" "$slim"
 }
 
 function build_wrapper {
@@ -117,9 +115,7 @@ function publish_wrapper {
     exit 1
   fi
 
-  for region in "${REGIONS[@]}"; do
-    publish_layer $ZIP $region nodejs${node_version}.x ${arch} $NEWRELIC_AGENT_VERSION $slim
-  done
+  run_region_loop "$ZIP" "nodejs${node_version}.x" "${arch}" "$NEWRELIC_AGENT_VERSION" "$slim"
 }
 
 # Publish staging layers for a given node version (us-east-1, -staging suffix).

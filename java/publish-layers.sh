@@ -65,9 +65,7 @@ function publish-java8al2-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA8_DIST_ARM64 $region java8.al2 arm64
-    done
+    run_region_loop "$JAVA8_DIST_ARM64" java8.al2 arm64
 }
 
 function publish-java8al2-x86 {
@@ -76,9 +74,7 @@ function publish-java8al2-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA8_DIST_X86_64 $region java8.al2 x86_64
-    done
+    run_region_loop "$JAVA8_DIST_X86_64" java8.al2 x86_64
 }
 
 function build-java11-arm64 {
@@ -95,9 +91,7 @@ function publish-java11-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA11_DIST_ARM64 $region java11 arm64
-    done
+    run_region_loop "$JAVA11_DIST_ARM64" java11 arm64
 }
 
 function publish-java11-x86 {
@@ -106,9 +100,7 @@ function publish-java11-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA11_DIST_X86_64 $region java11 x86_64
-    done
+    run_region_loop "$JAVA11_DIST_X86_64" java11 x86_64
 }
 
 function build-java17-arm64 {
@@ -125,9 +117,7 @@ function publish-java17-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA17_DIST_ARM64 $region java17 arm64
-    done
+    run_region_loop "$JAVA17_DIST_ARM64" java17 arm64
 }
 
 function publish-java17-x86 {
@@ -136,9 +126,7 @@ function publish-java17-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA17_DIST_X86_64 $region java17 x86_64
-    done
+    run_region_loop "$JAVA17_DIST_X86_64" java17 x86_64
 }
 
 function build-java21-arm64 {
@@ -155,9 +143,7 @@ function publish-java21-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA21_DIST_ARM64 $region java21 arm64
-    done
+    run_region_loop "$JAVA21_DIST_ARM64" java21 arm64
 }
 
 function publish-java21-x86 {
@@ -166,9 +152,7 @@ function publish-java21-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA21_DIST_X86_64 $region java21 x86_64
-    done
+    run_region_loop "$JAVA21_DIST_X86_64" java21 x86_64
 }
 
 case "$1" in

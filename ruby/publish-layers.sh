@@ -175,11 +175,7 @@ function publish_ruby_for_arch {
   local arch=$2
   local dist_file=$3
 
-  for region in "${REGIONS[@]}"; do
-    echo "Publishing $dist_file for region=$region, ruby=$ruby_version, arch=$arch"
-    publish_layer $dist_file $region "ruby${ruby_version}" $arch $NEWRELIC_AGENT_VERSION
-  done
-  echo 'Publishing complete'
+  run_region_loop "$dist_file" "ruby${ruby_version}" "$arch" "$NEWRELIC_AGENT_VERSION"
 }
 
 set +u # permit $1 to be unbound so that '*' matches it when no args are present

@@ -70,6 +70,8 @@ jobs:
     needs: [stage-dotnet, validate-dotnet]
     if: needs.stage-dotnet.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -77,6 +79,7 @@ jobs:
         with:
           platforms: arm64, amd64
       - name: Publish Dotnet Layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -97,5 +100,5 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "${{ needs.publish-dotnet.result == 'success' && ':white_check_mark:' || ':x:' }} *dotnet10* layer release ${{ needs.publish-dotnet.result == 'success' && 'succeeded' || 'FAILED' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+              "text": "${{ needs.publish-dotnet.result == 'success' && ':white_check_mark:' || ':x:' }} *dotnet10* layer release ${{ needs.publish-dotnet.result == 'success' && 'succeeded' || 'FAILED' }}${{ needs.publish-dotnet.outputs.failure_summary != '' && format(' — {0}', needs.publish-dotnet.outputs.failure_summary) || '' }} — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
             }

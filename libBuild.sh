@@ -503,3 +503,61 @@ function publish_docker_hub {
   echo "docker push newrelic/newrelic-lambda-layers:${language_flag}-${version_flag}${arch_flag}"
   docker push newrelic/newrelic-lambda-layers:${language_flag}-${version_flag}${arch_flag}
 }
+
+# Calls publish_layer for one region; prints [OK]/[FAIL] and returns 0/1.
+# Args: <zip> <region> <runtime> <arch> [version] [slim]
+publish_layer_safe() {
+  local region="${2}"
+  if publish_layer "$@"; then
+    echo "  [OK]  ${region}"
+    return 0
+  else
+    echo "  [FAIL] ${region} — skipped (see AWS error above)"
+    return 1
+  fi
+}
+
+# Iterates REGIONS[@], calling publish_layer_safe per region.
+# Writes a table to $GITHUB_STEP_SUMMARY and failure_summary to $GITHUB_OUTPUT.
+# Exits 1 (after all regions are attempted) if any region failed.
+# Usage: run_region_loop <zip> <runtime> <arch> [version] [slim]
+run_region_loop() {
+  local zip=$1
+  shift
+  local extra_args=("$@")
+  local -a failed=() passed=()
+
+  for region in "${REGIONS[@]}"; do
+    if publish_layer_safe "$zip" "$region" "${extra_args[@]}"; then
+      passed+=("$region")
+    else
+      failed+=("$region")
+    fi
+  done
+
+  local total=$(( ${#passed[@]} + ${#failed[@]} ))
+  local label="${extra_args[0]:-layer} ${extra_args[1]:-}"
+
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    {
+      printf "### Region Publish: %s\n" "$label"
+      printf "| Region | Status |\n|--------|--------|\n"
+      for r in "${passed[@]}"; do printf "| \`%s\` | ✅ passed |\n" "$r"; done
+      for r in "${failed[@]}"; do printf "| \`%s\` | ❌ FAILED |\n" "$r"; done
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
+
+  if [[ -n "${GITHUB_OUTPUT:-}" && ${#failed[@]} -gt 0 ]]; then
+    echo "failure_summary=${#failed[@]}/${total} regions failed: ${failed[*]}" >> "$GITHUB_OUTPUT"
+  fi
+
+  echo ""
+  echo "=== Region Publish Summary: ${label} ==="
+  echo "  Passed (${#passed[@]}/${total}): ${passed[*]:-none}"
+  echo "  Failed (${#failed[@]}/${total}): ${failed[*]:-none}"
+
+  if [[ ${#failed[@]} -gt 0 ]]; then
+    echo "ERROR: ${#failed[@]}/${total} region(s) failed"
+    return 1
+  fi
+}
