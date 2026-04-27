@@ -250,7 +250,7 @@ function publish_public_layer {
     --compatible-runtimes ${compat_list[*]} \
     --region "$region" \
     --output text \
-    --query Version)
+    --query Version) || return 1
   echo "Published ${runtime_name} layer version ${layer_version} to ${region}"
 
   echo "Setting public permissions for ${runtime_name} layer version ${layer_version} in ${region}"
@@ -544,11 +544,11 @@ run_region_loop() {
       printf "| Region | Status |\n|--------|--------|\n"
       for r in "${passed[@]}"; do printf "| \`%s\` | ✅ passed |\n" "$r"; done
       for r in "${failed[@]}"; do printf "| \`%s\` | ❌ FAILED |\n" "$r"; done
-    } >> "$GITHUB_STEP_SUMMARY"
+    } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
   fi
 
   if [[ -n "${GITHUB_OUTPUT:-}" && ${#failed[@]} -gt 0 ]]; then
-    echo "failure_summary=${#failed[@]}/${total} regions failed: ${failed[*]}" >> "$GITHUB_OUTPUT"
+    echo "failure_summary=${#failed[@]}/${total} regions failed: ${failed[*]}" >> "$GITHUB_OUTPUT" 2>/dev/null || true
   fi
 
   echo ""
