@@ -97,6 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Install publish dependencies
@@ -121,6 +122,7 @@ jobs:
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd extension
           ./publish-layer.sh
@@ -145,6 +147,7 @@ jobs:
         with:
           language_name: Extension (Go/AL2+AL2023)
           versions_json: '[{"key":"extension","label":"Extension (go/al2+al2023)","job":"publish-extension","fallback":"${{ needs.publish-extension.result }}","failure_key":"extension"}]'
+          failure_summaries: ${{ needs.publish-extension.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

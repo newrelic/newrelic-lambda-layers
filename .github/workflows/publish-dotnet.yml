@@ -79,6 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -101,6 +102,7 @@ jobs:
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd dotnet
           ./publish-layers.sh
@@ -125,6 +127,7 @@ jobs:
         with:
           language_name: Dotnet
           versions_json: '[{"key":"dotnet10","label":"Dotnet 10","job":"publish-dotnet","fallback":"${{ needs.publish-dotnet.result }}","failure_key":"dotnet"}]'
+          failure_summaries: ${{ needs.publish-dotnet.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

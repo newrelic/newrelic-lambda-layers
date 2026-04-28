@@ -65,12 +65,16 @@ case "${1:-publish}" in
   "publish-staging")  publish-staging ;;
   "cleanup-staging")  cleanup-staging ;;
   *)
+    layer_rc=0
     build-layer-x86
-    publish-layer-x86
-    publish_docker_ecr $EXTENSION_DIST_ZIP_X86_64 extension x86_64
+    publish-layer-x86 || layer_rc=$?
+    publish_ecr_safe $EXTENSION_DIST_ZIP_X86_64 extension x86_64
 
     build-layer-arm64
-    publish-layer-arm64
-    publish_docker_ecr $EXTENSION_DIST_ZIP_ARM64 extension arm64
+    publish-layer-arm64 || layer_rc=$?
+    publish_ecr_safe $EXTENSION_DIST_ZIP_ARM64 extension arm64
+
+    finalize_ecr_results "extension"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
 esac

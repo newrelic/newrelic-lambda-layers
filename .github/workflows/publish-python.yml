@@ -75,6 +75,7 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -95,6 +96,7 @@ jobs:
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd python
           ./publish-layers.sh python${{ matrix.python-version }}
@@ -115,6 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-universal.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -135,6 +138,7 @@ jobs:
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd python
           ./publish-layers.sh python
@@ -168,6 +172,9 @@ jobs:
               {"key":"3.14","label":"Python 3.14","job":"publish-python (3.14)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.14"},
               {"key":"universal","label":"Python Universal","job":"publish-python-universal","fallback":"${{ needs.publish-python-universal.result }}","failure_key":"python-universal"}
             ]
+          failure_summaries: |
+            ${{ needs.publish-python.outputs.ecr_failure_summary }}
+            ${{ needs.publish-python-universal.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

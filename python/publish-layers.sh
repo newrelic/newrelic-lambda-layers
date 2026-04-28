@@ -144,60 +144,81 @@ case "$1" in
         publish_docker_ecr $PY_DIST_X86_64 python x86_64
         ;;
     "python")
+        layer_rc=0
         build_universal_python_layer arm64
-        publish_universal_python_layer arm64
-        publish_docker_ecr $PY_DIST_ARM64 python arm64
+        publish_universal_python_layer arm64 || layer_rc=$?
+        publish_ecr_safe $PY_DIST_ARM64 python arm64
         build_universal_python_layer x86_64
-        publish_universal_python_layer x86_64
-        publish_docker_ecr $PY_DIST_X86_64 python x86_64
+        publish_universal_python_layer x86_64 || layer_rc=$?
+        publish_ecr_safe $PY_DIST_X86_64 python x86_64
+        finalize_ecr_results "python-universal"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.9")
+        layer_rc=0
         build_python_layer 3.9 arm64
-        publish_python_layer 3.9 arm64
-        publish_docker_ecr $PY39_DIST_ARM64 python3.9 arm64
+        publish_python_layer 3.9 arm64 || layer_rc=$?
+        publish_ecr_safe $PY39_DIST_ARM64 python3.9 arm64
         build_python_layer 3.9 x86_64
-        publish_python_layer 3.9 x86_64
-        publish_docker_ecr $PY39_DIST_X86_64 python3.9 x86_64
+        publish_python_layer 3.9 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY39_DIST_X86_64 python3.9 x86_64
+        finalize_ecr_results "python3.9"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.10")
+        layer_rc=0
         build_python_layer 3.10 arm64
-        publish_python_layer 3.10 arm64
-        publish_docker_ecr $PY310_DIST_ARM64 python3.10 arm64
+        publish_python_layer 3.10 arm64 || layer_rc=$?
+        publish_ecr_safe $PY310_DIST_ARM64 python3.10 arm64
         build_python_layer 3.10 x86_64
-        publish_python_layer 3.10 x86_64
-        publish_docker_ecr $PY310_DIST_X86_64 python3.10 x86_64
+        publish_python_layer 3.10 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY310_DIST_X86_64 python3.10 x86_64
+        finalize_ecr_results "python3.10"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.11")
+        layer_rc=0
         build_python_layer 3.11 arm64
-        publish_python_layer 3.11 arm64
-        publish_docker_ecr $PY311_DIST_ARM64 python3.11 arm64
+        publish_python_layer 3.11 arm64 || layer_rc=$?
+        publish_ecr_safe $PY311_DIST_ARM64 python3.11 arm64
         build_python_layer 3.11 x86_64
-        publish_python_layer 3.11 x86_64
-        publish_docker_ecr $PY311_DIST_X86_64 python3.11 x86_64
+        publish_python_layer 3.11 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY311_DIST_X86_64 python3.11 x86_64
+        finalize_ecr_results "python3.11"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.12")
+        layer_rc=0
         build_python_layer 3.12 arm64
-        publish_python_layer 3.12 arm64
-        publish_docker_ecr $PY312_DIST_ARM64 python3.12 arm64
+        publish_python_layer 3.12 arm64 || layer_rc=$?
+        publish_ecr_safe $PY312_DIST_ARM64 python3.12 arm64
         build_python_layer 3.12 x86_64
-        publish_python_layer 3.12 x86_64
-        publish_docker_ecr $PY312_DIST_X86_64 python3.12 x86_64
+        publish_python_layer 3.12 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY312_DIST_X86_64 python3.12 x86_64
+        finalize_ecr_results "python3.12"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.13")
+        layer_rc=0
         build_python_layer 3.13 arm64
-        publish_python_layer 3.13 arm64
-        publish_docker_ecr $PY313_DIST_ARM64 python3.13 arm64
+        publish_python_layer 3.13 arm64 || layer_rc=$?
+        publish_ecr_safe $PY313_DIST_ARM64 python3.13 arm64
         build_python_layer 3.13 x86_64
-        publish_python_layer 3.13 x86_64
-        publish_docker_ecr $PY313_DIST_X86_64 python3.13 x86_64
+        publish_python_layer 3.13 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY313_DIST_X86_64 python3.13 x86_64
+        finalize_ecr_results "python3.13"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.14")
+        layer_rc=0
         build_python_layer 3.14 arm64
-        publish_python_layer 3.14 arm64
-        publish_docker_ecr $PY314_DIST_ARM64 python3.14 arm64
+        publish_python_layer 3.14 arm64 || layer_rc=$?
+        publish_ecr_safe $PY314_DIST_ARM64 python3.14 arm64
         build_python_layer 3.14 x86_64
-        publish_python_layer 3.14 x86_64
-        publish_docker_ecr $PY314_DIST_X86_64 python3.14 x86_64
+        publish_python_layer 3.14 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY314_DIST_X86_64 python3.14 x86_64
+        finalize_ecr_results "python3.14"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "publish-staging-python3.14")
         build_python_layer 3.14 arm64

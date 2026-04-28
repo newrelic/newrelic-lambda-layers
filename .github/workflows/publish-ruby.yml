@@ -93,6 +93,7 @@ jobs:
         ruby-version: [3.2, 3.3, 3.4]
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Use Ruby ${{ matrix.ruby-version }}
@@ -125,6 +126,7 @@ jobs:
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: ./publish-layers.sh ruby${{ matrix.ruby-version }}
         working-directory: ruby
       - name: Save failed regions for re-run
@@ -153,6 +155,7 @@ jobs:
               {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.3"},
               {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.4"}
             ]
+          failure_summaries: ${{ needs.publish-ruby.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

@@ -181,28 +181,37 @@ function publish_ruby_for_arch {
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
   "ruby3.4")
+    layer_rc=0
     build-ruby34-arm64
-    publish-ruby34-arm64
-    publish_docker_ecr $RB34_DIST_ARM64 ruby3.4 arm64
+    publish-ruby34-arm64 || layer_rc=$?
+    publish_ecr_safe $RB34_DIST_ARM64 ruby3.4 arm64
     build-ruby34-x86
-    publish-ruby34-x86
-    publish_docker_ecr $RB34_DIST_X86_64 ruby3.4 x86_64
+    publish-ruby34-x86 || layer_rc=$?
+    publish_ecr_safe $RB34_DIST_X86_64 ruby3.4 x86_64
+    finalize_ecr_results "ruby3.4"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
   "ruby3.3")
+    layer_rc=0
     build-ruby33-arm64
-    publish-ruby33-arm64
-    publish_docker_ecr $RB33_DIST_ARM64 ruby3.3 arm64
+    publish-ruby33-arm64 || layer_rc=$?
+    publish_ecr_safe $RB33_DIST_ARM64 ruby3.3 arm64
     build-ruby33-x86
-    publish-ruby33-x86
-    publish_docker_ecr $RB33_DIST_X86_64 ruby3.3 x86_64
+    publish-ruby33-x86 || layer_rc=$?
+    publish_ecr_safe $RB33_DIST_X86_64 ruby3.3 x86_64
+    finalize_ecr_results "ruby3.3"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
   "ruby3.2")
+    layer_rc=0
     build-ruby32-arm64
-    publish-ruby32-arm64
-    publish_docker_ecr $RB32_DIST_ARM64 ruby3.2 arm64
+    publish-ruby32-arm64 || layer_rc=$?
+    publish_ecr_safe $RB32_DIST_ARM64 ruby3.2 arm64
     build-ruby32-x86
-    publish-ruby32-x86
-    publish_docker_ecr $RB32_DIST_X86_64 ruby3.2 x86_64
+    publish-ruby32-x86 || layer_rc=$?
+    publish_ecr_safe $RB32_DIST_X86_64 ruby3.2 x86_64
+    finalize_ecr_results "ruby3.2"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
   "publish-staging-ruby3.4")
     build-ruby34-arm64

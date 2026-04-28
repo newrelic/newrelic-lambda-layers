@@ -37,8 +37,6 @@ function publish-dotnet-x86-64 {
     fi
 
     run_region_loop "$DOTNET_DIST_X86_64" dotnet x86_64 "$NEWRELIC_AGENT_VERSION"
-
-    publish_docker_ecr $DOTNET_DIST_X86_64 dotnet x86_64
 }
 
 function build-dotnet-arm64 {
@@ -60,8 +58,6 @@ function publish-dotnet-arm64 {
     fi
 
     run_region_loop "$DOTNET_DIST_ARM64" dotnet arm64 "$NEWRELIC_AGENT_VERSION"
-
-    publish_docker_ecr $DOTNET_DIST_ARM64 dotnet arm64
 }
 
 # exmaple https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_amd64.tar.gz
@@ -108,10 +104,15 @@ case "${1:-}" in
     done
     ;;
 *)
+    layer_rc=0
     build-dotnet-arm64
-    publish-dotnet-arm64
+    publish-dotnet-arm64 || layer_rc=$?
+    publish_ecr_safe $DOTNET_DIST_ARM64 dotnet arm64
     build-dotnet-x86-64
-    publish-dotnet-x86-64
+    publish-dotnet-x86-64 || layer_rc=$?
+    publish_ecr_safe $DOTNET_DIST_X86_64 dotnet x86_64
+    finalize_ecr_results "dotnet"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
 esac
 
