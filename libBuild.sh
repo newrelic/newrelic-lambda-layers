@@ -576,3 +576,55 @@ run_region_loop() {
     return 1
   fi
 }
+
+# Global accumulators for ECR publish results within one script invocation.
+declare -ga _ECR_PASSED=()
+declare -ga _ECR_FAILED=()
+
+# Calls publish_docker_ecr; accumulates pass/fail into _ECR_PASSED/_ECR_FAILED.
+# Never propagates failure — call finalize_ecr_results at the end instead.
+# Args: same as publish_docker_ecr (<zip> <runtime> <arch> [slim])
+publish_ecr_safe() {
+  local label="${2}-${3}${4:+-$4}"
+  if publish_docker_ecr "$@"; then
+    echo "  [ECR OK]   ${label}"
+    _ECR_PASSED+=("$label")
+  else
+    echo "  [ECR FAIL] ${label} — see Docker/AWS error above"
+    _ECR_FAILED+=("$label")
+  fi
+  return 0
+}
+
+# Writes ECR summary table to $GITHUB_STEP_SUMMARY and ecr_failure_summary to
+# $GITHUB_OUTPUT, then returns 1 if any images failed.
+# Call once after all publish_ecr_safe calls for a given publish block.
+# Args: [label] — optional human label for the summary heading
+finalize_ecr_results() {
+  local label="${1:-ECR}"
+  local total=$(( ${#_ECR_PASSED[@]} + ${#_ECR_FAILED[@]} ))
+
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    {
+      printf "### ECR Image Publish: %s\n" "$label"
+      printf "| Image | Status |\n|-------|--------|\n"
+      for i in "${_ECR_PASSED[@]}"; do printf "| \`%s\` | ✅ passed |\n" "$i"; done
+      for i in "${_ECR_FAILED[@]}"; do printf "| \`%s\` | ❌ FAILED |\n" "$i"; done
+    } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+  fi
+
+  echo ""
+  echo "=== ECR Publish Summary: ${label} ==="
+  echo "  Passed (${#_ECR_PASSED[@]}/${total}): ${_ECR_PASSED[*]:-none}"
+  echo "  Failed (${#_ECR_FAILED[@]}/${total}): ${_ECR_FAILED[*]:-none}"
+
+  if [[ ${#_ECR_FAILED[@]} -gt 0 ]]; then
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+      echo "ecr_failure_summary=${#_ECR_FAILED[@]}/${total} ECR images failed: ${_ECR_FAILED[*]}" \
+        >> "$GITHUB_OUTPUT" 2>/dev/null || true
+    fi
+    echo "ERROR: ${#_ECR_FAILED[@]}/${total} ECR image(s) failed"
+    return 1
+  fi
+  return 0
+}

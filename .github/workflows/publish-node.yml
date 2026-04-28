@@ -86,6 +86,7 @@ jobs:
         node-version: [20, 22, 24]
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -128,6 +129,7 @@ jobs:
           run_id: ${{ github.run_id }}
           run_attempt: ${{ github.run_attempt }}
       - name: Publish ECR image for nodejs${{ matrix.node-version }}
+        id: publish-ecr
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -149,6 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr-universal.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
@@ -180,6 +183,7 @@ jobs:
           run_id: ${{ github.run_id }}
           run_attempt: ${{ github.run_attempt }}
       - name: Publish universal ECR image
+        id: publish-ecr-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -213,7 +217,9 @@ jobs:
             ]
           failure_summaries: |
             ${{ needs.publish-node.outputs.failure_summary }}
+            ${{ needs.publish-node.outputs.ecr_failure_summary }}
             ${{ needs.publish-node-universal.outputs.failure_summary }}
+            ${{ needs.publish-node-universal.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

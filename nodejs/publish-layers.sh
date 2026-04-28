@@ -169,13 +169,14 @@ case "$1" in
 	;;
 "build-publish-universal-ecr-image")
   build_universal_wrapper arm64
-	publish_docker_ecr $DIST_DIR/nodejs.arm64.zip nodejs arm64
+	publish_ecr_safe $DIST_DIR/nodejs.arm64.zip nodejs arm64
   build_universal_wrapper arm64 slim
-	publish_docker_ecr $DIST_DIR/nodejs.arm64.slim.zip nodejs arm64 slim
+	publish_ecr_safe $DIST_DIR/nodejs.arm64.slim.zip nodejs arm64 slim
   build_universal_wrapper x86_64
-	publish_docker_ecr $DIST_DIR/nodejs.x86_64.zip nodejs x86_64
+	publish_ecr_safe $DIST_DIR/nodejs.x86_64.zip nodejs x86_64
   build_universal_wrapper x86_64 slim
-	publish_docker_ecr $DIST_DIR/nodejs.x86_64.slim.zip nodejs x86_64 slim
+	publish_ecr_safe $DIST_DIR/nodejs.x86_64.slim.zip nodejs x86_64 slim
+  finalize_ecr_results "nodejs-universal"
 	;;
 "nodejs")
   $0 build-universal
@@ -224,34 +225,37 @@ case "$1" in
   publish_wrapper 24 x86_64 slim
 	;;
 "build-publish-20-ecr-image")
-  build_wrapper 20 arm64 
-	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
+  build_wrapper 20 arm64
+	publish_ecr_safe $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
   build_wrapper 20 arm64 slim
-	publish_docker_ecr $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
-  build_wrapper 20 x86_64 
-	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
+	publish_ecr_safe $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
+  build_wrapper 20 x86_64
+	publish_ecr_safe $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
   build_wrapper 20 x86_64 slim
-	publish_docker_ecr $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
+	publish_ecr_safe $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
+  finalize_ecr_results "nodejs20.x"
 	;;
 "build-publish-22-ecr-image")
-  build_wrapper 22 arm64 
-	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
+  build_wrapper 22 arm64
+	publish_ecr_safe $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
   build_wrapper 22 arm64 slim
-	publish_docker_ecr $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64
-  build_wrapper 22 x86_64 
-	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
+	publish_ecr_safe $DIST_DIR/nodejs22x.arm64.slim.zip nodejs22.x arm64 slim
+  build_wrapper 22 x86_64
+	publish_ecr_safe $DIST_DIR/nodejs22x.x86_64.zip nodejs22.x x86_64
   build_wrapper 22 x86_64 slim
-	publish_docker_ecr $DIST_DIR/nodejs22x.x86_64.slim.zip nodejs22.x x86_64 slim
+	publish_ecr_safe $DIST_DIR/nodejs22x.x86_64.slim.zip nodejs22.x x86_64 slim
+  finalize_ecr_results "nodejs22.x"
 	;;
 "build-publish-24-ecr-image")
-  build_wrapper 24 arm64 
-	publish_docker_ecr $DIST_DIR/nodejs24x.arm64.zip nodejs24.x arm64
+  build_wrapper 24 arm64
+	publish_ecr_safe $DIST_DIR/nodejs24x.arm64.zip nodejs24.x arm64
   build_wrapper 24 arm64 slim
-	publish_docker_ecr $DIST_DIR/nodejs24x.arm64.slim.zip nodejs24.x arm64
-  build_wrapper 24 x86_64 
-	publish_docker_ecr $DIST_DIR/nodejs24x.x86_64.zip nodejs24.x x86_64
+	publish_ecr_safe $DIST_DIR/nodejs24x.arm64.slim.zip nodejs24.x arm64 slim
+  build_wrapper 24 x86_64
+	publish_ecr_safe $DIST_DIR/nodejs24x.x86_64.zip nodejs24.x x86_64
   build_wrapper 24 x86_64 slim
-	publish_docker_ecr $DIST_DIR/nodejs24x.x86_64.slim.zip nodejs24.x x86_64 slim
+	publish_ecr_safe $DIST_DIR/nodejs24x.x86_64.slim.zip nodejs24.x x86_64 slim
+  finalize_ecr_results "nodejs24.x"
 	;;
 "nodejs20")
   $0 build-20

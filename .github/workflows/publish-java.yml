@@ -87,6 +87,7 @@ jobs:
         java-version: [java8al2, java11, java17, java21]
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
       - name: Set up Java version
@@ -148,6 +149,7 @@ jobs:
         with:
           platforms: arm64, amd64
       - name: Publish ECR image for ${{ matrix.java-version }}
+        id: publish-ecr
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -172,7 +174,9 @@ jobs:
               {"key":"java17","label":"Java 17","job":"publish-java (java17)","fallback":"${{ needs.publish-java.result }}"},
               {"key":"java21","label":"Java 21","job":"publish-java (java21)","fallback":"${{ needs.publish-java.result }}"}
             ]
-          failure_summaries: ${{ needs.publish-java.outputs.failure_summary }}
+          failure_summaries: |
+            ${{ needs.publish-java.outputs.failure_summary }}
+            ${{ needs.publish-java.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}

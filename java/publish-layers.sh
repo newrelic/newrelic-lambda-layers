@@ -190,27 +190,31 @@ case "$1" in
 	;;
 "build-publish-java8al2-ecr-image")
 	build-java8al2-arm64
-	publish_docker_ecr $JAVA8_DIST_ARM64 java8 arm64
+	publish_ecr_safe $JAVA8_DIST_ARM64 java8 arm64
 	build-java8al2-x86
-	publish_docker_ecr $JAVA8_DIST_X86_64 java8 x86_64
+	publish_ecr_safe $JAVA8_DIST_X86_64 java8 x86_64
+	finalize_ecr_results "java8al2"
 	;;
 "build-publish-java11-ecr-image")
 	build-java11-arm64
-	publish_docker_ecr $JAVA11_DIST_ARM64 java11 arm64
+	publish_ecr_safe $JAVA11_DIST_ARM64 java11 arm64
 	build-java11-x86
-	publish_docker_ecr $JAVA11_DIST_X86_64 java11 x86_64
+	publish_ecr_safe $JAVA11_DIST_X86_64 java11 x86_64
+	finalize_ecr_results "java11"
 	;;
 "build-publish-java17-ecr-image")
 	build-java17-arm64
-	publish_docker_ecr $JAVA17_DIST_ARM64 java17 arm64
+	publish_ecr_safe $JAVA17_DIST_ARM64 java17 arm64
 	build-java17-x86
-	publish_docker_ecr $JAVA17_DIST_X86_64 java17 x86_64
+	publish_ecr_safe $JAVA17_DIST_X86_64 java17 x86_64
+	finalize_ecr_results "java17"
 	;;
 "build-publish-java21-ecr-image")
 	build-java21-arm64
-	publish_docker_ecr $JAVA21_DIST_ARM64 java21 arm64
+	publish_ecr_safe $JAVA21_DIST_ARM64 java21 arm64
 	build-java21-x86
-	publish_docker_ecr $JAVA21_DIST_X86_64 java21 x86_64
+	publish_ecr_safe $JAVA21_DIST_X86_64 java21 x86_64
+	finalize_ecr_results "java21"
 	;;
 "java8al2")
 	$0 build-java8al2

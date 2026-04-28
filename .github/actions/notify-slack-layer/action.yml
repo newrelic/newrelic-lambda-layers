@@ -92,15 +92,24 @@ runs:
           reason = "Layer published successfully" if r == "success" else "Layer publish to AWS failed"
           lines.append(f"{em} {v['label']} — {reason}")
 
-        skipped = []
+        skipped_regions = []
+        skipped_ecr = []
         for fs in os.environ.get("FAILURE_SUMMARIES", "").splitlines():
+          fs = fs.strip()
           if "regions failed:" in fs:
             for region in fs.split("regions failed:")[-1].strip().split():
-              if region not in skipped:
-                skipped.append(region)
-        if skipped:
-          lines += ["", ":warning: *Regions skipped (AWS infra errors):*"]
-          lines += [f"• {r}" for r in skipped]
+              if region not in skipped_regions:
+                skipped_regions.append(region)
+          elif "ECR images failed:" in fs:
+            for img in fs.split("ECR images failed:")[-1].strip().split():
+              if img not in skipped_ecr:
+                skipped_ecr.append(img)
+        if skipped_regions:
+          lines += ["", ":warning: *Regions with publish errors:*"]
+          lines += [f"• {r}" for r in skipped_regions]
+        if skipped_ecr:
+          lines += ["", ":warning: *ECR images failed to publish:*"]
+          lines += [f"• {i}" for i in skipped_ecr]
 
         run_url = f"{os.environ['SERVER_URL']}/{os.environ['REPO']}/actions/runs/{os.environ['RUN_ID']}"
         lines += ["", f"<{run_url}|View Run>"]
