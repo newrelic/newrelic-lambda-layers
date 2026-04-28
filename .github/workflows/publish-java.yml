@@ -158,10 +158,12 @@ jobs:
           run_id: ${{ github.run_id }}
           run_attempt: ${{ github.run_attempt }}
       - name: Set up QEMU
+        if: always()
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
       - name: Publish ECR image for ${{ matrix.java-version }}
+        if: always()
         id: publish-ecr
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
