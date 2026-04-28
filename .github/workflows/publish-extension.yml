@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - v**_extension
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
   # ── Job 1: Publish staging (extension) ───────────────────────────────────
@@ -18,7 +24,8 @@ jobs:
       - name: Check Tag
         id: extension-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension$ ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_extension$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Install publish dependencies
@@ -98,14 +105,32 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: extension
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish extension layer
         id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
         run: |
           cd extension
           ./publish-layer.sh
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: extension
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
 
   # ── Job 5: Slack release summary — only after both validates passed ────────
   notify-slack:

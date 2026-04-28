@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - v**_nodejs
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
   # ── Job 1: Build + publish staging (node24 only) ──────────────────────────
@@ -88,20 +94,39 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Build layer artifacts
         run: make extract-nodejs${{ matrix.node-version }}-artifacts
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: nodejs-${{ matrix.node-version }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish release layers
         id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
         run: |
           docker run \
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
             -e GITHUB_OUTPUT \
             -e GITHUB_STEP_SUMMARY \
+            -e PUBLISH_REGIONS \
             -v "$GITHUB_OUTPUT:$GITHUB_OUTPUT" \
             -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             newrelic-lambda-layers-nodejs${{ matrix.node-version }}
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: nodejs-${{ matrix.node-version }}
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish ECR image for nodejs${{ matrix.node-version }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -130,12 +155,30 @@ jobs:
         uses: ./.github/actions/node-layer-setup
         with:
           node-version: 22
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: nodejs-universal
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish universal layer
         id: publish-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
         run: make publish-nodejs-universal-ci
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: nodejs-universal
+          failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish universal ECR image
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -1,0 +1,105 @@
+name: Region Retry State
+description: |
+  Save failed regions after a publish attempt, or load them before a re-run.
+  On attempt N > 1, load automatically restricts publishing to the regions
+  that failed in attempt N-1. This makes "Re-run failed jobs" smart: it only
+  retries the regions that actually need it.
+
+  Usage in a publish job:
+    # Before publish step:
+    - uses: ./.github/actions/region-retry
+      id: region-retry-load
+      with: { mode: load, job_key: nodejs-20, run_id: ..., run_attempt: ... }
+
+    # In publish step env:
+    #   PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+
+    # After publish step (if: always()):
+    - uses: ./.github/actions/region-retry
+      with: { mode: save, job_key: nodejs-20, failure_summary: ..., run_id: ..., run_attempt: ... }
+
+inputs:
+  mode:
+    description: '"save" — write failed regions artifact after publish. "load" — read it before publish.'
+    required: true
+  job_key:
+    description: 'Unique key for this publish job, e.g. "nodejs-20", "python-3.9", "java-java21".'
+    required: true
+  failure_summary:
+    description: 'failure_summary output from the publish step (save mode only).'
+    required: false
+    default: ''
+  run_id:
+    description: '${{ github.run_id }}'
+    required: true
+  run_attempt:
+    description: '${{ github.run_attempt }}'
+    required: true
+
+outputs:
+  publish_regions:
+    description: 'Comma-separated regions to target (empty = all). Set PUBLISH_REGIONS env var to this value.'
+    value: ${{ steps.load-regions.outputs.publish_regions }}
+
+runs:
+  using: composite
+  steps:
+    # ── SAVE: write failed regions to an artifact named by attempt number ─────
+    - name: Write failed-regions file
+      if: inputs.mode == 'save'
+      id: write-file
+      shell: bash
+      run: |
+        fs="${{ inputs.failure_summary }}"
+        outfile="/tmp/failed-regions-${{ inputs.job_key }}.txt"
+        if [[ "$fs" == *"regions failed:"* ]]; then
+          regions="${fs#*regions failed: }"
+          printf '%s' "${regions// /,}" > "$outfile"
+          echo "has_failures=true" >> "$GITHUB_OUTPUT"
+          echo "Captured failed regions: ${regions}"
+        else
+          echo "has_failures=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Upload failed-regions artifact
+      if: inputs.mode == 'save' && steps.write-file.outputs.has_failures == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: failed-regions-${{ inputs.job_key }}-${{ inputs.run_id }}-attempt-${{ inputs.run_attempt }}
+        path: /tmp/failed-regions-${{ inputs.job_key }}.txt
+        retention-days: 7
+
+    # ── LOAD: on re-run, download the previous attempt's failed-regions ────────
+    - name: Compute previous attempt artifact name
+      if: inputs.mode == 'load'
+      id: artifact-name
+      shell: bash
+      run: |
+        prev=$(( ${{ inputs.run_attempt }} - 1 ))
+        echo "name=failed-regions-${{ inputs.job_key }}-${{ inputs.run_id }}-attempt-${prev}" >> "$GITHUB_OUTPUT"
+
+    - name: Download previous failed-regions artifact
+      if: inputs.mode == 'load' && fromJSON(inputs.run_attempt) > 1
+      id: download
+      continue-on-error: true
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ steps.artifact-name.outputs.name }}
+        path: /tmp/prev-attempt-${{ inputs.job_key }}
+
+    - name: Set publish_regions output
+      if: inputs.mode == 'load'
+      id: load-regions
+      shell: bash
+      run: |
+        regions=""
+        f="/tmp/prev-attempt-${{ inputs.job_key }}/failed-regions-${{ inputs.job_key }}.txt"
+        if [[ -f "$f" ]]; then
+          regions=$(cat "$f")
+          if [[ -n "$regions" ]]; then
+            echo "Re-run: restricting to previously failed regions: ${regions}"
+          else
+            echo "Previous attempt had no failures — publishing to all regions."
+          fi
+        fi
+        echo "publish_regions=${regions}" >> "$GITHUB_OUTPUT"

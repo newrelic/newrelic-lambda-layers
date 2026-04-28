@@ -527,7 +527,22 @@ run_region_loop() {
   local extra_args=("$@")
   local -a failed=() passed=()
 
-  for region in "${REGIONS[@]}"; do
+  # If PUBLISH_REGIONS is set, restrict to that comma-separated list of regions.
+  # Used by workflow_dispatch re-runs to retry only specific failed regions.
+  local -a target_regions=("${REGIONS[@]}")
+  if [[ -n "${PUBLISH_REGIONS:-}" ]]; then
+    local -a filter
+    IFS=',' read -ra filter <<< "${PUBLISH_REGIONS//[[:space:]]/}"
+    target_regions=()
+    for r in "${REGIONS[@]}"; do
+      for f in "${filter[@]}"; do
+        [[ "$r" == "$f" ]] && { target_regions+=("$r"); break; }
+      done
+    done
+    echo "=== Region filter active: targeting ${#target_regions[@]}/${#REGIONS[@]} region(s): ${target_regions[*]:-none} ==="
+  fi
+
+  for region in "${target_regions[@]}"; do
     if publish_layer_safe "$zip" "$region" "${extra_args[@]}"; then
       passed+=("$region")
     else
