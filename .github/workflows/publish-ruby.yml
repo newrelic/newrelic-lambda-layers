@@ -149,15 +149,15 @@ jobs:
           language_name: Ruby
           versions_json: |-
             [
-              {"key":"3.2","label":"Ruby 3.2","job":"publish-ruby (3.2)","fallback":"${{ needs.publish-ruby.result }}"},
-              {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}"},
-              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}"}
+              {"key":"3.2","label":"Ruby 3.2","job":"publish-ruby (3.2)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.2"},
+              {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.3"},
+              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.4"}
             ]
-          failure_summaries: ${{ needs.publish-ruby.outputs.failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}

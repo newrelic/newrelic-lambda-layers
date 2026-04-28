@@ -160,21 +160,19 @@ jobs:
           language_name: Python
           versions_json: |-
             [
-              {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"3.11","label":"Python 3.11","job":"publish-python (3.11)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"3.12","label":"Python 3.12","job":"publish-python (3.12)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"3.13","label":"Python 3.13","job":"publish-python (3.13)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"3.14","label":"Python 3.14","job":"publish-python (3.14)","fallback":"${{ needs.publish-python.result }}"},
-              {"key":"universal","label":"Python Universal","job":"publish-python-universal","fallback":"${{ needs.publish-python-universal.result }}"}
+              {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.9"},
+              {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.10"},
+              {"key":"3.11","label":"Python 3.11","job":"publish-python (3.11)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.11"},
+              {"key":"3.12","label":"Python 3.12","job":"publish-python (3.12)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.12"},
+              {"key":"3.13","label":"Python 3.13","job":"publish-python (3.13)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.13"},
+              {"key":"3.14","label":"Python 3.14","job":"publish-python (3.14)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.14"},
+              {"key":"universal","label":"Python Universal","job":"publish-python-universal","fallback":"${{ needs.publish-python-universal.result }}","failure_key":"python-universal"}
             ]
-          failure_summaries: |
-            ${{ needs.publish-python.outputs.failure_summary }}
-            ${{ needs.publish-python-universal.outputs.failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}

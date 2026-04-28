@@ -144,12 +144,12 @@ jobs:
       - uses: ./.github/actions/notify-slack-layer
         with:
           language_name: Extension (Go/AL2+AL2023)
-          versions_json: '[{"key":"extension","label":"Extension (go/al2+al2023)","job":"publish-extension","fallback":"${{ needs.publish-extension.result }}"}]'
-          failure_summaries: ${{ needs.publish-extension.outputs.failure_summary }}
+          versions_json: '[{"key":"extension","label":"Extension (go/al2+al2023)","job":"publish-extension","fallback":"${{ needs.publish-extension.result }}","failure_key":"extension"}]'
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}

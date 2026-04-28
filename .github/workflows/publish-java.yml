@@ -183,18 +183,17 @@ jobs:
           language_name: Java
           versions_json: |-
             [
-              {"key":"java8al2","label":"Java 8 (AL2)","job":"publish-java (java8al2)","fallback":"${{ needs.publish-java.result }}"},
-              {"key":"java11","label":"Java 11","job":"publish-java (java11)","fallback":"${{ needs.publish-java.result }}"},
-              {"key":"java17","label":"Java 17","job":"publish-java (java17)","fallback":"${{ needs.publish-java.result }}"},
-              {"key":"java21","label":"Java 21","job":"publish-java (java21)","fallback":"${{ needs.publish-java.result }}"}
+              {"key":"java8al2","label":"Java 8 (AL2)","job":"publish-java (java8al2)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java8al2"},
+              {"key":"java11","label":"Java 11","job":"publish-java (java11)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java11"},
+              {"key":"java17","label":"Java 17","job":"publish-java (java17)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java17"},
+              {"key":"java21","label":"Java 21","job":"publish-java (java21)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java21"}
             ]
-          failure_summaries: |
-            ${{ needs.publish-java.outputs.failure_summary }}
-            ${{ needs.publish-java.outputs.ecr_failure_summary }}
+          failure_summaries: ${{ needs.publish-java.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}

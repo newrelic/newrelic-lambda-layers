@@ -124,12 +124,12 @@ jobs:
       - uses: ./.github/actions/notify-slack-layer
         with:
           language_name: Dotnet
-          versions_json: '[{"key":"dotnet10","label":"Dotnet 10","job":"publish-dotnet","fallback":"${{ needs.publish-dotnet.result }}"}]'
-          failure_summaries: ${{ needs.publish-dotnet.outputs.failure_summary }}
+          versions_json: '[{"key":"dotnet10","label":"Dotnet 10","job":"publish-dotnet","fallback":"${{ needs.publish-dotnet.result }}","failure_key":"dotnet"}]'
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}

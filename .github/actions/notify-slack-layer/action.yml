@@ -7,14 +7,15 @@ inputs:
     required: true
   versions_json:
     description: |
-      JSON array: [{"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"success"}]
+      JSON array: [{"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"success","failure_key":"nodejs-20"}]
       - key: unique identifier
       - label: display label in Slack message
       - job: GitHub Actions job name (used for per-matrix API lookup)
       - fallback: result to use if API lookup finds no match
+      - failure_key: job_key used in region-retry (for per-version region failure detail)
     required: true
   failure_summaries:
-    description: Newline-separated failure_summary strings from publish jobs
+    description: Newline-separated failure_summary strings from publish jobs (used for ECR failures)
     required: false
     default: ""
   slack_webhook:
@@ -26,6 +27,10 @@ inputs:
     required: true
   run_id:
     required: true
+  run_attempt:
+    description: Pass github.run_attempt from the calling workflow.
+    required: false
+    default: "1"
   ref_name:
     required: true
   actor:
@@ -45,18 +50,23 @@ runs:
         GH_TOKEN: ${{ inputs.gh_token }}
         REPO: ${{ inputs.repo }}
         RUN_ID: ${{ inputs.run_id }}
+        RUN_ATTEMPT: ${{ inputs.run_attempt }}
         TAG: ${{ inputs.ref_name }}
         ACTOR: ${{ inputs.actor }}
         SERVER_URL: ${{ inputs.server_url }}
       run: |
         python3 << 'PYEOF'
-        import json, os, subprocess
+        import json, os, subprocess, glob, re
 
         versions = json.loads(os.environ["VERSIONS_JSON"])
+        run_id   = os.environ["RUN_ID"]
+        run_attempt = os.environ.get("RUN_ATTEMPT", "1")
+        repo     = os.environ["REPO"]
 
+        # ── Fetch per-job results from the GitHub API ────────────────────────
         r = subprocess.run(
           ["gh", "api", "--paginate",
-           f"repos/{os.environ['REPO']}/actions/runs/{os.environ['RUN_ID']}/jobs",
+           f"repos/{repo}/actions/runs/{run_id}/jobs",
            "-q", ".jobs[]"],
           capture_output=True, text=True
         )
@@ -72,14 +82,44 @@ runs:
         for v in versions:
           results[v["key"]] = api_jobs.get(v["job"], v["fallback"])
 
-        total = len(versions)
-        failed_count = sum(1 for v in versions if results.get(v["key"]) != "success")
-        all_ok = failed_count == 0
+        # ── Download per-version region failure artifacts ─────────────────────
+        # Artifacts are named: failed-regions-{job_key}-{run_id}-attempt-{N}
+        subprocess.run(
+          ["gh", "run", "download", run_id,
+           "--pattern", "failed-regions-*",
+           "--dir", "/tmp/region-artifacts",
+           "--repo", repo],
+          capture_output=True, text=True
+        )
 
-        lang = os.environ["LANGUAGE_NAME"]
-        icon = ":white_check_mark:" if all_ok else ":x:"
+        version_failures = {}  # job_key -> comma-separated failed regions
+        artifact_base = "/tmp/region-artifacts"
+        if os.path.isdir(artifact_base):
+          for artifact_dir in sorted(glob.glob(f"{artifact_base}/failed-regions-*")):
+            artifact_name = os.path.basename(artifact_dir)
+            # Strip "failed-regions-" prefix, then split off "-{run_id}-attempt-{N}"
+            stripped = artifact_name[len("failed-regions-"):]
+            parts = stripped.rsplit(f"-{run_id}-attempt-", 1)
+            if len(parts) != 2:
+              continue
+            job_key, attempt_num = parts
+            if attempt_num != run_attempt:
+              continue
+            txt_file = os.path.join(artifact_dir, f"failed-regions-{job_key}.txt")
+            if os.path.isfile(txt_file):
+              content = open(txt_file).read().strip()
+              if content:
+                version_failures[job_key] = content
+
+        # ── Build Slack message ───────────────────────────────────────────────
+        total        = len(versions)
+        failed_count = sum(1 for v in versions if results.get(v["key"]) != "success")
+        all_ok       = failed_count == 0
+
+        lang   = os.environ["LANGUAGE_NAME"]
+        icon   = ":white_check_mark:" if all_ok else ":x:"
         status = "Succeeded" if all_ok else f"Failed ({failed_count}/{total} versions failed)"
-        lines = [
+        lines  = [
           f"{icon} *{lang} Layer Release {status}*",
           f"Tag: `{os.environ['TAG']}`",
           f"Triggered by: {os.environ['ACTOR']}",
@@ -87,32 +127,34 @@ runs:
           "*Layer Results:*",
         ]
         for v in versions:
-          r = results.get(v["key"], "unknown")
-          em = ":white_check_mark:" if r == "success" else ":x:"
-          reason = "Layer published successfully" if r == "success" else "Layer publish to AWS failed"
-          lines.append(f"{em} {v['label']} — {reason}")
+          res = results.get(v["key"], "unknown")
+          em  = ":white_check_mark:" if res == "success" else ":x:"
+          if res == "success":
+            detail = "Layer published successfully"
+          else:
+            fk          = v.get("failure_key", "")
+            regions_str = version_failures.get(fk, "")
+            if regions_str:
+              regions = [r for r in regions_str.split(",") if r]
+              detail  = f"{len(regions)} region(s) failed: {', '.join(regions)}"
+            else:
+              detail = "Layer publish to AWS failed"
+          lines.append(f"{em} {v['label']} — {detail}")
 
-        skipped_regions = []
+        # ECR failures (from failure_summaries — not stored in artifacts)
         skipped_ecr = []
         for fs in os.environ.get("FAILURE_SUMMARIES", "").splitlines():
           fs = fs.strip()
-          if "regions failed:" in fs:
-            for region in fs.split("regions failed:")[-1].strip().split():
-              if region not in skipped_regions:
-                skipped_regions.append(region)
-          elif "ECR images failed:" in fs:
+          if "ECR images failed:" in fs:
             for img in fs.split("ECR images failed:")[-1].strip().split():
               if img not in skipped_ecr:
                 skipped_ecr.append(img)
-        if skipped_regions:
-          lines += ["", ":warning: *Regions with publish errors:*"]
-          lines += [f"• {r}" for r in skipped_regions]
         if skipped_ecr:
           lines += ["", ":warning: *ECR images failed to publish:*"]
           lines += [f"• {i}" for i in skipped_ecr]
 
-        run_url = f"{os.environ['SERVER_URL']}/{os.environ['REPO']}/actions/runs/{os.environ['RUN_ID']}"
-        lines += ["", f"<{run_url}|View Run>"]
+        run_url = f"{os.environ['SERVER_URL']}/{repo}/actions/runs/{run_id}"
+        lines  += ["", f"<{run_url}|View Run>"]
 
         with open("/tmp/slack-payload.json", "w") as f:
           json.dump({"text": "\n".join(lines)}, f)

@@ -226,20 +226,19 @@ jobs:
           language_name: Node.js
           versions_json: |-
             [
-              {"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"${{ needs.publish-node.result }}"},
-              {"key":"22","label":"Node.js 22","job":"publish-node (22)","fallback":"${{ needs.publish-node.result }}"},
-              {"key":"24","label":"Node.js 24","job":"publish-node (24)","fallback":"${{ needs.publish-node.result }}"},
-              {"key":"universal","label":"Node.js Universal","job":"publish-node-universal","fallback":"${{ needs.publish-node-universal.result }}"}
+              {"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-20"},
+              {"key":"22","label":"Node.js 22","job":"publish-node (22)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-22"},
+              {"key":"24","label":"Node.js 24","job":"publish-node (24)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-24"},
+              {"key":"universal","label":"Node.js Universal","job":"publish-node-universal","fallback":"${{ needs.publish-node-universal.result }}","failure_key":"nodejs-universal"}
             ]
           failure_summaries: |
-            ${{ needs.publish-node.outputs.failure_summary }}
             ${{ needs.publish-node.outputs.ecr_failure_summary }}
-            ${{ needs.publish-node-universal.outputs.failure_summary }}
             ${{ needs.publish-node-universal.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
           gh_token: ${{ github.token }}
           repo: ${{ github.repository }}
           run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
           ref_name: ${{ github.ref_name }}
           actor: ${{ github.actor }}
           server_url: ${{ github.server_url }}
