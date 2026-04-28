@@ -12,7 +12,7 @@ description: |
       with: { mode: load, job_key: nodejs-20, run_id: ..., run_attempt: ... }
 
     # In publish step env:
-    #   PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+    #   PUBLISH_REGIONS: steps.region-retry-load.outputs.publish_regions || inputs.regions
 
     # After publish step (if: always()):
     - uses: ./.github/actions/region-retry
@@ -30,10 +30,10 @@ inputs:
     required: false
     default: ''
   run_id:
-    description: '${{ github.run_id }}'
+    description: 'Pass github.run_id from the calling workflow.'
     required: true
   run_attempt:
-    description: '${{ github.run_attempt }}'
+    description: 'Pass github.run_attempt from the calling workflow.'
     required: true
 
 outputs:
