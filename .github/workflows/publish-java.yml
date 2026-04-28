@@ -123,12 +123,16 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: |
           if [[ "${{ matrix.java-version }}" == "java21" ]]; then
             docker run \
               -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
               -e GITHUB_OUTPUT -e GITHUB_STEP_SUMMARY \
               -e PUBLISH_REGIONS \
+              -e LAYER_REGIONS \
+              -e S3_BUCKET_PREFIX \
               -v "$GITHUB_OUTPUT:$GITHUB_OUTPUT" \
               -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
               newrelic-lambda-layers-java21
@@ -153,6 +157,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd java
           ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image

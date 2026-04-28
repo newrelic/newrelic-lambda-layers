@@ -93,6 +93,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: |
           cd python
           ./publish-layers.sh python${{ matrix.python-version }}
@@ -131,6 +133,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: |
           cd python
           ./publish-layers.sh python
