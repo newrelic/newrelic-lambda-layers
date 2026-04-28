@@ -31,6 +31,21 @@ REGIONS=(
   us-west-2
 )
 
+# Override the default region list for testing:
+#   LAYER_REGIONS="us-east-1,us-west-2" ./publish-layers.sh ...
+if [[ -n "${LAYER_REGIONS:-}" ]]; then
+  IFS=',' read -ra REGIONS <<< "${LAYER_REGIONS//[[:space:]]/}"
+  echo "=== LAYER_REGIONS override: publishing to ${#REGIONS[@]} region(s): ${REGIONS[*]} ==="
+fi
+
+# S3 bucket name prefix — bucket per region is "<prefix>-<region>".
+# Override for testing: S3_BUCKET_PREFIX="my-test-bucket-prefix"
+S3_BUCKET_PREFIX="${S3_BUCKET_PREFIX:-nr-layers}"
+
+# Public ECR repository alias — override for testing:
+#   ECR_REPOSITORY="q6k3q1g1" ./publish-layers.sh build-publish-20-ecr-image
+ECR_REPOSITORY="${ECR_REPOSITORY:-x6n7b2o2}"
+
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
@@ -278,7 +293,7 @@ function publish_layer {
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
-    bucket_name="nr-layers-${region}"
+    bucket_name="${S3_BUCKET_PREFIX}-${region}"
     s3_key="$( s3_prefix $runtime_name )/${hash}.${arch}.zip"
 
     compat_list=( $runtime_name )
@@ -436,9 +451,8 @@ function publish_docker_ecr {
       echo "File does not start with 'dist/': $file_without_dist"
     fi
 
-    # public ecr repository name
-    # maintainer can use this("q6k3q1g1") repo name for testing
-    repository="x6n7b2o2"
+    # Public ECR repository alias — set ECR_REPOSITORY env var to override
+    repository="${ECR_REPOSITORY}"
 
     # copy dockerfile
     cp ../Dockerfile.ecrImage .
