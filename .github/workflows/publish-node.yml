@@ -112,17 +112,25 @@ jobs:
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: |
+          failed_file="$(mktemp)"
+          chmod a+rw "$failed_file" "$GITHUB_STEP_SUMMARY"
+          set +e
           docker run \
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
-            -e GITHUB_OUTPUT \
             -e GITHUB_STEP_SUMMARY \
             -e PUBLISH_REGIONS \
             -e LAYER_REGIONS \
             -e S3_BUCKET_PREFIX \
-            -v "$GITHUB_OUTPUT:$GITHUB_OUTPUT" \
+            -e "FAILED_REGIONS_FILE=${failed_file}" \
             -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
+            -v "${failed_file}:${failed_file}" \
             newrelic-lambda-layers-nodejs${{ matrix.node-version }}
+          docker_exit=$?
+          set -e
+          [[ -s "${failed_file}" ]] && cat "${failed_file}" >> "$GITHUB_OUTPUT" || true
+          rm -f "${failed_file}"
+          exit "${docker_exit}"
       - name: Save failed regions for re-run
         if: always()
         uses: ./.github/actions/region-retry

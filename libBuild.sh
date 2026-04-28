@@ -576,8 +576,16 @@ run_region_loop() {
     } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
   fi
 
-  if [[ -n "${GITHUB_OUTPUT:-}" && ${#failed[@]} -gt 0 ]]; then
-    echo "failure_summary=${#failed[@]}/${total} regions failed: ${failed[*]}" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+  if [[ ${#failed[@]} -gt 0 ]]; then
+    local summary="${#failed[@]}/${total} regions failed: ${failed[*]}"
+    # Non-Docker steps: write directly to GITHUB_OUTPUT
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+      echo "failure_summary=${summary}" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+    fi
+    # Docker steps: write to FAILED_REGIONS_FILE; host runner relays to GITHUB_OUTPUT
+    if [[ -n "${FAILED_REGIONS_FILE:-}" ]]; then
+      echo "failure_summary=${summary}" >> "${FAILED_REGIONS_FILE}" 2>/dev/null || true
+    fi
   fi
 
   echo ""
