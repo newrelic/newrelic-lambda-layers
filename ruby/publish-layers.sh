@@ -15,7 +15,7 @@ set -Eeuo pipefail
 #   preview-extensions-*                  -- Extensions preview file
 
 RUBY_DIR=ruby
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 WRAPPER_FILE=newrelic_lambda_wrapper.rb
 NEWRELIC_AGENT_VERSION=""
 # Set this to a path to a clone of newrelic-lambda-extension to build
@@ -175,38 +175,57 @@ function publish_ruby_for_arch {
   local arch=$2
   local dist_file=$3
 
-  for region in "${REGIONS[@]}"; do
-    echo "Publishing $dist_file for region=$region, ruby=$ruby_version, arch=$arch"
-    publish_layer $dist_file $region "ruby${ruby_version}" $arch $NEWRELIC_AGENT_VERSION
-  done
-  echo 'Publishing complete'
+  run_region_loop "$dist_file" "ruby${ruby_version}" "$arch" "$NEWRELIC_AGENT_VERSION"
 }
 
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
   "ruby3.4")
+    layer_rc=0
     build-ruby34-arm64
-    publish-ruby34-arm64
-    publish_docker_ecr $RB34_DIST_ARM64 ruby3.4 arm64
+    publish-ruby34-arm64 || layer_rc=$?
+    publish_ecr_safe $RB34_DIST_ARM64 ruby3.4 arm64
     build-ruby34-x86
-    publish-ruby34-x86
-    publish_docker_ecr $RB34_DIST_X86_64 ruby3.4 x86_64
+    publish-ruby34-x86 || layer_rc=$?
+    publish_ecr_safe $RB34_DIST_X86_64 ruby3.4 x86_64
+    finalize_ecr_results "ruby3.4"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
   "ruby3.3")
+    layer_rc=0
     build-ruby33-arm64
-    publish-ruby33-arm64
-    publish_docker_ecr $RB33_DIST_ARM64 ruby3.3 arm64
+    publish-ruby33-arm64 || layer_rc=$?
+    publish_ecr_safe $RB33_DIST_ARM64 ruby3.3 arm64
     build-ruby33-x86
-    publish-ruby33-x86
-    publish_docker_ecr $RB33_DIST_X86_64 ruby3.3 x86_64
+    publish-ruby33-x86 || layer_rc=$?
+    publish_ecr_safe $RB33_DIST_X86_64 ruby3.3 x86_64
+    finalize_ecr_results "ruby3.3"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
     ;;
   "ruby3.2")
+    layer_rc=0
     build-ruby32-arm64
-    publish-ruby32-arm64
-    publish_docker_ecr $RB32_DIST_ARM64 ruby3.2 arm64
+    publish-ruby32-arm64 || layer_rc=$?
+    publish_ecr_safe $RB32_DIST_ARM64 ruby3.2 arm64
     build-ruby32-x86
-    publish-ruby32-x86
-    publish_docker_ecr $RB32_DIST_X86_64 ruby3.2 x86_64
+    publish-ruby32-x86 || layer_rc=$?
+    publish_ecr_safe $RB32_DIST_X86_64 ruby3.2 x86_64
+    finalize_ecr_results "ruby3.2"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
+    ;;
+  "publish-staging-ruby3.4")
+    build-ruby34-arm64
+    build-ruby34-x86
+    arn_arm64=$(publish_staging_layer "$RB34_DIST_ARM64" ruby3.4 arm64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$RB34_DIST_X86_64" ruby3.4 x86_64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+  "cleanup-staging-ruby3.4")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
     ;;
   *)
     usage

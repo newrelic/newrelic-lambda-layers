@@ -33,6 +33,21 @@ REGIONS=(
   us-west-2
 )
 
+# Override the default region list for testing:
+#   LAYER_REGIONS="us-east-1,us-west-2" ./publish-layers.sh ...
+if [[ -n "${LAYER_REGIONS:-}" ]]; then
+  IFS=',' read -ra REGIONS <<< "${LAYER_REGIONS//[[:space:]]/}"
+  echo "=== LAYER_REGIONS override: publishing to ${#REGIONS[@]} region(s): ${REGIONS[*]} ==="
+fi
+
+# S3 bucket name prefix — bucket per region is "<prefix>-<region>".
+# Override for testing: S3_BUCKET_PREFIX="my-test-bucket-prefix"
+S3_BUCKET_PREFIX="${S3_BUCKET_PREFIX:-nr-layers}"
+
+# Public ECR repository alias — override for testing:
+#   ECR_REPOSITORY="q6k3q1g1" ./publish-layers.sh build-publish-20-ecr-image
+ECR_REPOSITORY="${ECR_REPOSITORY:-x6n7b2o2}"
+
 EXTENSION_DIST_DIR=extensions
 EXTENSION_DIST_ZIP=extension.zip
 EXTENSION_DIST_PREVIEW_FILE=preview-extensions-ggqizro707
@@ -262,7 +277,7 @@ function publish_public_layer {
     --compatible-runtimes ${compat_list[*]} \
     --region "$region" \
     --output text \
-    --query Version)
+    --query Version) || return 1
   echo "Published ${runtime_name} layer version ${layer_version} to ${region}"
 
   echo "Setting public permissions for ${runtime_name} layer version ${layer_version} in ${region}"
@@ -290,7 +305,7 @@ function publish_layer {
 
     hash=$( hash_file $layer_archive | awk '{ print $1 }' )
 
-    bucket_name="nr-layers-${region}"
+    bucket_name="${S3_BUCKET_PREFIX}-${region}"
     s3_key="$( s3_prefix $runtime_name )/${hash}.${arch}.zip"
 
     compat_list=( $runtime_name )
@@ -353,6 +368,57 @@ function publish_layer {
 
 }
 
+# Staging region/bucket — overridable via environment for local testing.
+STAGING_REGION="${STAGING_REGION:-us-east-1}"
+
+# Publish a single layer zip to the staging account as <LayerName>-staging[-slim].
+# Prints the full layer ARN to stdout; all progress messages go to stderr.
+# Uses direct zip upload (no S3 hop) so no bucket policy changes are needed.
+function publish_staging_layer {
+    layer_archive=$1
+    runtime_name=$2
+    arch=$3
+    newrelic_agent_version=${4:-"none"}
+    slim=${5:-""}
+
+    layer_name=$( layer_name_str $runtime_name $arch )
+    staging_layer_name="${layer_name}-staging"
+    if [[ $slim == "slim" ]]; then
+        staging_layer_name="${layer_name}-slim-staging"
+    fi
+
+    compat_list=( $runtime_name )
+    if [[ $runtime_name == "provided" ]]; then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1"); fi
+    if [[ $runtime_name == "dotnet" ]];   then compat_list=("dotnet6" "dotnet8" "dotnet10"); fi
+    if [[ $runtime_name == "python" ]];   then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14"); fi
+    if [[ $runtime_name == "nodejs" ]];   then compat_list=("nodejs20.x" "nodejs22.x" "nodejs24.x"); fi
+
+    echo "Publishing staging layer ${staging_layer_name} (${arch}) to ${STAGING_REGION}" >&2
+    layer_version=$(aws lambda publish-layer-version \
+        --layer-name "${staging_layer_name}" \
+        --region "${STAGING_REGION}" \
+        --zip-file "fileb://${layer_archive}" \
+        --compatible-architectures "${arch}" \
+        --compatible-runtimes "${compat_list[@]}" \
+        --query 'Version' \
+        --output text)
+
+    echo "Staged ${staging_layer_name}:${layer_version}" >&2
+    account_id=$(aws sts get-caller-identity --query Account --output text)
+    echo "arn:aws:lambda:${STAGING_REGION}:${account_id}:layer:${staging_layer_name}:${layer_version}"
+}
+
+# Delete a staging layer version (best-effort; never fails the caller).
+function delete_staging_layer {
+    layer_name=$1
+    version=$2
+    echo "Deleting staging layer ${layer_name}:${version} in ${STAGING_REGION}"
+    aws lambda delete-layer-version \
+        --layer-name "${layer_name}" \
+        --version-number "${version}" \
+        --region "${STAGING_REGION}" 2>/dev/null || true
+}
+
 
 function publish_docker_ecr {
     layer_archive=$1
@@ -406,9 +472,8 @@ function publish_docker_ecr {
       echo "File does not start with 'dist/': $file_without_dist"
     fi
 
-    # public ecr repository name
-    # maintainer can use this("q6k3q1g1") repo name for testing
-    repository="x6n7b2o2"
+    # Public ECR repository alias — set ECR_REPOSITORY env var to override
+    repository="${ECR_REPOSITORY}"
 
     # copy dockerfile
     cp ../Dockerfile.ecrImage .
@@ -472,4 +537,137 @@ function publish_docker_hub {
   docker tag ${language_flag}-${version_flag}${arch_flag}:latest newrelic/newrelic-lambda-layers:${language_flag}-${version_flag}${arch_flag}
   echo "docker push newrelic/newrelic-lambda-layers:${language_flag}-${version_flag}${arch_flag}"
   docker push newrelic/newrelic-lambda-layers:${language_flag}-${version_flag}${arch_flag}
+}
+
+# Calls publish_layer for one region; prints [OK]/[FAIL] and returns 0/1.
+# Args: <zip> <region> <runtime> <arch> [version] [slim]
+publish_layer_safe() {
+  local region="${2}"
+  if publish_layer "$@"; then
+    echo "  [OK]  ${region}"
+    return 0
+  else
+    echo "  [FAIL] ${region} — skipped (see AWS error above)"
+    return 1
+  fi
+}
+
+# Iterates REGIONS[@], calling publish_layer_safe per region.
+# Writes a table to $GITHUB_STEP_SUMMARY and failure_summary to $GITHUB_OUTPUT.
+# Exits 1 (after all regions are attempted) if any region failed.
+# Usage: run_region_loop <zip> <runtime> <arch> [version] [slim]
+run_region_loop() {
+  local zip=$1
+  shift
+  local extra_args=("$@")
+  local -a failed=() passed=()
+
+  # If PUBLISH_REGIONS is set, restrict to that comma-separated list of regions.
+  # Used by workflow_dispatch re-runs to retry only specific failed regions.
+  local -a target_regions=("${REGIONS[@]}")
+  if [[ -n "${PUBLISH_REGIONS:-}" ]]; then
+    local -a filter
+    IFS=',' read -ra filter <<< "${PUBLISH_REGIONS//[[:space:]]/}"
+    target_regions=()
+    for r in "${REGIONS[@]}"; do
+      for f in "${filter[@]}"; do
+        [[ "$r" == "$f" ]] && { target_regions+=("$r"); break; }
+      done
+    done
+    echo "=== Region filter active: targeting ${#target_regions[@]}/${#REGIONS[@]} region(s): ${target_regions[*]:-none} ==="
+  fi
+
+  for region in "${target_regions[@]}"; do
+    if publish_layer_safe "$zip" "$region" "${extra_args[@]}"; then
+      passed+=("$region")
+    else
+      failed+=("$region")
+    fi
+  done
+
+  local total=$(( ${#passed[@]} + ${#failed[@]} ))
+  local label="${extra_args[0]:-layer} ${extra_args[1]:-}"
+
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    {
+      printf "### Region Publish: %s\n" "$label"
+      printf "| Region | Status |\n|--------|--------|\n"
+      for r in "${passed[@]}"; do printf "| \`%s\` | ✅ passed |\n" "$r"; done
+      for r in "${failed[@]}"; do printf "| \`%s\` | ❌ FAILED |\n" "$r"; done
+    } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+  fi
+
+  if [[ ${#failed[@]} -gt 0 ]]; then
+    local summary="${#failed[@]}/${total} regions failed: ${failed[*]}"
+    # Non-Docker steps: write directly to GITHUB_OUTPUT
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+      echo "failure_summary=${summary}" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+    fi
+    # Docker steps: write to FAILED_REGIONS_FILE; host runner relays to GITHUB_OUTPUT
+    if [[ -n "${FAILED_REGIONS_FILE:-}" ]]; then
+      echo "failure_summary=${summary}" >> "${FAILED_REGIONS_FILE}" 2>/dev/null || true
+    fi
+  fi
+
+  echo ""
+  echo "=== Region Publish Summary: ${label} ==="
+  echo "  Passed (${#passed[@]}/${total}): ${passed[*]:-none}"
+  echo "  Failed (${#failed[@]}/${total}): ${failed[*]:-none}"
+
+  if [[ ${#failed[@]} -gt 0 ]]; then
+    echo "ERROR: ${#failed[@]}/${total} region(s) failed"
+    return 1
+  fi
+}
+
+# Global accumulators for ECR publish results within one script invocation.
+declare -ga _ECR_PASSED=()
+declare -ga _ECR_FAILED=()
+
+# Calls publish_docker_ecr; accumulates pass/fail into _ECR_PASSED/_ECR_FAILED.
+# Never propagates failure — call finalize_ecr_results at the end instead.
+# Args: same as publish_docker_ecr (<zip> <runtime> <arch> [slim])
+publish_ecr_safe() {
+  local label="${2}-${3}${4:+-$4}"
+  if publish_docker_ecr "$@"; then
+    echo "  [ECR OK]   ${label}"
+    _ECR_PASSED+=("$label")
+  else
+    echo "  [ECR FAIL] ${label} — see Docker/AWS error above"
+    _ECR_FAILED+=("$label")
+  fi
+  return 0
+}
+
+# Writes ECR summary table to $GITHUB_STEP_SUMMARY and ecr_failure_summary to
+# $GITHUB_OUTPUT, then returns 1 if any images failed.
+# Call once after all publish_ecr_safe calls for a given publish block.
+# Args: [label] — optional human label for the summary heading
+finalize_ecr_results() {
+  local label="${1:-ECR}"
+  local total=$(( ${#_ECR_PASSED[@]} + ${#_ECR_FAILED[@]} ))
+
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    {
+      printf "### ECR Image Publish: %s\n" "$label"
+      printf "| Image | Status |\n|-------|--------|\n"
+      for i in "${_ECR_PASSED[@]}"; do printf "| \`%s\` | ✅ passed |\n" "$i"; done
+      for i in "${_ECR_FAILED[@]}"; do printf "| \`%s\` | ❌ FAILED |\n" "$i"; done
+    } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+  fi
+
+  echo ""
+  echo "=== ECR Publish Summary: ${label} ==="
+  echo "  Passed (${#_ECR_PASSED[@]}/${total}): ${_ECR_PASSED[*]:-none}"
+  echo "  Failed (${#_ECR_FAILED[@]}/${total}): ${_ECR_FAILED[*]:-none}"
+
+  if [[ ${#_ECR_FAILED[@]} -gt 0 ]]; then
+    if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+      echo "ecr_failure_summary=${#_ECR_FAILED[@]}/${total} ECR images failed: ${_ECR_FAILED[*]}" \
+        >> "$GITHUB_OUTPUT" 2>/dev/null || true
+    fi
+    echo "ERROR: ${#_ECR_FAILED[@]}/${total} ECR image(s) failed"
+    return 1
+  fi
+  return 0
 }

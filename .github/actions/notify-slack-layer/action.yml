@@ -1,0 +1,167 @@
+name: Notify Slack Layer Release
+description: Builds and sends a structured Slack notification for lambda layer releases
+
+inputs:
+  language_name:
+    description: Language display name, e.g. "Node.js"
+    required: true
+  versions_json:
+    description: |
+      JSON array: [{"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"success","failure_key":"nodejs-20"}]
+      - key: unique identifier
+      - label: display label in Slack message
+      - job: GitHub Actions job name (used for per-matrix API lookup)
+      - fallback: result to use if API lookup finds no match
+      - failure_key: job_key used in region-retry (for per-version region failure detail)
+    required: true
+  failure_summaries:
+    description: Newline-separated failure_summary strings from publish jobs (used for ECR failures)
+    required: false
+    default: ""
+  slack_webhook:
+    description: Slack incoming webhook URL
+    required: true
+  gh_token:
+    required: true
+  repo:
+    required: true
+  run_id:
+    required: true
+  run_attempt:
+    description: Pass github.run_attempt from the calling workflow.
+    required: false
+    default: "1"
+  ref_name:
+    required: true
+  actor:
+    required: true
+  server_url:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build Slack payload
+      shell: bash
+      env:
+        LANGUAGE_NAME: ${{ inputs.language_name }}
+        VERSIONS_JSON: ${{ inputs.versions_json }}
+        FAILURE_SUMMARIES: ${{ inputs.failure_summaries }}
+        GH_TOKEN: ${{ inputs.gh_token }}
+        REPO: ${{ inputs.repo }}
+        RUN_ID: ${{ inputs.run_id }}
+        RUN_ATTEMPT: ${{ inputs.run_attempt }}
+        TAG: ${{ inputs.ref_name }}
+        ACTOR: ${{ inputs.actor }}
+        SERVER_URL: ${{ inputs.server_url }}
+      run: |
+        python3 << 'PYEOF'
+        import json, os, subprocess, glob, re
+
+        versions = json.loads(os.environ["VERSIONS_JSON"])
+        run_id   = os.environ["RUN_ID"]
+        run_attempt = os.environ.get("RUN_ATTEMPT", "1")
+        repo     = os.environ["REPO"]
+
+        # ── Fetch per-job results from the GitHub API ────────────────────────
+        r = subprocess.run(
+          ["gh", "api", "--paginate",
+           f"repos/{repo}/actions/runs/{run_id}/jobs",
+           "-q", ".jobs[]"],
+          capture_output=True, text=True
+        )
+        api_jobs = {}
+        for line in r.stdout.strip().splitlines():
+          try:
+            job = json.loads(line)
+            api_jobs[job["name"]] = job.get("conclusion") or "in_progress"
+          except Exception:
+            pass
+
+        results = {}
+        for v in versions:
+          results[v["key"]] = api_jobs.get(v["job"], v["fallback"])
+
+        # ── Download per-version region failure artifacts ─────────────────────
+        # Artifacts are named: failed-regions-{job_key}-{run_id}-attempt-{N}
+        subprocess.run(
+          ["gh", "run", "download", run_id,
+           "--pattern", "failed-regions-*",
+           "--dir", "/tmp/region-artifacts",
+           "--repo", repo],
+          capture_output=True, text=True
+        )
+
+        version_failures = {}  # job_key -> comma-separated failed regions
+        artifact_base = "/tmp/region-artifacts"
+        if os.path.isdir(artifact_base):
+          for artifact_dir in sorted(glob.glob(f"{artifact_base}/failed-regions-*")):
+            artifact_name = os.path.basename(artifact_dir)
+            # Strip "failed-regions-" prefix, then split off "-{run_id}-attempt-{N}"
+            stripped = artifact_name[len("failed-regions-"):]
+            parts = stripped.rsplit(f"-{run_id}-attempt-", 1)
+            if len(parts) != 2:
+              continue
+            job_key, attempt_num = parts
+            if attempt_num != run_attempt:
+              continue
+            txt_file = os.path.join(artifact_dir, f"failed-regions-{job_key}.txt")
+            if os.path.isfile(txt_file):
+              content = open(txt_file).read().strip()
+              if content:
+                version_failures[job_key] = content
+
+        # ── Build Slack message ───────────────────────────────────────────────
+        total        = len(versions)
+        failed_count = sum(1 for v in versions if results.get(v["key"]) != "success")
+        all_ok       = failed_count == 0
+
+        lang   = os.environ["LANGUAGE_NAME"]
+        icon   = ":white_check_mark:" if all_ok else ":x:"
+        status = "Succeeded" if all_ok else f"Failed ({failed_count}/{total} versions failed)"
+        lines  = [
+          f"{icon} *{lang} Layer Release {status}*",
+          f"Tag: `{os.environ['TAG']}`",
+          f"Triggered by: {os.environ['ACTOR']}",
+          "",
+          "*Layer Results:*",
+        ]
+        for v in versions:
+          res = results.get(v["key"], "unknown")
+          em  = ":white_check_mark:" if res == "success" else ":x:"
+          if res == "success":
+            detail = "Layer published successfully"
+          else:
+            fk          = v.get("failure_key", "")
+            regions_str = version_failures.get(fk, "")
+            if regions_str:
+              regions = [r for r in regions_str.split(",") if r]
+              detail  = f"{len(regions)} region(s) failed: {', '.join(regions)}"
+            else:
+              detail = "Layer publish to AWS failed"
+          lines.append(f"{em} {v['label']} — {detail}")
+
+        # ECR failures (from failure_summaries — not stored in artifacts)
+        skipped_ecr = []
+        for fs in os.environ.get("FAILURE_SUMMARIES", "").splitlines():
+          fs = fs.strip()
+          if "ECR images failed:" in fs:
+            for img in fs.split("ECR images failed:")[-1].strip().split():
+              if img not in skipped_ecr:
+                skipped_ecr.append(img)
+        if skipped_ecr:
+          lines += ["", ":warning: *ECR images failed to publish:*"]
+          lines += [f"• {i}" for i in skipped_ecr]
+
+        run_url = f"{os.environ['SERVER_URL']}/{repo}/actions/runs/{run_id}"
+        lines  += ["", f"<{run_url}|View Run>"]
+
+        with open("/tmp/slack-payload.json", "w") as f:
+          json.dump({"text": "\n".join(lines)}, f)
+        PYEOF
+    - name: Notify Slack
+      uses: slackapi/slack-github-action@v2.1.0
+      with:
+        webhook: ${{ inputs.slack_webhook }}
+        webhook-type: incoming-webhook
+        payload-file-path: /tmp/slack-payload.json

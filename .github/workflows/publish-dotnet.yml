@@ -4,28 +4,135 @@ on:
   push:
     tags:
       - v**_dotnet
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
-  publish-dotnet:
+  # ── Job 1: Publish staging (dotnet10) ────────────────────────────────────
+  stage-dotnet:
     runs-on: ubuntu-latest
+    outputs:
+      tag-match: ${{ steps.dotnet-check-tag.outputs.match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
+      - uses: actions/checkout@v4
       - name: Check Tag
         id: dotnet-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_dotnet ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_dotnet ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
+      - name: Publish staging layers (dotnet10)
+        if: steps.dotnet-check-tag.outputs.match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd dotnet
+          ./publish-layers.sh publish-staging-dotnet
+
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-dotnet:
+    needs: stage-dotnet
+    if: needs.stage-dotnet.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   dotnet10
+      arn_x86:   ${{ needs.stage-dotnet.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-dotnet.outputs.arn_arm64 }}
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
+  cleanup-dotnet:
+    needs: [stage-dotnet, validate-dotnet]
+    if: always() && needs.stage-dotnet.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:   ${{ needs.stage-dotnet.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-dotnet.outputs.arn_arm64 }}
+        run: |
+          cd dotnet
+          ./publish-layers.sh cleanup-staging-dotnet
+
+  # ── Job 4: Release dotnet layer — gated on validate passing ───────────────
+  publish-dotnet:
+    needs: [stage-dotnet, validate-dotnet]
+    if: needs.stage-dotnet.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
+    steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: dotnet
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish Dotnet Layer
-        if: steps.dotnet-check-tag.outputs.match == 'true'
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AGENT_VERSION: ${{ steps.dotnet-check-tag.outputs.version }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd dotnet
           ./publish-layers.sh
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: dotnet
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+
+  # ── Job 5: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-dotnet, validate-dotnet, publish-dotnet]
+    if: always() && needs.validate-dotnet.result == 'success' && needs.stage-dotnet.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
+        with:
+          language_name: Dotnet
+          versions_json: '[{"key":"dotnet10","label":"Dotnet 10","job":"publish-dotnet","fallback":"${{ needs.publish-dotnet.result }}","failure_key":"dotnet"}]'
+          failure_summaries: ${{ needs.publish-dotnet.outputs.ecr_failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}

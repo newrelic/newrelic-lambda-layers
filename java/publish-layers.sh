@@ -5,7 +5,7 @@ set -Eeuo pipefail
 BUILD_DIR=build
 GRADLE_ARCHIVE=$BUILD_DIR/distributions/NewRelicJavaLayer.zip
 
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 JAVA8_DIST_ARM64=$DIST_DIR/java8.arm64.zip
 JAVA8_DIST_X86_64=$DIST_DIR/java8.x86_64.zip
 JAVA11_DIST_ARM64=$DIST_DIR/java11.arm64.zip
@@ -65,9 +65,7 @@ function publish-java8al2-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA8_DIST_ARM64 $region java8.al2 arm64
-    done
+    run_region_loop "$JAVA8_DIST_ARM64" java8.al2 arm64
 }
 
 function publish-java8al2-x86 {
@@ -76,9 +74,7 @@ function publish-java8al2-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA8_DIST_X86_64 $region java8.al2 x86_64
-    done
+    run_region_loop "$JAVA8_DIST_X86_64" java8.al2 x86_64
 }
 
 function build-java11-arm64 {
@@ -95,9 +91,7 @@ function publish-java11-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA11_DIST_ARM64 $region java11 arm64
-    done
+    run_region_loop "$JAVA11_DIST_ARM64" java11 arm64
 }
 
 function publish-java11-x86 {
@@ -106,9 +100,7 @@ function publish-java11-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA11_DIST_X86_64 $region java11 x86_64
-    done
+    run_region_loop "$JAVA11_DIST_X86_64" java11 x86_64
 }
 
 function build-java17-arm64 {
@@ -125,9 +117,7 @@ function publish-java17-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA17_DIST_ARM64 $region java17 arm64
-    done
+    run_region_loop "$JAVA17_DIST_ARM64" java17 arm64
 }
 
 function publish-java17-x86 {
@@ -136,9 +126,7 @@ function publish-java17-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA17_DIST_X86_64 $region java17 x86_64
-    done
+    run_region_loop "$JAVA17_DIST_X86_64" java17 x86_64
 }
 
 function build-java21-arm64 {
@@ -155,9 +143,7 @@ function publish-java21-arm64 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA21_DIST_ARM64 $region java21 arm64
-    done
+    run_region_loop "$JAVA21_DIST_ARM64" java21 arm64
 }
 
 function publish-java21-x86 {
@@ -166,9 +152,7 @@ function publish-java21-x86 {
       exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $JAVA21_DIST_X86_64 $region java21 x86_64
-    done
+    run_region_loop "$JAVA21_DIST_X86_64" java21 x86_64
 }
 
 case "$1" in
@@ -206,27 +190,31 @@ case "$1" in
 	;;
 "build-publish-java8al2-ecr-image")
 	build-java8al2-arm64
-	publish_docker_ecr $JAVA8_DIST_ARM64 java8 arm64
+	publish_ecr_safe $JAVA8_DIST_ARM64 java8 arm64
 	build-java8al2-x86
-	publish_docker_ecr $JAVA8_DIST_X86_64 java8 x86_64
+	publish_ecr_safe $JAVA8_DIST_X86_64 java8 x86_64
+	finalize_ecr_results "java8al2"
 	;;
 "build-publish-java11-ecr-image")
 	build-java11-arm64
-	publish_docker_ecr $JAVA11_DIST_ARM64 java11 arm64
+	publish_ecr_safe $JAVA11_DIST_ARM64 java11 arm64
 	build-java11-x86
-	publish_docker_ecr $JAVA11_DIST_X86_64 java11 x86_64
+	publish_ecr_safe $JAVA11_DIST_X86_64 java11 x86_64
+	finalize_ecr_results "java11"
 	;;
 "build-publish-java17-ecr-image")
 	build-java17-arm64
-	publish_docker_ecr $JAVA17_DIST_ARM64 java17 arm64
+	publish_ecr_safe $JAVA17_DIST_ARM64 java17 arm64
 	build-java17-x86
-	publish_docker_ecr $JAVA17_DIST_X86_64 java17 x86_64
+	publish_ecr_safe $JAVA17_DIST_X86_64 java17 x86_64
+	finalize_ecr_results "java17"
 	;;
 "build-publish-java21-ecr-image")
 	build-java21-arm64
-	publish_docker_ecr $JAVA21_DIST_ARM64 java21 arm64
+	publish_ecr_safe $JAVA21_DIST_ARM64 java21 arm64
 	build-java21-x86
-	publish_docker_ecr $JAVA21_DIST_X86_64 java21 x86_64
+	publish_ecr_safe $JAVA21_DIST_X86_64 java21 x86_64
+	finalize_ecr_results "java21"
 	;;
 "java8al2")
 	$0 build-java8al2
@@ -244,6 +232,20 @@ case "$1" in
 	$0 build-java21
 	$0 publish-java21
 	;;
+"publish-staging-java21")
+    build-java21-arm64
+    build-java21-x86
+    arn_arm64=$(publish_staging_layer "$JAVA21_DIST_ARM64" java21 arm64)
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$JAVA21_DIST_X86_64" java21 x86_64)
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+"cleanup-staging-java21")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
+    ;;
 *)
 	usage
 	;;

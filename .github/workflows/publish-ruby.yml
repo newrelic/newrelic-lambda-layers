@@ -4,23 +4,32 @@ on:
   push:
     tags:
       - v**_ruby
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
-  publish-ruby:
+  # ── Job 1: Publish staging (ruby3.4 only) ────────────────────────────────
+  stage-ruby:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby-version: [3.2, 3.3, 3.4]
+    outputs:
+      tag-match: ${{ steps.ruby-check-tag.outputs.match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Use Ruby ${{ matrix.ruby-version }}
+      - name: Use Ruby 3.4
         uses: ruby/setup-ruby@v1.226.0
         with:
-          ruby-version: ${{ matrix.ruby-version }}
+          ruby-version: 3.4
       - name: Check Tag
         id: ruby-check-tag
         run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_ruby$ ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_ruby$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
       - name: Clean the workspace
@@ -29,20 +38,129 @@ jobs:
       - name: Install Ruby Dependencies
         run: bundle
         working-directory: ruby
-      - name: Obtain Ruby version without the dot
-        id: ruby-version-without-dot
-        run: >-
-          echo "::set-output name=VERSION::$(
-            echo ${{ matrix.ruby-version }} | sed 's/\.//'
-          )"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
-      - name: Build and Publish layer
+      - name: Publish staging layers (ruby3.4)
         if: steps.ruby-check-tag.outputs.match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd ruby
+          ./publish-layers.sh publish-staging-ruby3.4
+
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-ruby:
+    needs: stage-ruby
+    if: needs.stage-ruby.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   ruby34
+      arn_x86:   ${{ needs.stage-ruby.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-ruby.outputs.arn_arm64 }}
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
+  cleanup-ruby:
+    needs: [stage-ruby, validate-ruby]
+    if: always() && needs.stage-ruby.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:   ${{ needs.stage-ruby.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-ruby.outputs.arn_arm64 }}
+        run: |
+          cd ruby
+          ./publish-layers.sh cleanup-staging-ruby3.4
+
+  # ── Job 4: Release all Ruby versions — gated on validate passing ──────────
+  publish-ruby:
+    needs: [stage-ruby, validate-ruby]
+    if: needs.stage-ruby.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: [3.2, 3.3, 3.4]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Use Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@v1.226.0
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - name: Clean the workspace
+        run: ./bin/clean
+        working-directory: ruby
+      - name: Install Ruby Dependencies
+        run: bundle
+        working-directory: ruby
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64, amd64
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: ruby-${{ matrix.ruby-version }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+      - name: Build and Publish layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: ./publish-layers.sh ruby${{ matrix.ruby-version }}
         working-directory: ruby
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: ruby-${{ matrix.ruby-version }}
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+
+  # ── Job 5: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-ruby, validate-ruby, publish-ruby]
+    if: always() && needs.validate-ruby.result == 'success' && needs.stage-ruby.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
+        with:
+          language_name: Ruby
+          versions_json: |-
+            [
+              {"key":"3.2","label":"Ruby 3.2","job":"publish-ruby (3.2)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.2"},
+              {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.3"},
+              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.4"}
+            ]
+          failure_summaries: ${{ needs.publish-ruby.outputs.ecr_failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}

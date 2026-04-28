@@ -4,71 +4,243 @@ on:
   push:
     tags:
       - v**_nodejs
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
-  publish-node:
+  # ── Job 1: Build + publish staging (node24 only) ──────────────────────────
+  stage-node:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
+    outputs:
+      tag-match:    ${{ steps.setup.outputs.tag-match }}
+      arn_x86:      ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64:    ${{ steps.staging.outputs.arn_arm64 }}
+      arn_x86_slim: ${{ steps.staging.outputs.arn_x86_slim }}
+      arn_arm64_slim: ${{ steps.staging.outputs.arn_arm64_slim }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
         id: setup
         uses: ./.github/actions/node-layer-setup
         with:
+          node-version: 24
+      - name: Build layer artifacts (node24)
+        if: steps.setup.outputs.tag-match == 'true'
+        run: make extract-nodejs24-artifacts
+      - name: Publish staging layers (node24)
+        if: steps.setup.outputs.tag-match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd nodejs
+          DIST_DIR=../dist/nodejs24 ./publish-layers.sh publish-staging-24
+
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-node:
+    needs: stage-node
+    if: needs.stage-node.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:       nodejs24
+      arn_x86:       ${{ needs.stage-node.outputs.arn_x86 }}
+      arn_arm64:     ${{ needs.stage-node.outputs.arn_arm64 }}
+      arn_x86_slim:  ${{ needs.stage-node.outputs.arn_x86_slim }}
+      arn_arm64_slim: ${{ needs.stage-node.outputs.arn_arm64_slim }}
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always, even if validate failed) ─────────────
+  cleanup-node:
+    needs: [stage-node, validate-node]
+    if: always() && needs.stage-node.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:      ${{ needs.stage-node.outputs.arn_x86 }}
+          ARN_ARM64:    ${{ needs.stage-node.outputs.arn_arm64 }}
+          ARN_X86_SLIM: ${{ needs.stage-node.outputs.arn_x86_slim }}
+          ARN_ARM64_SLIM: ${{ needs.stage-node.outputs.arn_arm64_slim }}
+        run: |
+          cd nodejs
+          ./publish-layers.sh cleanup-staging-24
+
+  # ── Job 4: Release node20/22/24 — gated on validate passing ──────────────
+  publish-node:
+    needs: [stage-node, validate-node]
+    if: needs.stage-node.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/node-layer-setup
+        with:
           node-version: ${{ matrix.node-version }}
-      - name: Publish layer
-        if: steps.setup.outputs.tag-match == 'true'
+      - name: Build layer artifacts
+        run: make extract-nodejs${{ matrix.node-version }}-artifacts
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: nodejs-${{ matrix.node-version }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+      - name: Publish release layers
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make publish-nodejs${{ matrix.node-version }}-ci
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+        run: |
+          failed_file="$(mktemp)"
+          chmod a+rw "$failed_file" "$GITHUB_STEP_SUMMARY"
+          set +e
+          docker run \
+            -e AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY \
+            -e GITHUB_STEP_SUMMARY \
+            -e PUBLISH_REGIONS \
+            -e LAYER_REGIONS \
+            -e S3_BUCKET_PREFIX \
+            -e "FAILED_REGIONS_FILE=${failed_file}" \
+            -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
+            -v "${failed_file}:${failed_file}" \
+            newrelic-lambda-layers-nodejs${{ matrix.node-version }}
+          docker_exit=$?
+          set -e
+          [[ -s "${failed_file}" ]] && cat "${failed_file}" >> "$GITHUB_OUTPUT" || true
+          rm -f "${failed_file}"
+          exit "${docker_exit}"
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: nodejs-${{ matrix.node-version }}
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish ECR image for nodejs${{ matrix.node-version }}
-        if: steps.setup.outputs.tag-match == 'true'
+        if: always()
+        id: publish-ecr
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd nodejs
           ./publish-layers.sh build-publish-${{ matrix.node-version }}-ecr-image
       - name: Upload Unit Test Coverage
-        if: steps.setup.outputs.tag-match == 'true'
         uses: codecov/codecov-action@v5.3.1
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./nodejs/coverage/unit/lcov.info
-         fail_ci_if_error: true
-         flags: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./nodejs/coverage/unit/lcov.info
+          fail_ci_if_error: true
+          flags: unit-tests
 
+  # ── Job 5: Release universal — gated on validate passing ─────────────────
   publish-node-universal:
+    needs: [stage-node, validate-node]
+    if: needs.stage-node.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr-universal.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
-        id: setup
         uses: ./.github/actions/node-layer-setup
         with:
           node-version: 22
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: nodejs-universal
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish universal layer
-        if: steps.setup.outputs.tag-match == 'true'
+        id: publish-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: make publish-nodejs-universal-ci
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: nodejs-universal
+          failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish universal ECR image
-        if: steps.setup.outputs.tag-match == 'true'
+        if: always()
+        id: publish-ecr-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd nodejs
           ./publish-layers.sh build-publish-universal-ecr-image
       - name: Upload Unit Test Coverage
-        if: steps.setup.outputs.tag-match == 'true'
         uses: codecov/codecov-action@v5.3.1
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./nodejs/coverage/unit/lcov.info
-         fail_ci_if_error: true
-         flags: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./nodejs/coverage/unit/lcov.info
+          fail_ci_if_error: true
+          flags: unit-tests
+
+  # ── Job 6: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-node, validate-node, publish-node, publish-node-universal]
+    if: always() && needs.validate-node.result == 'success' && needs.stage-node.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
+        with:
+          language_name: Node.js
+          versions_json: |-
+            [
+              {"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-20"},
+              {"key":"22","label":"Node.js 22","job":"publish-node (22)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-22"},
+              {"key":"24","label":"Node.js 24","job":"publish-node (24)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-24"},
+              {"key":"universal","label":"Node.js Universal","job":"publish-node-universal","fallback":"${{ needs.publish-node-universal.result }}","failure_key":"nodejs-universal"}
+            ]
+          failure_summaries: |
+            ${{ needs.publish-node.outputs.ecr_failure_summary }}
+            ${{ needs.publish-node-universal.outputs.ecr_failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}

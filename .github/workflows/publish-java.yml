@@ -4,14 +4,90 @@ on:
   push:
     tags:
       - v**_java
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
+  # ── Job 1: Build + publish staging (java21 only) ──────────────────────────
+  stage-java:
+    runs-on: ubuntu-latest
+    outputs:
+      tag-match: ${{ steps.java-check-tag.outputs.match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
+      - name: Use Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+      - name: Check Tag
+        id: java-check-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
+              echo "match=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Build layer artifacts (java21)
+        if: steps.java-check-tag.outputs.match == 'true'
+        run: make extract-java21-artifacts
+      - name: Publish staging layers (java21)
+        if: steps.java-check-tag.outputs.match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd java
+          DIST_DIR=../dist/java21 ./publish-layers.sh publish-staging-java21
+
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-java:
+    needs: stage-java
+    if: needs.stage-java.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   java21
+      arn_x86:   ${{ needs.stage-java.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-java.outputs.arn_arm64 }}
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
+  cleanup-java:
+    needs: [stage-java, validate-java]
+    if: always() && needs.stage-java.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:   ${{ needs.stage-java.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-java.outputs.arn_arm64 }}
+        run: |
+          cd java
+          ./publish-layers.sh cleanup-staging-java21
+
+  # ── Job 4: Release all Java versions — gated on validate passing ──────────
   publish-java:
+    needs: [stage-java, validate-java]
+    if: needs.stage-java.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        java-version: [ java8al2, java11, java17, java21 ]
-
+        java-version: [java8al2, java11, java17, java21]
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
       - name: Set up Java version
@@ -30,27 +106,96 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: ${{ env.JAVA_NUMERIC_VERSION }}
-      - name: Check Tag
-        id: java-check-tag
-        run: |
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
+      - name: Build layer artifacts (java21 only)
+        if: matrix.java-version == 'java21'
+        run: make extract-java21-artifacts
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: java-${{ matrix.java-version }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish ${{ matrix.java-version }} layer
-        if: steps.java-check-tag.outputs.match == 'true'
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make publish-${{ matrix.java-version }}-ci
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+        run: |
+          if [[ "${{ matrix.java-version }}" == "java21" ]]; then
+            failed_file="$(mktemp)"
+            chmod a+rw "$failed_file" "$GITHUB_STEP_SUMMARY"
+            set +e
+            docker run \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              -e GITHUB_STEP_SUMMARY \
+              -e PUBLISH_REGIONS \
+              -e LAYER_REGIONS \
+              -e S3_BUCKET_PREFIX \
+              -e "FAILED_REGIONS_FILE=${failed_file}" \
+              -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
+              -v "${failed_file}:${failed_file}" \
+              newrelic-lambda-layers-java21
+            docker_exit=$?
+            set -e
+            [[ -s "${failed_file}" ]] && cat "${failed_file}" >> "$GITHUB_OUTPUT" || true
+            rm -f "${failed_file}"
+            exit "${docker_exit}"
+          else
+            make publish-${{ matrix.java-version }}-ci
+          fi
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: java-${{ matrix.java-version }}
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Set up QEMU
+        if: always()
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
       - name: Publish ECR image for ${{ matrix.java-version }}
-        if: steps.java-check-tag.outputs.match == 'true'
+        if: always()
+        id: publish-ecr
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd java
           ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image
+
+  # ── Job 5: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-java, validate-java, publish-java]
+    if: always() && needs.validate-java.result == 'success' && needs.stage-java.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
+        with:
+          language_name: Java
+          versions_json: |-
+            [
+              {"key":"java8al2","label":"Java 8 (AL2)","job":"publish-java (java8al2)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java8al2"},
+              {"key":"java11","label":"Java 11","job":"publish-java (java11)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java11"},
+              {"key":"java17","label":"Java 17","job":"publish-java (java17)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java17"},
+              {"key":"java21","label":"Java 21","job":"publish-java (java21)","fallback":"${{ needs.publish-java.result }}","failure_key":"java-java21"}
+            ]
+          failure_summaries: ${{ needs.publish-java.outputs.ecr_failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}

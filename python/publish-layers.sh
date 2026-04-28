@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 BUILD_DIR=python
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 NEWRELIC_AGENT_VERSION=""
 VERSION_REGEX="v?([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+_python"
 PY39_DIST_ARM64=$DIST_DIR/python39.arm64.zip
@@ -78,10 +78,7 @@ function publish_python_layer {
         REGIONS=("${REGIONS[@]}");
     fi
 
-    for region in "${REGIONS[@]}"; do
-        echo "Publishing layer for python${python_version} (${arch}) to region ${region}"
-        publish_layer ${ZIP} $region python${python_version} ${arch} $NEWRELIC_AGENT_VERSION
-    done
+    run_region_loop "$ZIP" "python${python_version}" "${arch}" "$NEWRELIC_AGENT_VERSION"
 }
 
 
@@ -127,10 +124,7 @@ function publish_universal_python_layer {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-        echo "Publishing universal Python layer (${arch}) to region ${region}"
-        publish_layer ${ZIP} $region python ${arch} $NEWRELIC_AGENT_VERSION
-    done
+    run_region_loop "$ZIP" python "${arch}" "$NEWRELIC_AGENT_VERSION"
 }
 
 
@@ -150,60 +144,95 @@ case "$1" in
         publish_docker_ecr $PY_DIST_X86_64 python x86_64
         ;;
     "python")
+        layer_rc=0
         build_universal_python_layer arm64
-        publish_universal_python_layer arm64
-        publish_docker_ecr $PY_DIST_ARM64 python arm64
+        publish_universal_python_layer arm64 || layer_rc=$?
+        publish_ecr_safe $PY_DIST_ARM64 python arm64
         build_universal_python_layer x86_64
-        publish_universal_python_layer x86_64
-        publish_docker_ecr $PY_DIST_X86_64 python x86_64
+        publish_universal_python_layer x86_64 || layer_rc=$?
+        publish_ecr_safe $PY_DIST_X86_64 python x86_64
+        finalize_ecr_results "python-universal"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.9")
+        layer_rc=0
         build_python_layer 3.9 arm64
-        publish_python_layer 3.9 arm64
-        publish_docker_ecr $PY39_DIST_ARM64 python3.9 arm64
+        publish_python_layer 3.9 arm64 || layer_rc=$?
+        publish_ecr_safe $PY39_DIST_ARM64 python3.9 arm64
         build_python_layer 3.9 x86_64
-        publish_python_layer 3.9 x86_64
-        publish_docker_ecr $PY39_DIST_X86_64 python3.9 x86_64
+        publish_python_layer 3.9 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY39_DIST_X86_64 python3.9 x86_64
+        finalize_ecr_results "python3.9"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.10")
+        layer_rc=0
         build_python_layer 3.10 arm64
-        publish_python_layer 3.10 arm64
-        publish_docker_ecr $PY310_DIST_ARM64 python3.10 arm64
+        publish_python_layer 3.10 arm64 || layer_rc=$?
+        publish_ecr_safe $PY310_DIST_ARM64 python3.10 arm64
         build_python_layer 3.10 x86_64
-        publish_python_layer 3.10 x86_64
-        publish_docker_ecr $PY310_DIST_X86_64 python3.10 x86_64
+        publish_python_layer 3.10 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY310_DIST_X86_64 python3.10 x86_64
+        finalize_ecr_results "python3.10"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.11")
+        layer_rc=0
         build_python_layer 3.11 arm64
-        publish_python_layer 3.11 arm64
-        publish_docker_ecr $PY311_DIST_ARM64 python3.11 arm64
+        publish_python_layer 3.11 arm64 || layer_rc=$?
+        publish_ecr_safe $PY311_DIST_ARM64 python3.11 arm64
         build_python_layer 3.11 x86_64
-        publish_python_layer 3.11 x86_64
-        publish_docker_ecr $PY311_DIST_X86_64 python3.11 x86_64
+        publish_python_layer 3.11 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY311_DIST_X86_64 python3.11 x86_64
+        finalize_ecr_results "python3.11"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.12")
+        layer_rc=0
         build_python_layer 3.12 arm64
-        publish_python_layer 3.12 arm64
-        publish_docker_ecr $PY312_DIST_ARM64 python3.12 arm64
+        publish_python_layer 3.12 arm64 || layer_rc=$?
+        publish_ecr_safe $PY312_DIST_ARM64 python3.12 arm64
         build_python_layer 3.12 x86_64
-        publish_python_layer 3.12 x86_64
-        publish_docker_ecr $PY312_DIST_X86_64 python3.12 x86_64
+        publish_python_layer 3.12 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY312_DIST_X86_64 python3.12 x86_64
+        finalize_ecr_results "python3.12"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.13")
+        layer_rc=0
         build_python_layer 3.13 arm64
-        publish_python_layer 3.13 arm64
-        publish_docker_ecr $PY313_DIST_ARM64 python3.13 arm64
+        publish_python_layer 3.13 arm64 || layer_rc=$?
+        publish_ecr_safe $PY313_DIST_ARM64 python3.13 arm64
         build_python_layer 3.13 x86_64
-        publish_python_layer 3.13 x86_64
-        publish_docker_ecr $PY313_DIST_X86_64 python3.13 x86_64
+        publish_python_layer 3.13 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY313_DIST_X86_64 python3.13 x86_64
+        finalize_ecr_results "python3.13"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.14")
+        layer_rc=0
         build_python_layer 3.14 arm64
-        publish_python_layer 3.14 arm64
-        publish_docker_ecr $PY314_DIST_ARM64 python3.14 arm64
+        publish_python_layer 3.14 arm64 || layer_rc=$?
+        publish_ecr_safe $PY314_DIST_ARM64 python3.14 arm64
         build_python_layer 3.14 x86_64
-        publish_python_layer 3.14 x86_64
-        publish_docker_ecr $PY314_DIST_X86_64 python3.14 x86_64
+        publish_python_layer 3.14 x86_64 || layer_rc=$?
+        publish_ecr_safe $PY314_DIST_X86_64 python3.14 x86_64
+        finalize_ecr_results "python3.14"
+        [[ $layer_rc -eq 0 ]] || exit $layer_rc
+        ;;
+    "publish-staging-python3.14")
+        build_python_layer 3.14 arm64
+        build_python_layer 3.14 x86_64
+        arn_arm64=$(publish_staging_layer "$PY314_DIST_ARM64" python3.14 arm64 "$NEWRELIC_AGENT_VERSION")
+        echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+        arn_x86=$(publish_staging_layer "$PY314_DIST_X86_64" python3.14 x86_64 "$NEWRELIC_AGENT_VERSION")
+        echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+        ;;
+    "cleanup-staging-python3.14")
+        for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+            [[ -z "$arn" ]] && continue
+            delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+        done
         ;;
     *)
         usage

@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 BUILD_DIR=lib # for .net can either be lib  or bin. See: https://docs.aws.amazon.com/lambda/latest/dg/packaging-layers.html
-DIST_DIR=dist
+DIST_DIR=${DIST_DIR:-dist}
 
 DOTNET_DIST_ARM64=$DIST_DIR/dotnet.arm64.zip
 DOTNET_DIST_X86_64=$DIST_DIR/dotnet.x86_64.zip
@@ -36,11 +36,7 @@ function publish-dotnet-x86-64 {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $DOTNET_DIST_X86_64 $region dotnet x86_64 $NEWRELIC_AGENT_VERSION
-    done
-
-    publish_docker_ecr $DOTNET_DIST_X86_64 dotnet x86_64
+    run_region_loop "$DOTNET_DIST_X86_64" dotnet x86_64 "$NEWRELIC_AGENT_VERSION"
 }
 
 function build-dotnet-arm64 {
@@ -61,11 +57,7 @@ function publish-dotnet-arm64 {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $DOTNET_DIST_ARM64 $region dotnet arm64 $NEWRELIC_AGENT_VERSION
-    done
-
-    publish_docker_ecr $DOTNET_DIST_ARM64 dotnet arm64
+    run_region_loop "$DOTNET_DIST_ARM64" dotnet arm64 "$NEWRELIC_AGENT_VERSION"
 }
 
 # exmaple https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_amd64.tar.gz
@@ -96,8 +88,31 @@ function get_agent {
 }
 
 
-build-dotnet-arm64
-publish-dotnet-arm64
-build-dotnet-x86-64
-publish-dotnet-x86-64
+case "${1:-}" in
+"publish-staging-dotnet")
+    build-dotnet-arm64
+    build-dotnet-x86-64
+    arn_arm64=$(publish_staging_layer "$DOTNET_DIST_ARM64" dotnet arm64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$DOTNET_DIST_X86_64" dotnet x86_64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+"cleanup-staging-dotnet")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
+    ;;
+*)
+    layer_rc=0
+    build-dotnet-arm64
+    publish-dotnet-arm64 || layer_rc=$?
+    publish_ecr_safe $DOTNET_DIST_ARM64 dotnet arm64
+    build-dotnet-x86-64
+    publish-dotnet-x86-64 || layer_rc=$?
+    publish_ecr_safe $DOTNET_DIST_X86_64 dotnet x86_64
+    finalize_ecr_results "dotnet"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
+    ;;
+esac
 
