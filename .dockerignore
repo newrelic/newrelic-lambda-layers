@@ -3,7 +3,6 @@
 *.md
 LICENSE
 dockerfiles
-java
 ruby
 dotnet
 __pycache__
