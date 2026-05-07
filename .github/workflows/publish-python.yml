@@ -4,39 +4,182 @@ on:
   push:
     tags:
       - v**_python
+  workflow_dispatch:
+    inputs:
+      regions:
+        description: 'Comma-separated regions to (re)publish. Leave empty to publish all regions.'
+        required: false
+        default: ''
 
 jobs:
-  publish-python:
+  # ── Job 1: Publish staging (python3.14 only) ──────────────────────────────
+  stage-python:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13', '3.14' ]
+    outputs:
+      tag-match: ${{ steps.setup.outputs.tag-match }}
+      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
+      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
         id: setup
         uses: ./.github/actions/python-layer-setup
-      - name: Publish Python ${{ matrix.python-version }} layer
+      - name: Publish staging layers (python3.14)
         if: steps.setup.outputs.tag-match == 'true'
+        id: staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+        run: |
+          cd python
+          ./publish-layers.sh publish-staging-python3.14
+
+  # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
+  validate-python:
+    needs: stage-python
+    if: needs.stage-python.outputs.tag-match == 'true'
+    uses: ./.github/workflows/validate-layer.yml
+    with:
+      runtime:   python314
+      arn_x86:   ${{ needs.stage-python.outputs.arn_x86 }}
+      arn_arm64: ${{ needs.stage-python.outputs.arn_arm64 }}
+    secrets: inherit
+
+  # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
+  cleanup-python:
+    needs: [stage-python, validate-python]
+    if: always() && needs.stage-python.outputs.arn_x86 != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup staging layers
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          STAGING_REGION: us-east-1
+          ARN_X86:   ${{ needs.stage-python.outputs.arn_x86 }}
+          ARN_ARM64: ${{ needs.stage-python.outputs.arn_arm64 }}
+        run: |
+          cd python
+          ./publish-layers.sh cleanup-staging-python3.14
+
+  # ── Job 4: Release all Python versions — gated on validate passing ────────
+  publish-python:
+    needs: [stage-python, validate-python]
+    if: needs.stage-python.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+    outputs:
+      failure_summary: ${{ steps.publish.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/python-layer-setup
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: python-${{ matrix.python-version }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+      - name: Publish Python ${{ matrix.python-version }} layer
+        id: publish
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd python
           ./publish-layers.sh python${{ matrix.python-version }}
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: python-${{ matrix.python-version }}
+          failure_summary: ${{ steps.publish.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
 
+  # ── Job 5: Release universal — gated on validate passing ─────────────────
   publish-python-universal:
+    needs: [stage-python, validate-python]
+    if: needs.stage-python.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+      ecr_failure_summary: ${{ steps.publish-universal.outputs.ecr_failure_summary }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup
-        id: setup
         uses: ./.github/actions/python-layer-setup
+      - name: Load failed regions for re-run
+        id: region-retry-load
+        uses: ./.github/actions/region-retry
+        with:
+          mode: load
+          job_key: python-universal
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
       - name: Publish universal Python layer
-        if: steps.setup.outputs.tag-match == 'true'
+        id: publish-universal
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLISH_REGIONS: ${{ steps.region-retry-load.outputs.publish_regions || inputs.regions }}
+          LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
+          S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd python
           ./publish-layers.sh python
+      - name: Save failed regions for re-run
+        if: always()
+        uses: ./.github/actions/region-retry
+        with:
+          mode: save
+          job_key: python-universal
+          failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+
+  # ── Job 6: Slack release summary — only after validate passed ─────────────
+  notify-slack:
+    needs: [stage-python, validate-python, publish-python, publish-python-universal]
+    if: always() && needs.validate-python.result == 'success' && needs.stage-python.outputs.tag-match == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/notify-slack-layer
+        with:
+          language_name: Python
+          versions_json: |-
+            [
+              {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.9"},
+              {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.10"},
+              {"key":"3.11","label":"Python 3.11","job":"publish-python (3.11)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.11"},
+              {"key":"3.12","label":"Python 3.12","job":"publish-python (3.12)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.12"},
+              {"key":"3.13","label":"Python 3.13","job":"publish-python (3.13)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.13"},
+              {"key":"3.14","label":"Python 3.14","job":"publish-python (3.14)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.14"},
+              {"key":"universal","label":"Python Universal","job":"publish-python-universal","fallback":"${{ needs.publish-python-universal.result }}","failure_key":"python-universal"}
+            ]
+          failure_summaries: |
+            ${{ needs.publish-python.outputs.ecr_failure_summary }}
+            ${{ needs.publish-python-universal.outputs.ecr_failure_summary }}
+          slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          gh_token: ${{ github.token }}
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+          ref_name: ${{ github.ref_name }}
+          actor: ${{ github.actor }}
+          server_url: ${{ github.server_url }}

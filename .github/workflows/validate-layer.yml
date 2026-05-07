@@ -1,0 +1,78 @@
+name: Validate Layer (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      runtime:
+        required: true
+        type: string
+      label:
+        description: Display name used in Slack messages (defaults to runtime)
+        required: false
+        type: string
+        default: ''
+      arn_x86:
+        required: true
+        type: string
+      arn_arm64:
+        required: true
+        type: string
+      arn_x86_slim:
+        required: false
+        type: string
+        default: ''
+      arn_arm64_slim:
+        required: false
+        type: string
+        default: ''
+      os:
+        required: false
+        type: string
+        default: ''
+    secrets:
+      ORCHESTRATOR_API_URL:
+        required: true
+      ORCHESTRATOR_API_KEY:
+        required: true
+      VALIDATION_RESULTS_BUCKET:
+        required: true
+      STAGING_AWS_ACCESS_KEY_ID:
+        required: true
+      STAGING_AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_VALIDATION_WEBHOOK:
+        required: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate staging layers
+        id: validate
+        env:
+          ORCHESTRATOR_API_URL: ${{ secrets.ORCHESTRATOR_API_URL }}
+          ORCHESTRATOR_API_KEY: ${{ secrets.ORCHESTRATOR_API_KEY }}
+          RESULTS_BUCKET: ${{ secrets.VALIDATION_RESULTS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          chmod +x .github/scripts/poll-validation.sh
+          ARGS="--runtime ${{ inputs.runtime }} --arn-x86 ${{ inputs.arn_x86 }} --arn-arm64 ${{ inputs.arn_arm64 }}"
+          [[ -n "${{ inputs.arn_x86_slim }}"   ]] && ARGS="$ARGS --arn-x86-slim ${{ inputs.arn_x86_slim }}"
+          [[ -n "${{ inputs.arn_arm64_slim }}" ]] && ARGS="$ARGS --arn-arm64-slim ${{ inputs.arn_arm64_slim }}"
+          [[ -n "${{ inputs.os }}"             ]] && ARGS="$ARGS --os ${{ inputs.os }}"
+          .github/scripts/poll-validation.sh $ARGS
+
+      - name: Notify Slack — validation failed
+        if: failure()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": ":x: *${{ inputs.label || inputs.runtime }}* layer validation FAILED — release blocked — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_id }}>"
+            }
