@@ -7,12 +7,18 @@ inputs:
     required: true
   versions_json:
     description: |
-      JSON array: [{"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"success","failure_key":"nodejs-20"}]
-      - key: unique identifier
-      - label: display label in Slack message
-      - job: GitHub Actions job name (used for per-matrix API lookup)
-      - fallback: result to use if API lookup finds no match
-      - failure_key: job_key used in region-retry (for per-version region failure detail)
+      JSON array describing each runtime version to include in the Slack message.
+      Schema (one object per version):
+        - key:         unique identifier, e.g. "3.9"
+        - label:       display name shown in Slack, e.g. "Python 3.9"
+        - job:         GitHub Actions job name for API result lookup, e.g. "publish-python (3.9)"
+        - fallback:    result to use when the API lookup finds no match, e.g. "success" or "failure"
+        - failure_key: job_key used by region-retry for per-version region failure detail, e.g. "python-3.9"
+      Example:
+        [
+          {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"success","failure_key":"python-3.9"},
+          {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"success","failure_key":"python-3.10"}
+        ]
     required: true
   failure_summaries:
     description: Newline-separated failure_summary strings from publish jobs (used for ECR failures)
