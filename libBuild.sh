@@ -121,9 +121,6 @@ function layer_name_str() {
     "python")
       rt_part="Python"
       ;;
-    "nodejs20.x")
-      rt_part="NodeJS20X"
-      ;;
     "nodejs22.x")
       rt_part="NodeJS22X"
       ;;
@@ -193,9 +190,6 @@ function s3_prefix() {
     "python")
       name="nr-python"
       ;;
-    "nodejs20.x")
-      name="nr-nodejs20.x"
-      ;;
     "nodejs22.x")
       name="nr-nodejs22.x"
       ;;
@@ -230,7 +224,7 @@ function agent_name_str() {
         "dotnet")
             agent_name="Dotnet"
             ;;
-        "nodejs"|"nodejs20.x"|"nodejs22.x"|"nodejs24.x")
+        "nodejs"|"nodejs22.x"|"nodejs24.x")
             agent_name="Node"
             ;;
         "ruby3.2"|"ruby3.3"|"ruby3.4")
