@@ -75,7 +75,7 @@ jobs:
           cd nodejs
           ./publish-layers.sh cleanup-staging-24
 
-  # ── Job 4: Release node20/22/24 — gated on validate passing ──────────────
+  # ── Job 4: Release node22/24 — gated on validate passing ──────────────
   publish-node:
     needs: [stage-node, validate-node]
     if: needs.stage-node.outputs.tag-match == 'true'
@@ -83,7 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
@@ -228,7 +228,6 @@ jobs:
           language_name: Node.js
           versions_json: |-
             [
-              {"key":"20","label":"Node.js 20","job":"publish-node (20)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-20"},
               {"key":"22","label":"Node.js 22","job":"publish-node (22)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-22"},
               {"key":"24","label":"Node.js 24","job":"publish-node (24)","fallback":"${{ needs.publish-node.result }}","failure_key":"nodejs-24"},
               {"key":"universal","label":"Node.js Universal","job":"publish-node-universal","fallback":"${{ needs.publish-node-universal.result }}","failure_key":"nodejs-universal"}
