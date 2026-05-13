@@ -320,7 +320,7 @@ function publish_layer {
     fi
 
     if [[ $runtime_name == "nodejs" ]]
-    then compat_list=("nodejs20.x" "nodejs22.x" "nodejs24.x")
+    then compat_list=("nodejs22.x" "nodejs24.x")
     fi
 
     echo "Uploading ${layer_archive} to s3://${bucket_name}/${s3_key}"
@@ -385,7 +385,7 @@ function publish_staging_layer {
     if [[ $runtime_name == "provided" ]]; then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1"); fi
     if [[ $runtime_name == "dotnet" ]];   then compat_list=("dotnet6" "dotnet8" "dotnet10"); fi
     if [[ $runtime_name == "python" ]];   then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14"); fi
-    if [[ $runtime_name == "nodejs" ]];   then compat_list=("nodejs20.x" "nodejs22.x" "nodejs24.x"); fi
+    if [[ $runtime_name == "nodejs" ]];   then compat_list=("nodejs22.x" "nodejs24.x"); fi
 
     echo "Publishing staging layer ${staging_layer_name} (${arch}) to ${STAGING_REGION}" >&2
     layer_version=$(aws lambda publish-layer-version \
