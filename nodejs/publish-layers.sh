@@ -8,7 +8,7 @@ DIST_DIR=${DIST_DIR:-dist}
 source ../libBuild.sh
 
 function usage {
-  	echo "./publish-layers.sh [build-20|build-22|publish-20|publish-22]"
+  	echo "./publish-layers.sh [build-22|publish-22]"
 }
 
 function make_package_json {
@@ -188,18 +188,6 @@ case "$1" in
 "publish_wrapper")
   publish_wrapper $2 $3
   ;;
-"build-20")
-  build_wrapper 20 arm64 
-  build_wrapper 20 x86_64 
-  build_wrapper 20 arm64 slim
-  build_wrapper 20 x86_64 slim
-	;;
-"publish-20")
-  publish_wrapper 20 arm64
-  publish_wrapper 20 x86_64 
-  publish_wrapper 20 arm64 slim
-  publish_wrapper 20 x86_64 slim
-	;;
 "build-22")
   build_wrapper 22 arm64 
   build_wrapper 22 x86_64 
@@ -224,17 +212,6 @@ case "$1" in
   publish_wrapper 24 arm64 slim
   publish_wrapper 24 x86_64 slim
 	;;
-"build-publish-20-ecr-image")
-  build_wrapper 20 arm64
-	publish_ecr_safe $DIST_DIR/nodejs20x.arm64.zip nodejs20.x arm64
-  build_wrapper 20 arm64 slim
-	publish_ecr_safe $DIST_DIR/nodejs20x.arm64.slim.zip nodejs20.x arm64 slim
-  build_wrapper 20 x86_64
-	publish_ecr_safe $DIST_DIR/nodejs20x.x86_64.zip nodejs20.x x86_64
-  build_wrapper 20 x86_64 slim
-	publish_ecr_safe $DIST_DIR/nodejs20x.x86_64.slim.zip nodejs20.x x86_64 slim
-  finalize_ecr_results "nodejs20.x"
-	;;
 "build-publish-22-ecr-image")
   build_wrapper 22 arm64
 	publish_ecr_safe $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
@@ -257,10 +234,6 @@ case "$1" in
 	publish_ecr_safe $DIST_DIR/nodejs24x.x86_64.slim.zip nodejs24.x x86_64 slim
   finalize_ecr_results "nodejs24.x"
 	;;
-"nodejs20")
-  $0 build-20
-  $0 publish-20
-  ;;
 "nodejs22")
   $0 build-22
   $0 publish-22
@@ -269,17 +242,11 @@ case "$1" in
   $0 build-24
   $0 publish-24
   ;;
-"publish-staging-20")
-  publish_staging_wrapper 20
-  ;;
 "publish-staging-22")
   publish_staging_wrapper 22
   ;;
 "publish-staging-24")
   publish_staging_wrapper 24
-  ;;
-"cleanup-staging-20")
-  cleanup_staging_wrapper
   ;;
 "cleanup-staging-22")
   cleanup_staging_wrapper
