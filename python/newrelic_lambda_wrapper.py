@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 
-os.environ.setdefault("NEW_RELIC_APP_NAME", os.getenv("AWS_LAMBDA_FUNCTION_NAME", ""))
+os.environ["NEW_RELIC_APP_NAME"] = os.environ.get("NEW_RELIC_APP_NAME") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "")
 os.environ.setdefault("NEW_RELIC_NO_CONFIG_FILE", "true")
 os.environ.setdefault("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "true")
 os.environ.setdefault("NEW_RELIC_SERVERLESS_MODE_ENABLED", "true")
