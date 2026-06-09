@@ -6,13 +6,13 @@ import pytest
 
 
 CWD = os.path.dirname(__file__)
-SERVERLESS = os.path.realpath(os.path.join(CWD, "../node_modules/serverless/bin/serverless.js"))
+SERVERLESS = os.path.realpath(os.path.join(CWD, "../node_modules/serverless/run.js"))
 TIMEOUT=60
 
 
 @pytest.fixture(scope="session", autouse=True)
 def start_serverless_offline():
-    with subprocess.Popen([SERVERLESS, "offline", "start"], cwd=CWD, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+    with subprocess.Popen([SERVERLESS, "offline", "start"], cwd=CWD, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
         timed_out = Event()
         def timeout():
             process.kill()
@@ -23,7 +23,7 @@ def start_serverless_offline():
         try:
             timer.start()
             while not timed_out.is_set():
-                line = process.stderr.readline().decode("utf-8")
+                line = process.stdout.readline().decode("utf-8")
                 # Wait for server to be ready
                 if 'Server ready:' in line:
                     break
