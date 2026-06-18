@@ -16,7 +16,7 @@ class LambdaWrapperIntegrationTest < Minitest::Test
   METADATA_PATTERN = /"agent_language":"ruby"/
   SERVERLESS_ROOT = 'test/support'
   SERVERLESS_OUTPUT_FILE = 'serverless_log'
-  SERVERLESS_CMD = "cd #{SERVERLESS_ROOT} && node_modules/serverless/bin/serverless.js " \
+  SERVERLESS_CMD = "cd #{SERVERLESS_ROOT} && node node_modules/serverless/run.js " \
                    "offline start >#{SERVERLESS_OUTPUT_FILE} 2>&1".freeze
   SERVERLESS_URI = URI('http://localhost:3000/dev')
 
