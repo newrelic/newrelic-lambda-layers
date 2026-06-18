@@ -1,5 +1,7 @@
 'use strict'
-
+if (process.env.NEW_RELIC_USE_ESM === 'true') {
+  process.env.NODE_OPTIONS += '--experimental-loader newrelic/esm-loader.mjs'
+}
 process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME
 process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = process.env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED || 'true'
 process.env.NEW_RELIC_NO_CONFIG_FILE = process.env.NEW_RELIC_NO_CONFIG_FILE || 'true'
