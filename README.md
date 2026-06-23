@@ -26,7 +26,7 @@ cd ..
 
 ```
 cd nodejs
-./publish-layers.sh nodejs20 
+./publish-layers.sh nodejs22
 cd ..
 ```
 

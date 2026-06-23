@@ -31,9 +31,7 @@ function publish-layer-x86 {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $EXTENSION_DIST_ZIP_X86_64 $region provided x86_64 provided
-    done
+    run_region_loop "$EXTENSION_DIST_ZIP_X86_64" provided x86_64 provided
 }
 
 function publish-layer-arm64 {
@@ -42,15 +40,41 @@ function publish-layer-arm64 {
         exit 1
     fi
 
-    for region in "${REGIONS[@]}"; do
-      publish_layer $EXTENSION_DIST_ZIP_ARM64 $region provided arm64 provided
+    run_region_loop "$EXTENSION_DIST_ZIP_ARM64" provided arm64 provided
+}
+
+function publish-staging {
+    build-layer-x86
+    build-layer-arm64
+
+    arn_x86=$(publish_staging_layer "$EXTENSION_DIST_ZIP_X86_64" provided x86_64)
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+
+    arn_arm64=$(publish_staging_layer "$EXTENSION_DIST_ZIP_ARM64" provided arm64)
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+}
+
+function cleanup-staging {
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
     done
 }
 
-build-layer-x86
-publish-layer-x86
-publish_docker_ecr $EXTENSION_DIST_ZIP_X86_64 extension x86_64
+case "${1:-publish}" in
+  "publish-staging")  publish-staging ;;
+  "cleanup-staging")  cleanup-staging ;;
+  *)
+    layer_rc=0
+    build-layer-x86
+    publish-layer-x86 || layer_rc=$?
+    publish_ecr_safe $EXTENSION_DIST_ZIP_X86_64 extension x86_64
 
-build-layer-arm64
-publish-layer-arm64
-publish_docker_ecr $EXTENSION_DIST_ZIP_ARM64 extension arm64
+    build-layer-arm64
+    publish-layer-arm64 || layer_rc=$?
+    publish_ecr_safe $EXTENSION_DIST_ZIP_ARM64 extension arm64
+
+    finalize_ecr_results "extension"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
+    ;;
+esac
