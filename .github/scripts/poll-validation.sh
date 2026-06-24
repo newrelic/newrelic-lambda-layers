@@ -99,9 +99,13 @@ while [[ $SECONDS -lt $end ]]; do
       exit 0
     else
       echo "FAILED: ${RUNTIME}"
-      echo "$result" | python3 - <<'PYEOF'
-import json, sys
-d = json.load(sys.stdin)
+      # Write result to a temp file — avoids the bash stdin conflict between
+      # a pipe and a heredoc both trying to own python3's stdin (broken pipe bug).
+      printf '%s' "$result" > /tmp/val_result.json
+      python3 <<'PYEOF'
+import json
+with open('/tmp/val_result.json') as f:
+    d = json.load(f)
 for variant in ("standard", "slim"):
     section = d.get(variant) or {}
     for f in section.get("functions", []):
