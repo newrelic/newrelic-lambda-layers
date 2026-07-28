@@ -12,7 +12,7 @@ COPY --chown=newrelic-lambda-layers java java/
 
 WORKDIR java
 # Gradle running on JDK 25 requires Gradle >= 9.1.0, but the repo's shared
-# wrapper (8.6) targets older JDKs used by the other java* layers.
+# wrapper (8.6) targets older JDKs used by the other Java layers.
 RUN sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-9.1.0-bin.zip#' gradle/wrapper/gradle-wrapper.properties
 RUN ./publish-layers.sh build-java25
 
