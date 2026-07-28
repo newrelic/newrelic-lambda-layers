@@ -74,13 +74,6 @@ publish-java21-local: build-java21
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-java21
 
-extract-java21-artifacts: build-java21
-	@docker rm -f java21-artifacts 2>/dev/null || true
-	mkdir -p dist/java21
-	docker create --name java21-artifacts newrelic-lambda-layers-java21
-	docker cp java21-artifacts:/home/newrelic-lambda-layers/java/dist/. dist/java21/
-	docker rm java21-artifacts
-
 build-java25:
 	docker build \
 		--no-cache \

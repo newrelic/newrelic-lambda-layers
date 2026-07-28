@@ -12,43 +12,8 @@ on:
         default: ''
 
 jobs:
-  # ── Job 1: Build + publish staging (java21 only) ──────────────────────────
+  # ── Job 1: Build + publish staging (java25 only) ──────────────────────────
   stage-java:
-    runs-on: ubuntu-latest
-    outputs:
-      tag-match: ${{ steps.java-check-tag.outputs.match }}
-      arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
-      arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # pin@v4
-      - name: Use Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'corretto'
-          java-version: '21'
-      - name: Check Tag
-        id: java-check-tag
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
-             [[ "${{ github.event.ref }}" =~ ^refs/tags/v[0-9]+(\.[0-9]+)*_java$ ]]; then
-              echo "match=true" >> $GITHUB_OUTPUT
-          fi
-      - name: Build layer artifacts (java21)
-        if: steps.java-check-tag.outputs.match == 'true'
-        run: make extract-java21-artifacts
-      - name: Publish staging layers (java21)
-        if: steps.java-check-tag.outputs.match == 'true'
-        id: staging
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-          STAGING_REGION: us-east-1
-        run: |
-          cd java
-          DIST_DIR=../dist/java21 ./publish-layers.sh publish-staging-java21
-
-  # ── Job 1b: Build + publish staging (java25 only) ─────────────────────────
-  stage-java25:
     runs-on: ubuntu-latest
     outputs:
       tag-match: ${{ steps.java-check-tag.outputs.match }}
@@ -88,20 +53,9 @@ jobs:
     if: needs.stage-java.outputs.tag-match == 'true'
     uses: ./.github/workflows/validate-layer.yml
     with:
-      runtime:   java21
+      runtime:   java25
       arn_x86:   ${{ needs.stage-java.outputs.arn_x86 }}
       arn_arm64: ${{ needs.stage-java.outputs.arn_arm64 }}
-    secrets: inherit
-
-  # ── Job 2b: Validate java25 (calls reusable workflow) ──────────────────────
-  validate-java25:
-    needs: stage-java25
-    if: needs.stage-java25.outputs.tag-match == 'true'
-    uses: ./.github/workflows/validate-layer.yml
-    with:
-      runtime:   java25
-      arn_x86:   ${{ needs.stage-java25.outputs.arn_x86 }}
-      arn_arm64: ${{ needs.stage-java25.outputs.arn_arm64 }}
     secrets: inherit
 
   # ── Job 3: Cleanup staging (always) ──────────────────────────────────────
@@ -120,29 +74,11 @@ jobs:
           ARN_ARM64: ${{ needs.stage-java.outputs.arn_arm64 }}
         run: |
           cd java
-          ./publish-layers.sh cleanup-staging-java21
-
-  # ── Job 3b: Cleanup java25 staging (always) ────────────────────────────────
-  cleanup-java25:
-    needs: [stage-java25, validate-java25]
-    if: always() && needs.stage-java25.outputs.arn_x86 != ''
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cleanup staging layers
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-          STAGING_REGION: us-east-1
-          ARN_X86:   ${{ needs.stage-java25.outputs.arn_x86 }}
-          ARN_ARM64: ${{ needs.stage-java25.outputs.arn_arm64 }}
-        run: |
-          cd java
           ./publish-layers.sh cleanup-staging-java25
 
   # ── Job 4: Release all Java versions — gated on validate passing ──────────
   publish-java:
-    needs: [stage-java, validate-java, stage-java25, validate-java25]
+    needs: [stage-java, validate-java]
     if: needs.stage-java.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -171,8 +107,8 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: ${{ env.JAVA_NUMERIC_VERSION }}
-      - name: Build layer artifacts (java21/java25 only)
-        if: matrix.java-version == 'java21' || matrix.java-version == 'java25'
+      - name: Build layer artifacts (java25 only)
+        if: matrix.java-version == 'java25'
         run: make extract-${{ matrix.java-version }}-artifacts
       - name: Load failed regions for re-run
         id: region-retry-load
@@ -191,7 +127,7 @@ jobs:
           LAYER_REGIONS: ${{ vars.LAYER_REGIONS }}
           S3_BUCKET_PREFIX: ${{ vars.S3_BUCKET_PREFIX }}
         run: |
-          if [[ "${{ matrix.java-version }}" == "java21" || "${{ matrix.java-version }}" == "java25" ]]; then
+          if [[ "${{ matrix.java-version }}" == "java25" ]]; then
             failed_file="$(mktemp)"
             chmod a+rw "$failed_file" "$GITHUB_STEP_SUMMARY"
             set +e
@@ -240,8 +176,8 @@ jobs:
 
   # ── Job 5: Slack release summary — only after validate passed ─────────────
   notify-slack:
-    needs: [stage-java, validate-java, stage-java25, validate-java25, publish-java]
-    if: always() && needs.validate-java.result == 'success' && needs.validate-java25.result == 'success' && needs.stage-java.outputs.tag-match == 'true'
+    needs: [stage-java, validate-java, publish-java]
+    if: always() && needs.validate-java.result == 'success' && needs.stage-java.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
