@@ -74,12 +74,31 @@ publish-java21-local: build-java21
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-java21
 
-extract-java21-artifacts: build-java21
-	@docker rm -f java21-artifacts 2>/dev/null || true
-	mkdir -p dist/java21
-	docker create --name java21-artifacts newrelic-lambda-layers-java21
-	docker cp java21-artifacts:/home/newrelic-lambda-layers/java/dist/. dist/java21/
-	docker rm java21-artifacts
+build-java25:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-java25 \
+		-f ./dockerfiles/Dockerfile.java25 \
+		.
+
+publish-java25-ci: build-java25
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-java25
+
+publish-java25-local: build-java25
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-java25
+
+extract-java25-artifacts: build-java25
+	@docker rm -f java25-artifacts 2>/dev/null || true
+	mkdir -p dist/java25
+	docker create --name java25-artifacts newrelic-lambda-layers-java25
+	docker cp java25-artifacts:/home/newrelic-lambda-layers/java/dist/. dist/java25/
+	docker rm java25-artifacts
 
 build-nodejs22:
 	docker build \

@@ -1,0 +1,32 @@
+FROM eclipse-temurin:25 AS builder
+
+RUN apt-get update \
+    && apt-get install -y curl unzip zip
+
+RUN useradd -m newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+
+COPY --chown=newrelic-lambda-layers libBuild.sh .
+COPY --chown=newrelic-lambda-layers java java/
+
+WORKDIR java
+# Gradle running on JDK 25 requires Gradle >= 9.1.0, but the repo's shared
+# wrapper (8.6) targets older JDKs used by the other Java layers.
+RUN sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-9.1.0-bin.zip#' gradle/wrapper/gradle-wrapper.properties
+RUN ./publish-layers.sh build-java25
+
+FROM python:3.12
+
+RUN useradd -m newrelic-lambda-layers
+USER newrelic-lambda-layers
+WORKDIR /home/newrelic-lambda-layers
+RUN pip3 install -U awscli --user
+ENV PATH /home/newrelic-lambda-layers/.local/bin/:$PATH
+
+COPY libBuild.sh .
+COPY java java/
+COPY --from=builder /home/newrelic-lambda-layers/java/dist java/dist
+
+WORKDIR java
+CMD ./publish-layers.sh publish-java25

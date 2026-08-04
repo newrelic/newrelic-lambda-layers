@@ -14,11 +14,13 @@ JAVA17_DIST_ARM64=$DIST_DIR/java17.arm64.zip
 JAVA17_DIST_X86_64=$DIST_DIR/java17.x86_64.zip
 JAVA21_DIST_ARM64=$DIST_DIR/java21.arm64.zip
 JAVA21_DIST_X86_64=$DIST_DIR/java21.x86_64.zip
+JAVA25_DIST_ARM64=$DIST_DIR/java25.arm64.zip
+JAVA25_DIST_X86_64=$DIST_DIR/java25.x86_64.zip
 
 source ../libBuild.sh
 
 function usage {
-	  echo "./publish-layers.sh [java8al2, java11, java17, java21]"
+	  echo "./publish-layers.sh [java8al2, java11, java17, java21, java25]"
 }
 
 function build-arm() {
@@ -155,6 +157,32 @@ function publish-java21-x86 {
     run_region_loop "$JAVA21_DIST_X86_64" java21 x86_64
 }
 
+function build-java25-arm64 {
+    build-arm "java25 (arm64)" 25 $JAVA25_DIST_ARM64
+}
+
+function build-java25-x86 {
+    build-x86 "java25 (x86_64)" 25 $JAVA25_DIST_X86_64
+}
+
+function publish-java25-arm64 {
+    if [ ! -f $JAVA25_DIST_ARM64 ]; then
+      echo "Package not found"
+      exit 1
+    fi
+
+    run_region_loop "$JAVA25_DIST_ARM64" java25 arm64
+}
+
+function publish-java25-x86 {
+    if [ ! -f $JAVA25_DIST_X86_64 ]; then
+      echo "Package not found"
+      exit 1
+    fi
+
+    run_region_loop "$JAVA25_DIST_X86_64" java25 x86_64
+}
+
 case "$1" in
 "build-java8al2")
 	build-java8al2-arm64
@@ -188,6 +216,14 @@ case "$1" in
 	publish-java21-arm64
 	publish-java21-x86
 	;;
+"build-java25")
+	build-java25-arm64
+	build-java25-x86
+        ;;
+"publish-java25")
+	publish-java25-arm64
+	publish-java25-x86
+	;;
 "build-publish-java8al2-ecr-image")
 	build-java8al2-arm64
 	publish_ecr_safe $JAVA8_DIST_ARM64 java8 arm64
@@ -216,6 +252,13 @@ case "$1" in
 	publish_ecr_safe $JAVA21_DIST_X86_64 java21 x86_64
 	finalize_ecr_results "java21"
 	;;
+"build-publish-java25-ecr-image")
+	build-java25-arm64
+	publish_ecr_safe $JAVA25_DIST_ARM64 java25 arm64
+	build-java25-x86
+	publish_ecr_safe $JAVA25_DIST_X86_64 java25 x86_64
+	finalize_ecr_results "java25"
+	;;
 "java8al2")
 	$0 build-java8al2
 	$0 publish-java8al2
@@ -232,6 +275,10 @@ case "$1" in
 	$0 build-java21
 	$0 publish-java21
 	;;
+"java25")
+	$0 build-java25
+	$0 publish-java25
+	;;
 "publish-staging-java21")
     build-java21-arm64
     build-java21-x86
@@ -241,6 +288,20 @@ case "$1" in
     echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
     ;;
 "cleanup-staging-java21")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
+    ;;
+"publish-staging-java25")
+    build-java25-arm64
+    build-java25-x86
+    arn_arm64=$(publish_staging_layer "$JAVA25_DIST_ARM64" java25 arm64)
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$JAVA25_DIST_X86_64" java25 x86_64)
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+"cleanup-staging-java25")
     for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
         [[ -z "$arn" ]] && continue
         delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
