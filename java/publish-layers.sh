@@ -294,8 +294,10 @@ case "$1" in
     done
     ;;
 "publish-staging-java25")
-    build-java25-arm64
-    build-java25-x86
+    if [ ! -f "$JAVA25_DIST_ARM64" ] || [ ! -f "$JAVA25_DIST_X86_64" ]; then
+      echo "Package not found"
+      exit 1
+    fi
     arn_arm64=$(publish_staging_layer "$JAVA25_DIST_ARM64" java25 arm64)
     echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
     arn_x86=$(publish_staging_layer "$JAVA25_DIST_X86_64" java25 x86_64)
