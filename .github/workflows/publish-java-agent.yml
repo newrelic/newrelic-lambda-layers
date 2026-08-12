@@ -5,6 +5,9 @@ on:
     tags:
       - v**_java-agent
 
+permissions:
+  contents: read
+
 jobs:
   publish-java-agent:
     runs-on: ubuntu-latest

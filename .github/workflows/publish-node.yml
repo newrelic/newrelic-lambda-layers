@@ -11,6 +11,10 @@ on:
         required: false
         default: ''
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   # ── Job 1: Build + publish staging (node24 only) ──────────────────────────
   stage-node:

@@ -11,6 +11,10 @@ on:
         required: false
         default: ''
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   # ── Job 1: Publish staging (python3.14 only) ──────────────────────────────
   stage-python:
