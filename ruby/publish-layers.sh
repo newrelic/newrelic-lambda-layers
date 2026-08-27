@@ -28,16 +28,18 @@ EXTENSION_CLONE_PATH=''
 RB32_DIST_ARM64=$DIST_DIR/ruby32.arm64.zip
 RB33_DIST_ARM64=$DIST_DIR/ruby33.arm64.zip
 RB34_DIST_ARM64=$DIST_DIR/ruby34.arm64.zip
+RB40_DIST_ARM64=$DIST_DIR/ruby40.arm64.zip
 
 # Distribution paths for X86_64
 RB32_DIST_X86_64=$DIST_DIR/ruby32.x86_64.zip
 RB33_DIST_X86_64=$DIST_DIR/ruby33.x86_64.zip 
 RB34_DIST_X86_64=$DIST_DIR/ruby34.x86_64.zip
+RB40_DIST_X86_64=$DIST_DIR/ruby40.x86_64.zip
 
 source ../libBuild.sh
 
 function usage {
-  echo "./publish-layers.sh [ruby3.2|ruby3.3|ruby3.4]"
+  echo "./publish-layers.sh [ruby3.2|ruby3.3|ruby3.4|ruby4.0]"
 }
 
 function build-ruby32-arm64 {
@@ -50,6 +52,10 @@ function build-ruby33-arm64 {
 
 function build-ruby34-arm64 {
   build_ruby_for_arch 3.4 'arm64' $RB34_DIST_ARM64
+}
+
+function build-ruby40-arm64 {
+  build_ruby_for_arch 4.0 'arm64' $RB40_DIST_ARM64
 }
 
 
@@ -65,6 +71,10 @@ function build-ruby34-x86 {
   build_ruby_for_arch 3.4 'x86_64' $RB34_DIST_X86_64
 }
 
+function build-ruby40-x86 {
+  build_ruby_for_arch 4.0 'x86_64' $RB40_DIST_X86_64
+}
+
 function publish-ruby32-arm64 {
   publish_ruby_for_arch 3.2 'arm64' $RB32_DIST_ARM64
 }
@@ -77,6 +87,10 @@ function publish-ruby34-arm64 {
   publish_ruby_for_arch 3.4 'arm64' $RB34_DIST_ARM64
 }
 
+function publish-ruby40-arm64 {
+  publish_ruby_for_arch 4.0 'arm64' $RB40_DIST_ARM64
+}
+
 function publish-ruby32-x86 {
   publish_ruby_for_arch 3.2 'x86_64' $RB32_DIST_X86_64
 }
@@ -87,6 +101,10 @@ function publish-ruby33-x86 {
 
 function publish-ruby34-x86 {
   publish_ruby_for_arch 3.4 'x86_64' $RB34_DIST_X86_64
+}
+
+function publish-ruby40-x86 {
+  publish_ruby_for_arch 4.0 'x86_64' $RB40_DIST_X86_64
 }
 
 function build_ruby_for_arch {
@@ -180,6 +198,17 @@ function publish_ruby_for_arch {
 
 set +u # permit $1 to be unbound so that '*' matches it when no args are present
 case "$1" in
+  "ruby4.0")
+    layer_rc=0
+    build-ruby40-arm64
+    publish-ruby40-arm64 || layer_rc=$?
+    publish_ecr_safe $RB40_DIST_ARM64 ruby4.0 arm64
+    build-ruby40-x86
+    publish-ruby40-x86 || layer_rc=$?
+    publish_ecr_safe $RB40_DIST_X86_64 ruby4.0 x86_64
+    finalize_ecr_results "ruby4.0"
+    [[ $layer_rc -eq 0 ]] || exit $layer_rc
+    ;;
   "ruby3.4")
     layer_rc=0
     build-ruby34-arm64
@@ -212,6 +241,20 @@ case "$1" in
     publish_ecr_safe $RB32_DIST_X86_64 ruby3.2 x86_64
     finalize_ecr_results "ruby3.2"
     [[ $layer_rc -eq 0 ]] || exit $layer_rc
+    ;;
+  "publish-staging-ruby4.0")
+    build-ruby40-arm64
+    build-ruby40-x86
+    arn_arm64=$(publish_staging_layer "$RB40_DIST_ARM64" ruby4.0 arm64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_arm64=${arn_arm64}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    arn_x86=$(publish_staging_layer "$RB40_DIST_X86_64" ruby4.0 x86_64 "$NEWRELIC_AGENT_VERSION")
+    echo "arn_x86=${arn_x86}" >> "${GITHUB_OUTPUT:-/dev/stderr}"
+    ;;
+  "cleanup-staging-ruby4.0")
+    for arn in "${ARN_X86:-}" "${ARN_ARM64:-}"; do
+        [[ -z "$arn" ]] && continue
+        delete_staging_layer "$(echo "$arn" | cut -d: -f8)" "$(echo "$arn" | cut -d: -f9)"
+    done
     ;;
   "publish-staging-ruby3.4")
     build-ruby34-arm64

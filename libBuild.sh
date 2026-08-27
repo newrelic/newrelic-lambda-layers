@@ -139,6 +139,9 @@ function layer_name_str() {
     "ruby3.4")
       rt_part="Ruby34"
       ;;
+    "ruby4.0")
+      rt_part="Ruby40"
+      ;;
     "dotnet")
       rt_part="Dotnet"
       ;;
@@ -205,6 +208,9 @@ function s3_prefix() {
     "ruby3.4")
       name="nr-ruby3.4"
       ;;
+    "ruby4.0")
+      name="nr-ruby4.0"
+      ;;
     "dotnet")
       name="nr-dotnet"
       ;;
@@ -227,7 +233,7 @@ function agent_name_str() {
         "nodejs"|"nodejs22.x"|"nodejs24.x")
             agent_name="Node"
             ;;
-        "ruby3.2"|"ruby3.3"|"ruby3.4")
+        "ruby3.2"|"ruby3.3"|"ruby3.4"|"ruby4.0")
             agent_name="Ruby"
             ;;
         "java8.al2"|"java11"|"java17"|"java21"|"java25"|"java")

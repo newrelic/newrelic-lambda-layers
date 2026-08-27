@@ -16,7 +16,7 @@ permissions:
   actions: read
 
 jobs:
-  # ── Job 1: Publish staging (ruby3.4 only) ────────────────────────────────
+  # ── Job 1: Publish staging (ruby4.0 only) ────────────────────────────────
   stage-ruby:
     runs-on: ubuntu-latest
     outputs:
@@ -25,10 +25,10 @@ jobs:
       arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Use Ruby 3.4
+      - name: Use Ruby 4.0
         uses: ruby/setup-ruby@v1.226.0
         with:
-          ruby-version: 3.4
+          ruby-version: '4.0'
       - name: Check Tag
         id: ruby-check-tag
         run: |
@@ -46,7 +46,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64, amd64
-      - name: Publish staging layers (ruby3.4)
+      - name: Publish staging layers (ruby4.0)
         if: steps.ruby-check-tag.outputs.match == 'true'
         id: staging
         env:
@@ -55,7 +55,7 @@ jobs:
           STAGING_REGION: us-east-1
         run: |
           cd ruby
-          ./publish-layers.sh publish-staging-ruby3.4
+          ./publish-layers.sh publish-staging-ruby4.0
 
   # ── Job 2: Validate (calls reusable workflow) ─────────────────────────────
   validate-ruby:
@@ -63,7 +63,7 @@ jobs:
     if: needs.stage-ruby.outputs.tag-match == 'true'
     uses: ./.github/workflows/validate-layer.yml
     with:
-      runtime:   ruby34
+      runtime:   ruby40
       arn_x86:   ${{ needs.stage-ruby.outputs.arn_x86 }}
       arn_arm64: ${{ needs.stage-ruby.outputs.arn_arm64 }}
     secrets: inherit
@@ -84,7 +84,7 @@ jobs:
           ARN_ARM64: ${{ needs.stage-ruby.outputs.arn_arm64 }}
         run: |
           cd ruby
-          ./publish-layers.sh cleanup-staging-ruby3.4
+          ./publish-layers.sh cleanup-staging-ruby4.0
 
   # ── Job 4: Release all Ruby versions — gated on validate passing ──────────
   publish-ruby:
@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: [3.2, 3.3, 3.4]
+        ruby-version: ['3.2', '3.3', '3.4', '4.0']
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
@@ -157,7 +157,8 @@ jobs:
             [
               {"key":"3.2","label":"Ruby 3.2","job":"publish-ruby (3.2)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.2"},
               {"key":"3.3","label":"Ruby 3.3","job":"publish-ruby (3.3)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.3"},
-              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.4"}
+              {"key":"3.4","label":"Ruby 3.4","job":"publish-ruby (3.4)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-3.4"},
+              {"key":"4.0","label":"Ruby 4.0","job":"publish-ruby (4.0)","fallback":"${{ needs.publish-ruby.result }}","failure_key":"ruby-4.0"}
             ]
           failure_summaries: ${{ needs.publish-ruby.outputs.ecr_failure_summary }}
           slack_webhook: ${{ secrets.SLACK_VALIDATION_WEBHOOK }}

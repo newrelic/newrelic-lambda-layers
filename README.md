@@ -32,7 +32,7 @@ cd ..
 
 ```
 cd ruby
-./publish-layers.sh ruby3.3 
+./publish-layers.sh ruby4.0
 cd ..
 ```
 
