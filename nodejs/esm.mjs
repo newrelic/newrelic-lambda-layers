@@ -12,6 +12,14 @@ if (process.env.LAMBDA_TASK_ROOT && typeof process.env.NEW_RELIC_SERVERLESS_MODE
   delete process.env.NEW_RELIC_SERVERLESS_MODE_ENABLED
 }
 
+// LMI runs multiple invocations concurrently within one execution environment.
+// The agent's worker_threads instrumentation must be on for its context manager
+// to track concurrent invocations correctly; leaving it off is what causes
+// invocations to hang until the function times out.
+if (process.env.AWS_LAMBDA_INITIALIZATION_TYPE === 'lambda-managed-instances') {
+  process.env.NEW_RELIC_WORKER_THREADS_ENABLED = process.env.NEW_RELIC_WORKER_THREADS_ENABLED || 'true'
+}
+
 function getHandlerPath() {
   let handler
   const { NEW_RELIC_LAMBDA_HANDLER } = process.env
