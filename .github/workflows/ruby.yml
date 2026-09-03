@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: ruby/setup-ruby@v1.226.0
+      - uses: ruby/setup-ruby@v1.321.0
         with:
           ruby-version: '3.3'
       - run: bundle
@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: ruby/setup-ruby@v1.226.0
+      - uses: ruby/setup-ruby@v1.321.0
         with:
           ruby-version: '3.3'
       # Node.js powers serverless-offline, used for unit tests

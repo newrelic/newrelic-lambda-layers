@@ -16,7 +16,7 @@ A layer is created for every region, architecture, and Ruby runtime combination.
 
 ## Layer building and publishing
 
-With Ruby v3.2 or v3.3 or v3.4 `bundle` binary in your path:
+With Ruby v3.2 or v3.3 or v3.4 or v4.0 `bundle` binary in your path:
 
 ```shell
 ./publish_layers.sh ruby3.2
@@ -28,6 +28,10 @@ With Ruby v3.2 or v3.3 or v3.4 `bundle` binary in your path:
 # or
 
 ./publish_layers.sh ruby3.4
+
+# or
+
+./publish_layers.sh ruby4.0
 ```
 
 
