@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     outputs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
@@ -168,7 +168,6 @@ jobs:
           language_name: Python
           versions_json: |-
             [
-              {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.9"},
               {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.10"},
               {"key":"3.11","label":"Python 3.11","job":"publish-python (3.11)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.11"},
               {"key":"3.12","label":"Python 3.12","job":"publish-python (3.12)","fallback":"${{ needs.publish-python.result }}","failure_key":"python-3.12"},

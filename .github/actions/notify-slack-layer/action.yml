@@ -9,15 +9,15 @@ inputs:
     description: |
       JSON array describing each runtime version to include in the Slack message.
       Schema (one object per version):
-        - key:         unique identifier, e.g. "3.9"
-        - label:       display name shown in Slack, e.g. "Python 3.9"
-        - job:         GitHub Actions job name for API result lookup, e.g. "publish-python (3.9)"
+        - key:         unique identifier, e.g. "3.13"
+        - label:       display name shown in Slack, e.g. "Python 3.13"
+        - job:         GitHub Actions job name for API result lookup, e.g. "publish-python (3.13)"
         - fallback:    result to use when the API lookup finds no match, e.g. "success" or "failure"
-        - failure_key: job_key used by region-retry for per-version region failure detail, e.g. "python-3.9"
+        - failure_key: job_key used by region-retry for per-version region failure detail, e.g. "python-3.13"
       Example:
         [
-          {"key":"3.9","label":"Python 3.9","job":"publish-python (3.9)","fallback":"success","failure_key":"python-3.9"},
-          {"key":"3.10","label":"Python 3.10","job":"publish-python (3.10)","fallback":"success","failure_key":"python-3.10"}
+          {"key":"3.13","label":"Python 3.13","job":"publish-python (3.13)","fallback":"success","failure_key":"python-3.13"},
+          {"key":"3.14","label":"Python 3.14","job":"publish-python (3.14)","fallback":"success","failure_key":"python-3.14"}
         ]
     required: true
   failure_summaries:

@@ -25,7 +25,7 @@ PY_DIST_X86_64=$DIST_DIR/python.x86_64.zip
 source ../libBuild.sh
 
 function usage {
-    echo "./publish-layers.sh [python3.9|python3.10|python3.11|python3.12|python3.13|python3.14]"
+    echo "./publish-layers.sh [python3.10|python3.11|python3.12|python3.13|python3.14]"
 }
 
 function build_python_layer {
@@ -152,17 +152,6 @@ case "$1" in
         publish_universal_python_layer x86_64 || layer_rc=$?
         publish_ecr_safe $PY_DIST_X86_64 python x86_64
         finalize_ecr_results "python-universal"
-        [[ $layer_rc -eq 0 ]] || exit $layer_rc
-        ;;
-    "python3.9")
-        layer_rc=0
-        build_python_layer 3.9 arm64
-        publish_python_layer 3.9 arm64 || layer_rc=$?
-        publish_ecr_safe $PY39_DIST_ARM64 python3.9 arm64
-        build_python_layer 3.9 x86_64
-        publish_python_layer 3.9 x86_64 || layer_rc=$?
-        publish_ecr_safe $PY39_DIST_X86_64 python3.9 x86_64
-        finalize_ecr_results "python3.9"
         [[ $layer_rc -eq 0 ]] || exit $layer_rc
         ;;
     "python3.10")
