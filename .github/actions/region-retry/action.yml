@@ -23,7 +23,7 @@ inputs:
     description: '"save" — write failed regions artifact after publish. "load" — read it before publish.'
     required: true
   job_key:
-    description: 'Unique key for this publish job, e.g. "nodejs-22", "python-3.9", "java-java21".'
+    description: 'Unique key for this publish job, e.g. "nodejs-22", "python-3.13", "java-java21".'
     required: true
   failure_summary:
     description: 'failure_summary output from the publish step (save mode only).'

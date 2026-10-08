@@ -100,8 +100,6 @@ function layer_name_str() {
     "java")
       rt_part="AgentJava"
       ;;
-    "python3.9")
-      rt_part="Python39"
       ;;
     "python3.10")
       rt_part="Python310"
@@ -172,9 +170,6 @@ function s3_prefix() {
     "java")
       name="nr-java-agent"
       ;;
-    "python3.9")
-      name="nr-python3.9"
-      ;;
     "python3.10")
       name="nr-python3.10"
       ;;
@@ -239,7 +234,7 @@ function agent_name_str() {
         "java8.al2"|"java11"|"java17"|"java21"|"java25"|"java")
             agent_name="Java"
             ;;
-        "python"|"python3.9"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
+        "python"|"python3.10"|"python3.11"|"python3.12"|"python3.13"|"python3.14")
             agent_name="Python"
             ;;
         *)
@@ -322,7 +317,7 @@ function publish_layer {
     fi
     
     if [[ $runtime_name == "python" ]]
-    then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14")
+    then compat_list=("python3.10" "python3.11" "python3.12" "python3.13" "python3.14")
     fi
 
     if [[ $runtime_name == "nodejs" ]]
@@ -390,7 +385,7 @@ function publish_staging_layer {
     compat_list=( $runtime_name )
     if [[ $runtime_name == "provided" ]]; then compat_list=("provided" "provided.al2" "provided.al2023" "dotnetcore3.1"); fi
     if [[ $runtime_name == "dotnet" ]];   then compat_list=("dotnet6" "dotnet8" "dotnet10"); fi
-    if [[ $runtime_name == "python" ]];   then compat_list=("python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14"); fi
+    if [[ $runtime_name == "python" ]];   then compat_list=("python3.10" "python3.11" "python3.12" "python3.13" "python3.14"); fi
     if [[ $runtime_name == "nodejs" ]];   then compat_list=("nodejs22.x" "nodejs24.x"); fi
 
     echo "Publishing staging layer ${staging_layer_name} (${arch}) to ${STAGING_REGION}" >&2
