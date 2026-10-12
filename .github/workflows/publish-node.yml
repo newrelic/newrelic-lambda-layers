@@ -154,13 +154,6 @@ jobs:
         run: |
           cd nodejs
           ./publish-layers.sh build-publish-${{ matrix.node-version }}-ecr-image
-      - name: Upload Unit Test Coverage
-        uses: codecov/codecov-action@v5.3.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./nodejs/coverage/unit/lcov.info
-          fail_ci_if_error: true
-          flags: unit-tests
 
   # ── Job 5: Release universal — gated on validate passing ─────────────────
   publish-node-universal:
@@ -212,13 +205,6 @@ jobs:
         run: |
           cd nodejs
           ./publish-layers.sh build-publish-universal-ecr-image
-      - name: Upload Unit Test Coverage
-        uses: codecov/codecov-action@v5.3.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./nodejs/coverage/unit/lcov.info
-          fail_ci_if_error: true
-          flags: unit-tests
 
   # ── Job 6: Slack release summary — only after validate passed ─────────────
   notify-slack:
