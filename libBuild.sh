@@ -100,7 +100,6 @@ function layer_name_str() {
     "java")
       rt_part="AgentJava"
       ;;
-      ;;
     "python3.10")
       rt_part="Python310"
       ;;
