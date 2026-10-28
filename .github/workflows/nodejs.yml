@@ -78,5 +78,4 @@ jobs:
               run: npm run test:integration
               working-directory: nodejs
               env:
-                # serverless-offline@13 doesn't recognise nodejs26.x; it only validates the label, the tests still run on the matrix Node
-                NODE_RUNTIME: nodejs${{ matrix.node-version == '26.x' && '24.x' || matrix.node-version }}
+                NODE_RUNTIME: nodejs${{ matrix.node-version }}
