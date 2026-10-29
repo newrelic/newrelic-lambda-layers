@@ -212,6 +212,18 @@ case "$1" in
   publish_wrapper 24 arm64 slim
   publish_wrapper 24 x86_64 slim
 	;;
+"build-26")
+  build_wrapper 26 arm64 
+  build_wrapper 26 x86_64 
+  build_wrapper 26 arm64 slim
+  build_wrapper 26 x86_64 slim
+	;;
+"publish-26")
+  publish_wrapper 26 arm64
+  publish_wrapper 26 x86_64 
+  publish_wrapper 26 arm64 slim
+  publish_wrapper 26 x86_64 slim
+	;;
 "build-publish-22-ecr-image")
   build_wrapper 22 arm64
 	publish_ecr_safe $DIST_DIR/nodejs22x.arm64.zip nodejs22.x arm64
@@ -234,6 +246,17 @@ case "$1" in
 	publish_ecr_safe $DIST_DIR/nodejs24x.x86_64.slim.zip nodejs24.x x86_64 slim
   finalize_ecr_results "nodejs24.x"
 	;;
+"build-publish-26-ecr-image")
+  build_wrapper 26 arm64
+	publish_ecr_safe $DIST_DIR/nodejs26x.arm64.zip nodejs26.x arm64
+  build_wrapper 26 arm64 slim
+	publish_ecr_safe $DIST_DIR/nodejs26x.arm64.slim.zip nodejs26.x arm64 slim
+  build_wrapper 26 x86_64
+	publish_ecr_safe $DIST_DIR/nodejs26x.x86_64.zip nodejs26.x x86_64
+  build_wrapper 26 x86_64 slim
+	publish_ecr_safe $DIST_DIR/nodejs26x.x86_64.slim.zip nodejs26.x x86_64 slim
+  finalize_ecr_results "nodejs26.x"
+	;;
 "nodejs22")
   $0 build-22
   $0 publish-22
@@ -242,16 +265,26 @@ case "$1" in
   $0 build-24
   $0 publish-24
   ;;
+"nodejs26")
+  $0 build-26
+  $0 publish-26
+  ;;
 "publish-staging-22")
   publish_staging_wrapper 22
   ;;
 "publish-staging-24")
   publish_staging_wrapper 24
   ;;
+"publish-staging-26")
+  publish_staging_wrapper 26
+  ;;
 "cleanup-staging-22")
   cleanup_staging_wrapper
   ;;
 "cleanup-staging-24")
+  cleanup_staging_wrapper
+  ;;
+"cleanup-staging-26")
   cleanup_staging_wrapper
   ;;
 *)
