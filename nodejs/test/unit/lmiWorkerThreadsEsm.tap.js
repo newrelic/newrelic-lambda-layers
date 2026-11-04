@@ -1,7 +1,7 @@
 'use strict'
 
 const tap = require('tap')
-const utils = require('@newrelic/test-utilities')
+const utils = require('../lib/test-agent')
 const td = require('testdouble')
 
 tap.test('Layer Handler - LMI worker_threads default (ESM)', (t) => {
