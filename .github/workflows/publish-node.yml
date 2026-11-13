@@ -26,7 +26,7 @@ jobs:
       arn_x86_slim: ${{ steps.staging.outputs.arn_x86_slim }}
       arn_arm64_slim: ${{ steps.staging.outputs.arn_arm64_slim }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Setup
         id: setup
         uses: ./.github/actions/node-layer-setup
@@ -65,7 +65,7 @@ jobs:
     if: always() && needs.stage-node.outputs.arn_x86 != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Cleanup staging layers
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
@@ -92,7 +92,7 @@ jobs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish-ecr.outputs.ecr_failure_summary }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Setup
         uses: ./.github/actions/node-layer-setup
         with:
@@ -164,7 +164,7 @@ jobs:
       failure_summary: ${{ steps.publish-universal.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish-ecr-universal.outputs.ecr_failure_summary }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Setup
         uses: ./.github/actions/node-layer-setup
         with:
@@ -212,7 +212,7 @@ jobs:
     if: always() && needs.validate-node.result == 'success' && needs.stage-node.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/notify-slack-layer
         with:
           language_name: Node.js

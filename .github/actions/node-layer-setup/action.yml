@@ -15,7 +15,7 @@ runs:
   using: composite
   steps:
     - name: Use Node.js ${{ inputs.node-version }}.x
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
         node-version: ${{ inputs.node-version }}
     - name: Check Tag
@@ -31,6 +31,6 @@ runs:
       shell: bash
       run: cd nodejs && npm ci && npm run test
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
       with:
         platforms: arm64, amd64
