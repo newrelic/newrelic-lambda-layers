@@ -24,7 +24,7 @@ jobs:
       arn_x86:   ${{ steps.staging.outputs.arn_x86 }}
       arn_arm64: ${{ steps.staging.outputs.arn_arm64 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Check Tag
         id: extension-check-tag
         run: |
@@ -36,7 +36,7 @@ jobs:
         if: steps.extension-check-tag.outputs.match == 'true'
         run: pip install -U awscli
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
         with:
           platforms: arm64, amd64
       - name: Publish staging layers
@@ -82,7 +82,7 @@ jobs:
     if: always() && needs.stage-extension.outputs.arn_x86 != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Cleanup staging layers
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
@@ -103,11 +103,11 @@ jobs:
       failure_summary: ${{ steps.publish.outputs.failure_summary }}
       ecr_failure_summary: ${{ steps.publish.outputs.ecr_failure_summary }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Install publish dependencies
         run: pip install -U awscli
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
         with:
           platforms: arm64, amd64
       - name: Load failed regions for re-run
@@ -146,7 +146,7 @@ jobs:
     if: always() && needs.validate-al2.result == 'success' && needs.validate-al2023.result == 'success' && needs.stage-extension.outputs.tag-match == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/notify-slack-layer
         with:
           language_name: Extension (Go/AL2+AL2023)

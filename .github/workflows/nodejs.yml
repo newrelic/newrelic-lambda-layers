@@ -23,9 +23,9 @@ jobs:
             node-version: [lts/*]
 
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v4
+          uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
           with:
             node-version: ${{ matrix.node-version }}
         - name: Install Dependencies
@@ -42,9 +42,9 @@ jobs:
             matrix:
                 node-version: [22.x, 24.x]
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v4
+          uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
           with:
             node-version: ${{ matrix.node-version }}
         - name: Install Dependencies
@@ -54,7 +54,7 @@ jobs:
           run: npm run test:unit
           working-directory: nodejs
         - name: Archive Unit Test Coverage
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
           with:
             name: unit-tests-${{ matrix.node-version }}
             path: ./nodejs/coverage/unit/lcov.info
@@ -66,9 +66,9 @@ jobs:
               matrix:
                 node-version: [22.x, 24.x]
             steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                 node-version: ${{ matrix.node-version }}
             - name: Install Dependencies
