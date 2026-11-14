@@ -2,7 +2,7 @@
 
 const tap = require('tap')
 const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
-const utils = require('@newrelic/test-utilities')
+const utils = require('../lib/test-agent')
 
 tap.test('Legacy Layer Handler - ESM Function', (t) => {
   t.autoend()
