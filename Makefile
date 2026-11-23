@@ -138,6 +138,25 @@ publish-nodejs24-local: build-nodejs24
 		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
 		newrelic-lambda-layers-nodejs24
 
+build-nodejs26:
+	docker build \
+		--no-cache \
+		-t newrelic-lambda-layers-nodejs26 \
+		-f ./dockerfiles/Dockerfile.nodejs26 \
+		.
+
+publish-nodejs26-ci: build-nodejs26
+	docker run \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		newrelic-lambda-layers-nodejs26
+
+publish-nodejs26-local: build-nodejs26
+	docker run \
+		-e AWS_PROFILE \
+		-v "${HOME}/.aws:/home/newrelic-lambda-layers/.aws" \
+		newrelic-lambda-layers-nodejs26
+
 # Extract built zips from the Docker image into dist/nodejs<N>/ for staging publish.
 extract-nodejs22-artifacts: build-nodejs22
 	@docker rm -f nodejs22-artifacts 2>/dev/null || true
@@ -152,6 +171,13 @@ extract-nodejs24-artifacts: build-nodejs24
 	docker create --name nodejs24-artifacts newrelic-lambda-layers-nodejs24
 	docker cp nodejs24-artifacts:/home/newrelic-lambda-layers/nodejs/dist/. dist/nodejs24/
 	docker rm nodejs24-artifacts
+
+extract-nodejs26-artifacts: build-nodejs26
+	@docker rm -f nodejs26-artifacts 2>/dev/null || true
+	mkdir -p dist/nodejs26
+	docker create --name nodejs26-artifacts newrelic-lambda-layers-nodejs26
+	docker cp nodejs26-artifacts:/home/newrelic-lambda-layers/nodejs/dist/. dist/nodejs26/
+	docker rm nodejs26-artifacts
 
 build-python-universal:
 	docker build \
