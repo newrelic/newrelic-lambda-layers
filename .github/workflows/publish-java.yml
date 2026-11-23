@@ -176,7 +176,14 @@ jobs:
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           cd java
-          ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image
+          if [[ "${{ matrix.java-version }}" == "java25" ]]; then
+            # The docker build context is java/, so the artifacts need to be in java/dist/.
+            mkdir -p dist
+            cp ../dist/java25/java25.*.zip dist/
+            ./publish-layers.sh publish-java25-ecr-image
+          else
+            ./publish-layers.sh build-publish-${{ matrix.java-version }}-ecr-image
+          fi
 
   # ── Job 5: Slack release summary — only after validate passed ─────────────
   notify-slack:

@@ -252,10 +252,17 @@ case "$1" in
 	publish_ecr_safe $JAVA21_DIST_X86_64 java21 x86_64
 	finalize_ecr_results "java21"
 	;;
-"build-publish-java25-ecr-image")
-	build-java25-arm64
+"publish-java25-ecr-image")
+	# Building on JDK 25 requires Gradle >= 9.1, which only dockerfiles/Dockerfile.java25
+	# provides, so this reuses the zips built there (make extract-java25-artifacts) and
+	# does not rebuild them with the shared Gradle 8.6 wrapper.
+	for artifact in $JAVA25_DIST_ARM64 $JAVA25_DIST_X86_64; do
+	  if [ ! -f "$artifact" ]; then
+	    echo "Package not found: $artifact (run 'make extract-java25-artifacts' and copy dist/java25/*.zip into java/$DIST_DIR/)"
+	    exit 1
+	  fi
+	done
 	publish_ecr_safe $JAVA25_DIST_ARM64 java25 arm64
-	build-java25-x86
 	publish_ecr_safe $JAVA25_DIST_X86_64 java25 x86_64
 	finalize_ecr_results "java25"
 	;;
