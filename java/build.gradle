@@ -27,12 +27,6 @@ dependencies {
 def extensions = copySpec {
     from('extensions')
     into('extensions')
-    // Gradle 9 (used for java25, see dockerfiles/Dockerfile.java25) archives every file as
-    // 0644 by default, which drops the execute bit on the extension binary. Gradle 8.6 keeps
-    // the filesystem mode, so this is a no-op there.
-    filePermissions {
-        unix('rwxr-xr-x')
-    }
 }
 
 task packageLayer(type: Zip) {
