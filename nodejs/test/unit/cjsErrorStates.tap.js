@@ -2,7 +2,7 @@
 
 const tap = require('tap')
 const proxyquire = require('proxyquire').noCallThru().noPreserveCache()
-const utils = require('@newrelic/test-utilities')
+const utils = require('../lib/test-agent')
 const path = require('node:path')
 
 const handlerPath = 'test/unit/fixtures/cjs/'

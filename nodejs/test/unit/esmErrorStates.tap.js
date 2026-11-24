@@ -1,7 +1,7 @@
 'use strict'
 
 const tap = require('tap')
-const utils = require('@newrelic/test-utilities')
+const utils = require('../lib/test-agent')
 const td = require('testdouble')
 
 const handlerPath = 'test/unit/fixtures/esm/'
